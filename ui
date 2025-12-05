@@ -2235,8 +2235,8 @@ function initLibrary()
                         [Enum.KeyCode.Backquote] = "`";
                         [Enum.UserInputType.MouseButton1] = "Mouse 1";
                         [Enum.UserInputType.MouseButton2] = "Mouse 2";
-                        [Enum.UserInputType.MouseButton3] = "Mouse 3"
-                        [Enum.KeyCode.XButton1] = "XButton1"
+                        [Enum.UserInputType.MouseButton3] = "Mouse 3";
+                        [Enum.KeyCode.XButton1] = "XButton1";
                         [Enum.KeyCode.XButton2] = "XButton2"
                     }
 

@@ -167,7 +167,7 @@ function initLibrary()
     end
     
    function library:SetKey(key)
-     library.keybind = Enum.KeyCode[key]
+     library.keybind = key
    end
 
     local gui = utility.create("ScreenGui")

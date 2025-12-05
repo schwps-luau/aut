@@ -2189,13 +2189,13 @@ function initLibrary()
                     end
 
 
-                    local keys = {
-                        [Enum.KeyCode.LeftShift] = "Left Shift";
-                        [Enum.KeyCode.RightShift] = "Right Shift";
-                        [Enum.KeyCode.LeftControl] = "Left Ctrl";
-                        [Enum.KeyCode.RightControl] = "Right Ctrl";
-                        [Enum.KeyCode.LeftAlt] = "Left Alt";
-                        [Enum.KeyCode.RightAlt] = "Right Alt";
+                     local keys = {
+                        [Enum.KeyCode.LeftShift] = "LeftShift";
+                        [Enum.KeyCode.RightShift] = "RightShift";
+                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
+                        [Enum.KeyCode.RightControl] = "RightCtrl";
+                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
+                        [Enum.KeyCode.RightAlt] = "RightAlt";
                         [Enum.KeyCode.CapsLock] = "CapsLock";
                         [Enum.KeyCode.One] = "1";
                         [Enum.KeyCode.Two] = "2";
@@ -2207,16 +2207,16 @@ function initLibrary()
                         [Enum.KeyCode.Eight] = "8";
                         [Enum.KeyCode.Nine] = "9";
                         [Enum.KeyCode.Zero] = "0";
-                        [Enum.KeyCode.KeypadOne] = "Num 1";
-                        [Enum.KeyCode.KeypadTwo] = "Num 2";
-                        [Enum.KeyCode.KeypadThree] = "Num 3";
-                        [Enum.KeyCode.KeypadFour] = "Num 4";
-                        [Enum.KeyCode.KeypadFive] = "Num 5";
-                        [Enum.KeyCode.KeypadSix] = "Num 6";
-                        [Enum.KeyCode.KeypadSeven] = "Num 7";
-                        [Enum.KeyCode.KeypadEight] = "Num 8";
-                        [Enum.KeyCode.KeypadNine] = "Num 9";
-                        [Enum.KeyCode.KeypadZero] = "Num 0";
+                        [Enum.KeyCode.KeypadOne] = "N1";
+                        [Enum.KeyCode.KeypadTwo] = "N2";
+                        [Enum.KeyCode.KeypadThree] = "N3";
+                        [Enum.KeyCode.KeypadFour] = "N4";
+                        [Enum.KeyCode.KeypadFive] = "N5";
+                        [Enum.KeyCode.KeypadSix] = "N6";
+                        [Enum.KeyCode.KeypadSeven] = "N7";
+                        [Enum.KeyCode.KeypadEight] = "N8";
+                        [Enum.KeyCode.KeypadNine] = "N9";
+                        [Enum.KeyCode.KeypadZero] = "N0";
                         [Enum.KeyCode.Minus] = "-";
                         [Enum.KeyCode.Equals] = "=";
                         [Enum.KeyCode.Tilde] = "~";
@@ -2234,11 +2234,6 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-                        [Enum.UserInputType.MouseButton1] = "Mouse 1";
-                        [Enum.UserInputType.MouseButton2] = "Mouse 2";
-                        [Enum.UserInputType.MouseButton3] = "Mouse 3";
-                        [Enum.KeyCode.XButton1] = "xb1";
-                        [Enum.KeyCode.XButton2] = "xb2"
                     }
 
 
@@ -2427,13 +2422,13 @@ function initLibrary()
                     local keybindCallback = options.keybindCallback or function() end
 
 
-                    local keys = {
-                        [Enum.KeyCode.LeftShift] = "Left Shift";
-                        [Enum.KeyCode.RightShift] = "Right Shift";
-                        [Enum.KeyCode.LeftControl] = "Left Ctrl";
-                        [Enum.KeyCode.RightControl] = "Right Ctrl";
-                        [Enum.KeyCode.LeftAlt] = "Left Alt";
-                        [Enum.KeyCode.RightAlt] = "Right Alt";
+                   local keys = {
+                        [Enum.KeyCode.LeftShift] = "LeftShift";
+                        [Enum.KeyCode.RightShift] = "RightShift";
+                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
+                        [Enum.KeyCode.RightControl] = "RightCtrl";
+                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
+                        [Enum.KeyCode.RightAlt] = "RightAlt";
                         [Enum.KeyCode.CapsLock] = "CapsLock";
                         [Enum.KeyCode.One] = "1";
                         [Enum.KeyCode.Two] = "2";
@@ -2445,16 +2440,16 @@ function initLibrary()
                         [Enum.KeyCode.Eight] = "8";
                         [Enum.KeyCode.Nine] = "9";
                         [Enum.KeyCode.Zero] = "0";
-                        [Enum.KeyCode.KeypadOne] = "Num 1";
-                        [Enum.KeyCode.KeypadTwo] = "Num 2";
-                        [Enum.KeyCode.KeypadThree] = "Num 3";
-                        [Enum.KeyCode.KeypadFour] = "Num 4";
-                        [Enum.KeyCode.KeypadFive] = "Num 5";
-                        [Enum.KeyCode.KeypadSix] = "Num 6";
-                        [Enum.KeyCode.KeypadSeven] = "Num 7";
-                        [Enum.KeyCode.KeypadEight] = "Num 8";
-                        [Enum.KeyCode.KeypadNine] = "Num 9";
-                        [Enum.KeyCode.KeypadZero] = "Num 0";
+                        [Enum.KeyCode.KeypadOne] = "N1";
+                        [Enum.KeyCode.KeypadTwo] = "N2";
+                        [Enum.KeyCode.KeypadThree] = "N3";
+                        [Enum.KeyCode.KeypadFour] = "N4";
+                        [Enum.KeyCode.KeypadFive] = "N5";
+                        [Enum.KeyCode.KeypadSix] = "N6";
+                        [Enum.KeyCode.KeypadSeven] = "N7";
+                        [Enum.KeyCode.KeypadEight] = "N8";
+                        [Enum.KeyCode.KeypadNine] = "N9";
+                        [Enum.KeyCode.KeypadZero] = "N0";
                         [Enum.KeyCode.Minus] = "-";
                         [Enum.KeyCode.Equals] = "=";
                         [Enum.KeyCode.Tilde] = "~";
@@ -2472,10 +2467,8 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-                        [Enum.UserInputType.MouseButton1] = "Mouse 1";
-                        [Enum.UserInputType.MouseButton2] = "Mouse 2";
-                        [Enum.UserInputType.MouseButton3] = "Mouse 3"
                     }
+
 
 
                     local toggled = false

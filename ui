@@ -2234,8 +2234,8 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-                        [Enum.KeyCode.MouseButton1] = "LeftMouse";
-                        [Enum.KeyCode.MouseButton2] = "RightMouse";
+                        [Enum.UserInputType.MouseButton1] = "LeftMouse";
+                        [Enum.UserInputType.MouseButton2] = "RightMouse";
 
                     }
 

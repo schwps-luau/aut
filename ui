@@ -2234,8 +2234,8 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-                        [Enum.KeyCode.MouseLeftButton] = "LeftMouse";
-                        [Enum.KeyCode.MouseRightButton] = "RightMouse";
+                        [Enum.KeyCode.MouseButton1] = "LeftMouse";
+                        [Enum.KeyCode.MouseButton2] = "RightMouse";
                         [Enum.KeyCode.MouseBackButton] = "XButton1";
                         [Enum.KeyCode.MouseNoButton] = "XButton2";
                     }
@@ -2348,7 +2348,7 @@ function initLibrary()
 
 
                     inputService.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.Keyboard then
+                        
                             if input.KeyCode == keyChosen then
                                 callback(keyChosen)
                             end
@@ -2356,7 +2356,7 @@ function initLibrary()
                             if input.UserInputType == keyChosen then
                                 callback(keyChosen)
                             end
-                        end
+                        
                     end)
 
 

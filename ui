@@ -2470,8 +2470,7 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-                        [Enum.KeyCode.MouseLeftButton] = "LeftMouse";
-                        [Enum.KeyCode.MouseRightButton] = "RightMouse";
+
 
                     }
 

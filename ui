@@ -2234,6 +2234,10 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
+                        [Enum.KeyCode.MouseLeftButton] = "LeftMouse";
+                        [Enum.KeyCode.MouseRightButton] = "RightMouse";
+                        [Enum.KeyCode.MouseBackButton] = "XButton1";
+                        [Enum.KeyCode.MouseNoButton] = "XButton2";
                     }
 
 
@@ -2467,6 +2471,10 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
+                        [Enum.KeyCode.MouseLeftButton] = "LeftMouse";
+                        [Enum.KeyCode.MouseRightButton] = "RightMouse";
+                        [Enum.KeyCode.MouseBackButton] = "XButton1";
+                        [Enum.KeyCode.MouseNoButton] = "XButton2";
                     }
 
 
@@ -3627,3 +3635,4 @@ function initLibrary()
 
     return library
 end
+

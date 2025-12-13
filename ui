@@ -2232,7 +2232,7 @@ function initLibrary()
                         [Enum.KeyCode.Slash] = "/";
                         [Enum.KeyCode.Asterisk] = "*";
                         [Enum.KeyCode.Plus] = "+";
-                        [Enum.KeyCode.MouseButton1] = "mb1";
+                        [Enum.UserInputType.MouseButton1] = "mb1";
                         [Enum.KeyCode.MouseButton2] = "mb2";
                     }
 

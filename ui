@@ -2234,7 +2234,6 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-      
                     }
 
 
@@ -2345,7 +2344,7 @@ function initLibrary()
 
 
                     inputService.InputBegan:Connect(function(input)
-                        
+                        if input.UserInputType == Enum.UserInputType.Keyboard then
                             if input.KeyCode == keyChosen then
                                 callback(keyChosen)
                             end
@@ -2353,7 +2352,7 @@ function initLibrary()
                             if input.UserInputType == keyChosen then
                                 callback(keyChosen)
                             end
-                        
+                        end
                     end)
 
 
@@ -2468,8 +2467,6 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-
-
                     }
 
 

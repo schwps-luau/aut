@@ -61,35 +61,7 @@ function initLibrary()
         [Enum.KeyCode.GreaterThan] = ">",
         [Enum.KeyCode.Question] = "?",
         [Enum.KeyCode.At] = "@",
-        
-        -- Буквы
-        [Enum.KeyCode.A] = "A",
-        [Enum.KeyCode.B] = "B",
-        [Enum.KeyCode.C] = "C",
-        [Enum.KeyCode.D] = "D",
-        [Enum.KeyCode.E] = "E",
-        [Enum.KeyCode.F] = "F",
-        [Enum.KeyCode.G] = "G",
-        [Enum.KeyCode.H] = "H",
-        [Enum.KeyCode.I] = "I",
-        [Enum.KeyCode.J] = "J",
-        [Enum.KeyCode.K] = "K",
-        [Enum.KeyCode.L] = "L",
-        [Enum.KeyCode.M] = "M",
-        [Enum.KeyCode.N] = "N",
-        [Enum.KeyCode.O] = "O",
-        [Enum.KeyCode.P] = "P",
-        [Enum.KeyCode.Q] = "Q",
-        [Enum.KeyCode.R] = "R",
-        [Enum.KeyCode.S] = "S",
-        [Enum.KeyCode.T] = "T",
-        [Enum.KeyCode.U] = "U",
-        [Enum.KeyCode.V] = "V",
-        [Enum.KeyCode.W] = "W",
-        [Enum.KeyCode.X] = "X",
-        [Enum.KeyCode.Y] = "Y",
-        [Enum.KeyCode.Z] = "Z",
-        
+
         -- Numpad
         [Enum.KeyCode.KeypadZero] = "Num0",
         [Enum.KeyCode.KeypadOne] = "Num1",
@@ -108,20 +80,6 @@ function initLibrary()
         [Enum.KeyCode.KeypadPlus] = "Num+",
         [Enum.KeyCode.KeypadEnter] = "NumEnter",
         [Enum.KeyCode.KeypadEquals] = "Num=",
-        
-        -- Function keys
-        [Enum.KeyCode.F1] = "F1",
-        [Enum.KeyCode.F2] = "F2",
-        [Enum.KeyCode.F3] = "F3",
-        [Enum.KeyCode.F4] = "F4",
-        [Enum.KeyCode.F5] = "F5",
-        [Enum.KeyCode.F6] = "F6",
-        [Enum.KeyCode.F7] = "F7",
-        [Enum.KeyCode.F8] = "F8",
-        [Enum.KeyCode.F9] = "F9",
-        [Enum.KeyCode.F10] = "F10",
-        [Enum.KeyCode.F11] = "F11",
-        [Enum.KeyCode.F12] = "F12",
         
         -- Modifiers
         [Enum.KeyCode.LeftShift] = "LShift",
@@ -144,41 +102,14 @@ function initLibrary()
         [Enum.KeyCode.PageUp] = "PageUp",
         [Enum.KeyCode.PageDown] = "PageDown",
         
-        -- Other
-        [Enum.KeyCode.CapsLock] = "CapsLock",
-        [Enum.KeyCode.NumLock] = "NumLock",
-        [Enum.KeyCode.ScrollLock] = "ScrollLock",
-        [Enum.KeyCode.Print] = "Print",
-        [Enum.KeyCode.SysReq] = "SysReq",
-        [Enum.KeyCode.Break] = "Break",
-        [Enum.KeyCode.Help] = "Help",
-        [Enum.KeyCode.Menu] = "Menu",
-        
+   
         -- Mouse buttons (используем UserInputType вместо KeyCode)
         [Enum.UserInputType.MouseButton1] = "MouseButton1",
         [Enum.UserInputType.MouseButton2] = "MouseButton2",
         [Enum.UserInputType.MouseButton3] = "MouseButton3",
         [Enum.UserInputType.MouseWheel] = "MouseWheel",
-        
-        -- Gamepad
-        [Enum.KeyCode.ButtonA] = "ButtonA",
-        [Enum.KeyCode.ButtonB] = "ButtonB",
-        [Enum.KeyCode.ButtonX] = "ButtonX",
-        [Enum.KeyCode.ButtonY] = "ButtonY",
-        [Enum.KeyCode.ButtonStart] = "Start",
-        [Enum.KeyCode.ButtonSelect] = "Select",
-        [Enum.KeyCode.ButtonL1] = "L1",
-        [Enum.KeyCode.ButtonR1] = "R1",
-        [Enum.KeyCode.ButtonL2] = "L2",
-        [Enum.KeyCode.ButtonR2] = "R2",
-        [Enum.KeyCode.ButtonL3] = "L3",
-        [Enum.KeyCode.ButtonR3] = "R3",
-        [Enum.KeyCode.DPadLeft] = "DPadLeft",
-        [Enum.KeyCode.DPadRight] = "DPadRight",
-        [Enum.KeyCode.DPadUp] = "DPadUp",
-        [Enum.KeyCode.DPadDown] = "DPadDown",
-    }
 
+                                                }
     
     local utility = {}
 

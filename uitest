@@ -2231,10 +2231,10 @@ function initLibrary()
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Slash] = "/";
                         [Enum.KeyCode.Asterisk] = "*";
-                        [Enum.UserInputType.MouseButton1] = 'MB1';
-                        [Enum.UserInputType.MouseButton2] = 'MB2';
-                        [Enum.UserInputType.MouseButton3] = 'MB3';
-
+                        [Enum.KeyCode.Plus] = "+";
+                        [Enum.KeyCode.Period] = ".";
+                        [Enum.KeyCode.Backquote] = "`";
+      
                     }
 
 
@@ -2282,11 +2282,7 @@ function initLibrary()
 
 
                     keybind.MouseButton1Click:Connect(function()
-                        value.Text = "..."
-                        value.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-
-                        local binding
+                                    local binding
                     binding = inputService.InputBegan:Connect(function(input)
                             local key = keys[input.KeyCode] or keys[input.UserInputType]
                             value.Text = (keys[key] or tostring(input.KeyCode):gsub("Enum.KeyCode.", ""))
@@ -2341,6 +2337,7 @@ function initLibrary()
                                 end
                             end
                         end)
+                    
                     end)
 
 
@@ -2468,9 +2465,6 @@ function initLibrary()
                         [Enum.KeyCode.Plus] = "+";
                         [Enum.KeyCode.Period] = ".";
                         [Enum.KeyCode.Backquote] = "`";
-                        [Enum.UserInputType.MouseButton1] = 'MB1';
-                        [Enum.UserInputType.MouseButton2] = 'MB2';
-                        [Enum.UserInputType.MouseButton3] = 'MB3';
 
 
                     }
@@ -3633,3 +3627,4 @@ function initLibrary()
 
     return library
 end
+

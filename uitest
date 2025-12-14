@@ -3723,3 +3723,8 @@ end
     return library
 end
 
+-- В конце файла после всего кода добавьте:
+
+-- Создаем и возвращаем библиотеку
+local lib = initLibrary()
+return lib

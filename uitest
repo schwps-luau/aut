@@ -1,26 +1,177 @@
-
---[[
-Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
-Yun Devs: zomb#7741, nives#0001, loot#1337
-Special Thanks To: Qw#1549
---]]
 function initLibrary()
     local folderName = "zerox config holder"
     local gameConfigFolder = "cfgs"
 
-
     if not isfolder(gameConfigFolder) then
         makefolder(gameConfigFolder)
     end
-
 
     local inputService = game:GetService("UserInputService")
     local tweenService = game:GetService("TweenService")
     local runService = game:GetService("RunService")
     local coreGui = game:GetService("CoreGui")
 
+    -- ДОБАВЬТЕ ЭТОТ СЛОВАРЬ ЗДЕСЬ (после объявления сервисов)
+    local keys = {
+        [Enum.KeyCode.Backspace] = "Backspace",
+        [Enum.KeyCode.Tab] = "Tab",
+        [Enum.KeyCode.Clear] = "Clear",
+        [Enum.KeyCode.Return] = "Return",
+        [Enum.KeyCode.Pause] = "Pause",
+        [Enum.KeyCode.Escape] = "Escape",
+        [Enum.KeyCode.Space] = "Space",
+        [Enum.KeyCode.Exclamation] = "!",
+        [Enum.KeyCode.DoubleQuote] = "\"",
+        [Enum.KeyCode.Hash] = "#",
+        [Enum.KeyCode.Dollar] = "$",
+        [Enum.KeyCode.Percent] = "%",
+        [Enum.KeyCode.Ampersand] = "&",
+        [Enum.KeyCode.Quote] = "'",
+        [Enum.KeyCode.LeftParenthesis] = "(",
+        [Enum.KeyCode.RightParenthesis] = ")",
+        [Enum.KeyCode.Asterisk] = "*",
+        [Enum.KeyCode.Plus] = "+",
+        [Enum.KeyCode.Comma] = ",",
+        [Enum.KeyCode.Minus] = "-",
+        [Enum.KeyCode.Period] = ".",
+        [Enum.KeyCode.Slash] = "/",
+        [Enum.KeyCode.Zero] = "0",
+        [Enum.KeyCode.One] = "1",
+        [Enum.KeyCode.Two] = "2",
+        [Enum.KeyCode.Three] = "3",
+        [Enum.KeyCode.Four] = "4",
+        [Enum.KeyCode.Five] = "5",
+        [Enum.KeyCode.Six] = "6",
+        [Enum.KeyCode.Seven] = "7",
+        [Enum.KeyCode.Eight] = "8",
+        [Enum.KeyCode.Nine] = "9",
+        [Enum.KeyCode.Colon] = ":",
+        [Enum.KeyCode.Semicolon] = ";",
+        [Enum.KeyCode.LessThan] = "<",
+        [Enum.KeyCode.Equals] = "=",
+        [Enum.KeyCode.GreaterThan] = ">",
+        [Enum.KeyCode.Question] = "?",
+        [Enum.KeyCode.At] = "@",
+        
+        -- Буквы
+        [Enum.KeyCode.A] = "A",
+        [Enum.KeyCode.B] = "B",
+        [Enum.KeyCode.C] = "C",
+        [Enum.KeyCode.D] = "D",
+        [Enum.KeyCode.E] = "E",
+        [Enum.KeyCode.F] = "F",
+        [Enum.KeyCode.G] = "G",
+        [Enum.KeyCode.H] = "H",
+        [Enum.KeyCode.I] = "I",
+        [Enum.KeyCode.J] = "J",
+        [Enum.KeyCode.K] = "K",
+        [Enum.KeyCode.L] = "L",
+        [Enum.KeyCode.M] = "M",
+        [Enum.KeyCode.N] = "N",
+        [Enum.KeyCode.O] = "O",
+        [Enum.KeyCode.P] = "P",
+        [Enum.KeyCode.Q] = "Q",
+        [Enum.KeyCode.R] = "R",
+        [Enum.KeyCode.S] = "S",
+        [Enum.KeyCode.T] = "T",
+        [Enum.KeyCode.U] = "U",
+        [Enum.KeyCode.V] = "V",
+        [Enum.KeyCode.W] = "W",
+        [Enum.KeyCode.X] = "X",
+        [Enum.KeyCode.Y] = "Y",
+        [Enum.KeyCode.Z] = "Z",
+        
+        -- Numpad
+        [Enum.KeyCode.KeypadZero] = "Num0",
+        [Enum.KeyCode.KeypadOne] = "Num1",
+        [Enum.KeyCode.KeypadTwo] = "Num2",
+        [Enum.KeyCode.KeypadThree] = "Num3",
+        [Enum.KeyCode.KeypadFour] = "Num4",
+        [Enum.KeyCode.KeypadFive] = "Num5",
+        [Enum.KeyCode.KeypadSix] = "Num6",
+        [Enum.KeyCode.KeypadSeven] = "Num7",
+        [Enum.KeyCode.KeypadEight] = "Num8",
+        [Enum.KeyCode.KeypadNine] = "Num9",
+        [Enum.KeyCode.KeypadPeriod] = "Num.",
+        [Enum.KeyCode.KeypadDivide] = "Num/",
+        [Enum.KeyCode.KeypadMultiply] = "Num*",
+        [Enum.KeyCode.KeypadMinus] = "Num-",
+        [Enum.KeyCode.KeypadPlus] = "Num+",
+        [Enum.KeyCode.KeypadEnter] = "NumEnter",
+        [Enum.KeyCode.KeypadEquals] = "Num=",
+        
+        -- Function keys
+        [Enum.KeyCode.F1] = "F1",
+        [Enum.KeyCode.F2] = "F2",
+        [Enum.KeyCode.F3] = "F3",
+        [Enum.KeyCode.F4] = "F4",
+        [Enum.KeyCode.F5] = "F5",
+        [Enum.KeyCode.F6] = "F6",
+        [Enum.KeyCode.F7] = "F7",
+        [Enum.KeyCode.F8] = "F8",
+        [Enum.KeyCode.F9] = "F9",
+        [Enum.KeyCode.F10] = "F10",
+        [Enum.KeyCode.F11] = "F11",
+        [Enum.KeyCode.F12] = "F12",
+        
+        -- Modifiers
+        [Enum.KeyCode.LeftShift] = "LShift",
+        [Enum.KeyCode.RightShift] = "RShift",
+        [Enum.KeyCode.LeftControl] = "LCtrl",
+        [Enum.KeyCode.RightControl] = "RCtrl",
+        [Enum.KeyCode.LeftAlt] = "LAlt",
+        [Enum.KeyCode.RightAlt] = "RAlt",
+        [Enum.KeyCode.LeftMeta] = "LMeta",
+        [Enum.KeyCode.RightMeta] = "RMeta",
+        
+        -- Navigation
+        [Enum.KeyCode.Up] = "Up",
+        [Enum.KeyCode.Down] = "Down",
+        [Enum.KeyCode.Right] = "Right",
+        [Enum.KeyCode.Left] = "Left",
+        [Enum.KeyCode.Insert] = "Insert",
+        [Enum.KeyCode.Home] = "Home",
+        [Enum.KeyCode.End] = "End",
+        [Enum.KeyCode.PageUp] = "PageUp",
+        [Enum.KeyCode.PageDown] = "PageDown",
+        
+        -- Other
+        [Enum.KeyCode.CapsLock] = "CapsLock",
+        [Enum.KeyCode.NumLock] = "NumLock",
+        [Enum.KeyCode.ScrollLock] = "ScrollLock",
+        [Enum.KeyCode.Print] = "Print",
+        [Enum.KeyCode.SysReq] = "SysReq",
+        [Enum.KeyCode.Break] = "Break",
+        [Enum.KeyCode.Help] = "Help",
+        [Enum.KeyCode.Menu] = "Menu",
+        
+        -- Mouse buttons (используем UserInputType вместо KeyCode)
+        [Enum.UserInputType.MouseButton1] = "MouseButton1",
+        [Enum.UserInputType.MouseButton2] = "MouseButton2",
+        [Enum.UserInputType.MouseButton3] = "MouseButton3",
+        [Enum.UserInputType.MouseWheel] = "MouseWheel",
+        
+        -- Gamepad
+        [Enum.KeyCode.ButtonA] = "ButtonA",
+        [Enum.KeyCode.ButtonB] = "ButtonB",
+        [Enum.KeyCode.ButtonX] = "ButtonX",
+        [Enum.KeyCode.ButtonY] = "ButtonY",
+        [Enum.KeyCode.ButtonStart] = "Start",
+        [Enum.KeyCode.ButtonSelect] = "Select",
+        [Enum.KeyCode.ButtonL1] = "L1",
+        [Enum.KeyCode.ButtonR1] = "R1",
+        [Enum.KeyCode.ButtonL2] = "L2",
+        [Enum.KeyCode.ButtonR2] = "R2",
+        [Enum.KeyCode.ButtonL3] = "L3",
+        [Enum.KeyCode.ButtonR3] = "R3",
+        [Enum.KeyCode.DPadLeft] = "DPadLeft",
+        [Enum.KeyCode.DPadRight] = "DPadRight",
+        [Enum.KeyCode.DPadUp] = "DPadUp",
+        [Enum.KeyCode.DPadDown] = "DPadDown",
+    }
 
     local utility = {}
+    -- ... остальной код ...
 
 
     function utility.create(class, properties)
@@ -2187,163 +2338,6 @@ function initLibrary()
         library.flags[flag] = default
     end
 
-local keys = {
-    [Enum.KeyCode.Backspace] = "Backspace",
-    [Enum.KeyCode.Tab] = "Tab",
-    [Enum.KeyCode.Clear] = "Clear",
-    [Enum.KeyCode.Return] = "Return",
-    [Enum.KeyCode.Pause] = "Pause",
-    [Enum.KeyCode.Escape] = "Escape",
-    [Enum.KeyCode.Space] = "Space",
-    [Enum.KeyCode.Exclamation] = "!",
-    [Enum.KeyCode.DoubleQuote] = "\"",
-    [Enum.KeyCode.Hash] = "#",
-    [Enum.KeyCode.Dollar] = "$",
-    [Enum.KeyCode.Percent] = "%",
-    [Enum.KeyCode.Ampersand] = "&",
-    [Enum.KeyCode.Quote] = "'",
-    [Enum.KeyCode.LeftParenthesis] = "(",
-    [Enum.KeyCode.RightParenthesis] = ")",
-    [Enum.KeyCode.Asterisk] = "*",
-    [Enum.KeyCode.Plus] = "+",
-    [Enum.KeyCode.Comma] = ",",
-    [Enum.KeyCode.Minus] = "-",
-    [Enum.KeyCode.Period] = ".",
-    [Enum.KeyCode.Slash] = "/",
-    [Enum.KeyCode.Zero] = "0",
-    [Enum.KeyCode.One] = "1",
-    [Enum.KeyCode.Two] = "2",
-    [Enum.KeyCode.Three] = "3",
-    [Enum.KeyCode.Four] = "4",
-    [Enum.KeyCode.Five] = "5",
-    [Enum.KeyCode.Six] = "6",
-    [Enum.KeyCode.Seven] = "7",
-    [Enum.KeyCode.Eight] = "8",
-    [Enum.KeyCode.Nine] = "9",
-    [Enum.KeyCode.Colon] = ":",
-    [Enum.KeyCode.Semicolon] = ";",
-    [Enum.KeyCode.LessThan] = "<",
-    [Enum.KeyCode.Equals] = "=",
-    [Enum.KeyCode.GreaterThan] = ">",
-    [Enum.KeyCode.Question] = "?",
-    [Enum.KeyCode.At] = "@",
-    
-    -- Буквы
-    [Enum.KeyCode.A] = "A",
-    [Enum.KeyCode.B] = "B",
-    [Enum.KeyCode.C] = "C",
-    [Enum.KeyCode.D] = "D",
-    [Enum.KeyCode.E] = "E",
-    [Enum.KeyCode.F] = "F",
-    [Enum.KeyCode.G] = "G",
-    [Enum.KeyCode.H] = "H",
-    [Enum.KeyCode.I] = "I",
-    [Enum.KeyCode.J] = "J",
-    [Enum.KeyCode.K] = "K",
-    [Enum.KeyCode.L] = "L",
-    [Enum.KeyCode.M] = "M",
-    [Enum.KeyCode.N] = "N",
-    [Enum.KeyCode.O] = "O",
-    [Enum.KeyCode.P] = "P",
-    [Enum.KeyCode.Q] = "Q",
-    [Enum.KeyCode.R] = "R",
-    [Enum.KeyCode.S] = "S",
-    [Enum.KeyCode.T] = "T",
-    [Enum.KeyCode.U] = "U",
-    [Enum.KeyCode.V] = "V",
-    [Enum.KeyCode.W] = "W",
-    [Enum.KeyCode.X] = "X",
-    [Enum.KeyCode.Y] = "Y",
-    [Enum.KeyCode.Z] = "Z",
-    
-    -- Numpad
-    [Enum.KeyCode.KeypadZero] = "Num0",
-    [Enum.KeyCode.KeypadOne] = "Num1",
-    [Enum.KeyCode.KeypadTwo] = "Num2",
-    [Enum.KeyCode.KeypadThree] = "Num3",
-    [Enum.KeyCode.KeypadFour] = "Num4",
-    [Enum.KeyCode.KeypadFive] = "Num5",
-    [Enum.KeyCode.KeypadSix] = "Num6",
-    [Enum.KeyCode.KeypadSeven] = "Num7",
-    [Enum.KeyCode.KeypadEight] = "Num8",
-    [Enum.KeyCode.KeypadNine] = "Num9",
-    [Enum.KeyCode.KeypadPeriod] = "Num.",
-    [Enum.KeyCode.KeypadDivide] = "Num/",
-    [Enum.KeyCode.KeypadMultiply] = "Num*",
-    [Enum.KeyCode.KeypadMinus] = "Num-",
-    [Enum.KeyCode.KeypadPlus] = "Num+",
-    [Enum.KeyCode.KeypadEnter] = "NumEnter",
-    [Enum.KeyCode.KeypadEquals] = "Num=",
-    
-    -- Function keys
-    [Enum.KeyCode.F1] = "F1",
-    [Enum.KeyCode.F2] = "F2",
-    [Enum.KeyCode.F3] = "F3",
-    [Enum.KeyCode.F4] = "F4",
-    [Enum.KeyCode.F5] = "F5",
-    [Enum.KeyCode.F6] = "F6",
-    [Enum.KeyCode.F7] = "F7",
-    [Enum.KeyCode.F8] = "F8",
-    [Enum.KeyCode.F9] = "F9",
-    [Enum.KeyCode.F10] = "F10",
-    [Enum.KeyCode.F11] = "F11",
-    [Enum.KeyCode.F12] = "F12",
-    
-    -- Modifiers
-    [Enum.KeyCode.LeftShift] = "LShift",
-    [Enum.KeyCode.RightShift] = "RShift",
-    [Enum.KeyCode.LeftControl] = "LCtrl",
-    [Enum.KeyCode.RightControl] = "RCtrl",
-    [Enum.KeyCode.LeftAlt] = "LAlt",
-    [Enum.KeyCode.RightAlt] = "RAlt",
-    [Enum.KeyCode.LeftMeta] = "LMeta",
-    [Enum.KeyCode.RightMeta] = "RMeta",
-    
-    -- Navigation
-    [Enum.KeyCode.Up] = "Up",
-    [Enum.KeyCode.Down] = "Down",
-    [Enum.KeyCode.Right] = "Right",
-    [Enum.KeyCode.Left] = "Left",
-    [Enum.KeyCode.Insert] = "Insert",
-    [Enum.KeyCode.Home] = "Home",
-    [Enum.KeyCode.End] = "End",
-    [Enum.KeyCode.PageUp] = "PageUp",
-    [Enum.KeyCode.PageDown] = "PageDown",
-    
-    -- Other
-    [Enum.KeyCode.CapsLock] = "CapsLock",
-    [Enum.KeyCode.NumLock] = "NumLock",
-    [Enum.KeyCode.ScrollLock] = "ScrollLock",
-    [Enum.KeyCode.Print] = "Print",
-    [Enum.KeyCode.SysReq] = "SysReq",
-    [Enum.KeyCode.Break] = "Break",
-    [Enum.KeyCode.Help] = "Help",
-    [Enum.KeyCode.Menu] = "Menu",
-    
-    -- Mouse buttons (используем UserInputType вместо KeyCode)
-    [Enum.UserInputType.MouseButton1] = "MouseButton1",
-    [Enum.UserInputType.MouseButton2] = "MouseButton2",
-    [Enum.UserInputType.MouseButton3] = "MouseButton3",
-    [Enum.UserInputType.MouseWheel] = "MouseWheel",
-    
-    -- Gamepad
-    [Enum.KeyCode.ButtonA] = "ButtonA",
-    [Enum.KeyCode.ButtonB] = "ButtonB",
-    [Enum.KeyCode.ButtonX] = "ButtonX",
-    [Enum.KeyCode.ButtonY] = "ButtonY",
-    [Enum.KeyCode.ButtonStart] = "Start",
-    [Enum.KeyCode.ButtonSelect] = "Select",
-    [Enum.KeyCode.ButtonL1] = "L1",
-    [Enum.KeyCode.ButtonR1] = "R1",
-    [Enum.KeyCode.ButtonL2] = "L2",
-    [Enum.KeyCode.ButtonR2] = "R2",
-    [Enum.KeyCode.ButtonL3] = "L3",
-    [Enum.KeyCode.ButtonR3] = "R3",
-    [Enum.KeyCode.DPadLeft] = "DPadLeft",
-    [Enum.KeyCode.DPadRight] = "DPadRight",
-    [Enum.KeyCode.DPadUp] = "DPadUp",
-    [Enum.KeyCode.DPadDown] = "DPadDown",
-}
 
     local keyChosen = default
 
@@ -2513,57 +2507,6 @@ end
                     local keybindFlag = options.keybindFlag
                     local toggleCallback = options.toggleCallback or function() end
                     local keybindCallback = options.keybindCallback or function() end
-
-
-                   local keys = {
-                        [Enum.KeyCode.LeftShift] = "LeftShift";
-                        [Enum.KeyCode.RightShift] = "RightShift";
-                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
-                        [Enum.KeyCode.RightControl] = "RightCtrl";
-                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
-                        [Enum.KeyCode.RightAlt] = "RightAlt";
-                        [Enum.KeyCode.CapsLock] = "CapsLock";
-                        [Enum.KeyCode.One] = "1";
-                        [Enum.KeyCode.Two] = "2";
-                        [Enum.KeyCode.Three] = "3";
-                        [Enum.KeyCode.Four] = "4";
-                        [Enum.KeyCode.Five] = "5";
-                        [Enum.KeyCode.Six] = "6";
-                        [Enum.KeyCode.Seven] = "7";
-                        [Enum.KeyCode.Eight] = "8";
-                        [Enum.KeyCode.Nine] = "9";
-                        [Enum.KeyCode.Zero] = "0";
-                        [Enum.KeyCode.KeypadOne] = "N1";
-                        [Enum.KeyCode.KeypadTwo] = "N2";
-                        [Enum.KeyCode.KeypadThree] = "N3";
-                        [Enum.KeyCode.KeypadFour] = "N4";
-                        [Enum.KeyCode.KeypadFive] = "N5";
-                        [Enum.KeyCode.KeypadSix] = "N6";
-                        [Enum.KeyCode.KeypadSeven] = "N7";
-                        [Enum.KeyCode.KeypadEight] = "N8";
-                        [Enum.KeyCode.KeypadNine] = "N9";
-                        [Enum.KeyCode.KeypadZero] = "N0";
-                        [Enum.KeyCode.Minus] = "-";
-                        [Enum.KeyCode.Equals] = "=";
-                        [Enum.KeyCode.Tilde] = "~";
-                        [Enum.KeyCode.LeftBracket] = "[";
-                        [Enum.KeyCode.RightBracket] = "]";
-                        [Enum.KeyCode.RightParenthesis] = ")";
-                        [Enum.KeyCode.LeftParenthesis] = "(";
-                        [Enum.KeyCode.Semicolon] = ";";
-                        [Enum.KeyCode.Quote] = "'";
-                        [Enum.KeyCode.BackSlash] = "\\";
-                        [Enum.KeyCode.Comma] = ";";
-                        [Enum.KeyCode.Period] = ".";
-                        [Enum.KeyCode.Slash] = "/";
-                        [Enum.KeyCode.Asterisk] = "*";
-                        [Enum.KeyCode.Plus] = "+";
-                        [Enum.KeyCode.Period] = ".";
-                        [Enum.KeyCode.Backquote] = "`";
-
-
-                    }
-
 
 
                     local toggled = false
@@ -3722,9 +3665,3 @@ end
 
     return library
 end
-
--- В конце файла после всего кода добавьте:
-
--- Создаем и возвращаем библиотеку
-local lib = initLibrary()
-return lib

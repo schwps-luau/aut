@@ -1,17 +1,26 @@
+
+--[[
+Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
+Yun Devs: zomb#7741, nives#0001, loot#1337
+Special Thanks To: Qw#1549
+--]]
 function initLibrary()
     local folderName = "zerox config holder"
     local gameConfigFolder = "cfgs"
 
+
     if not isfolder(gameConfigFolder) then
         makefolder(gameConfigFolder)
     end
+
 
     local inputService = game:GetService("UserInputService")
     local tweenService = game:GetService("TweenService")
     local runService = game:GetService("RunService")
     local coreGui = game:GetService("CoreGui")
 
-    -- ДОБАВЬТЕ ЭТОТ СЛОВАРЬ ЗДЕСЬ (после объявления сервисов)
+
+
     local keys = {
         [Enum.KeyCode.Backspace] = "Backspace",
         [Enum.KeyCode.Tab] = "Tab",
@@ -170,8 +179,8 @@ function initLibrary()
         [Enum.KeyCode.DPadDown] = "DPadDown",
     }
 
+    
     local utility = {}
-    -- ... остальной код ...
 
 
     function utility.create(class, properties)
@@ -2327,175 +2336,191 @@ function initLibrary()
 
 
                 function sectionTypes:Keybind(opts)
-    local options = utility.table(opts)
-    local name = options.name or "Keybind"
-    local default = options.default
-    local blacklist = options.blacklist or {}
-    local flag = options.flag
-    local callback = options.callback or function() end
-
-    if flag then
-        library.flags[flag] = default
-    end
+                    local options = utility.table(opts)
+                    local name = options.name or "Keybind"
+                    local default = options.default
+                    local blacklist = options.blacklist or {}
+                    local flag = options.flag
+                    local callback = options.callback or function() end
 
 
-    local keyChosen = default
-
-    local keybind = utility.create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 16),
-        BackgroundTransparency = 1,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        FontSize = Enum.FontSize.Size14,
-        TextSize = 14,
-        TextColor3 = Color3.fromRGB(0, 0, 0),
-        Font = Enum.Font.SourceSans,
-        Parent = sectionContent
-    })
-    
-    local title = utility.create("TextLabel", {
-        ZIndex = 3,
-        Size = UDim2.new(0, 0, 1, 0),
-        BackgroundTransparency = 1,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        FontSize = Enum.FontSize.Size14,
-        TextSize = 13,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        Text = name,
-        Font = Enum.Font.Gotham,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = keybind
-    })
-    
-    local value = utility.create("TextLabel", {
-        ZIndex = 3,
-        Size = UDim2.new(0, 0, 1, 0),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, 0, 0, 0),
-        FontSize = Enum.FontSize.Size14,
-        TextSize = 13,
-        TextColor3 = Color3.fromRGB(180, 180, 180),
-        Text = default and (keys[default] or tostring(default):gsub("Enum%.KeyCode%.", ""):gsub("Enum%.UserInputType%.", "")) or "NONE",
-        Font = Enum.Font.Gotham,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Parent = keybind
-    })
-
-    keybind.MouseButton1Click:Connect(function()
-        value.Text = "..."
-        value.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-        local binding
-        binding = inputService.InputBegan:Connect(function(input)
-            -- Проверяем клавиши клавиатуры
-            if input.UserInputType == Enum.UserInputType.Keyboard then
-                if not table.find(blacklist, input.KeyCode) then
-                    keyChosen = input.KeyCode
-                    local keyName = keys[input.KeyCode] or tostring(input.KeyCode):gsub("Enum%.KeyCode%.", "")
-                    value.Text = keyName
-                    value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                    
                     if flag then
-                        library.flags[flag] = input.KeyCode
+                        library.flags[flag] = default
                     end
+
+
+                    local keyChosen = default
+
+
+                    local keybind = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 14,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = sectionContent
+                    })
                     
-                    binding:Disconnect()
-                else
-                    keyChosen = nil
-                    value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                    value.Text = "NONE"
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = Color3.fromRGB(255, 255, 255),
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = keybind
+                    })
+                    
+                    local value = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, 0, 0, 0),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = Color3.fromRGB(180, 180, 180),
+                        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Right,
+                        Parent = keybind
+                    })
+
+
+                    keybind.MouseButton1Click:Connect(function()
+                        value.Text = "..."
+                        value.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+
+                        local binding
+                        binding = inputService.InputBegan:Connect(function(input)
+                            local key = keys[input.KeyCode] or keys[input.UserInputType]
+                            value.Text = (keys[key] or tostring(input.KeyCode):gsub("Enum.KeyCode.", ""))
+                            value.TextColor3 = Color3.fromRGB(180, 180, 180)
+
+
+                            if input.UserInputType == Enum.UserInputType.Keyboard then
+                                if not table.find(blacklist, input.KeyCode) then
+                                    keyChosen = input.KeyCode
+
+
+                                    if flag then
+                                        library.flags[flag] = input.KeyCode
+                                    end
+
+
+                                    binding:Disconnect()
+                                else
+                                    keyChosen = nil
+                                    value.TextColor3 = Color3.fromRGB(180, 180, 180)
+                                    value.Text = "NONE"
+                                        
+                                    if flag then
+                                        library.flags[flag] = nil
+                                    end
+
+
+                                    binding:Disconnect()
+                                end
+                            else
+                                if not table.find(blacklist, input.UserInputType) then
+                                    keyChosen = input.UserInputType
+
+
+                                    if flag then
+                                        library.flags[flag] = input.UserInputType
+                                    end
+
+
+                                    binding:Disconnect()
+                                else
+                                    keyChosen = nil
+                                    value.TextColor3 = Color3.fromRGB(180, 180, 180)
+                                    value.Text = "NONE"
+                                    
+                                    if flag then
+                                        library.flags[flag] = nil
+                                    end
+
+
+                                    binding:Disconnect()
+                                end
+                            end
+                        end)
+                    end)
+
+
+                    inputService.InputBegan:Connect(function(input)
                         
-                    if flag then
-                        library.flags[flag] = nil
+                            if input.KeyCode == keyChosen then
+                                callback(keyChosen)
+                            end
+                        else
+                            if input.UserInputType == keyChosen then
+                                callback(keyChosen)
+                            end
+                        
+                    end)
+
+
+                    local keybindTypes = utility.table()
+
+
+                    function keybindTypes:Show()
+                        keybind.Visible = true
                     end
 
-                    binding:Disconnect()
-                end
-            -- Проверяем кнопки мыши
-            elseif input.UserInputType == Enum.UserInputType.MouseButton1 or 
-                   input.UserInputType == Enum.UserInputType.MouseButton2 or 
-                   input.UserInputType == Enum.UserInputType.MouseButton3 then
-                if not table.find(blacklist, input.UserInputType) then
-                    keyChosen = input.UserInputType
-                    local keyName = keys[input.UserInputType] or tostring(input.UserInputType):gsub("Enum%.UserInputType%.", "")
-                    value.Text = keyName
-                    value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                    
-                    if flag then
-                        library.flags[flag] = input.UserInputType
-                    end
-                    
-                    binding:Disconnect()
-                else
-                    keyChosen = nil
-                    value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                    value.Text = "NONE"
-                    
-                    if flag then
-                        library.flags[flag] = nil
+
+                    function keybindTypes:Hide()
+                        keybind.Visible = false
                     end
 
-                    binding:Disconnect()
+
+                    function keybindTypes:SetName(str)
+                        title.Text = str
+                    end
+
+
+                    function keybindTypes:Set(newKey)
+                        if typeof(newKey) == "EnumItem" then
+                            if not table.find(blacklist, newKey) then
+                                local key = keys[newKey]
+                                value.Text = (keys[key] or tostring(newKey):gsub("Enum.KeyCode.", ""))
+                                value.TextColor3 = Color3.fromRGB(180, 180, 180)
+            
+                                keyChosen = newKey
+            
+                                if flag then
+                                    library.flags[flag] = newKey
+                                end
+                            else
+                                keyChosen = nil
+                                value.TextColor3 = Color3.fromRGB(180, 180, 180)
+                                value.Text = "NONE"
+
+
+                                if flag then
+                                    library.flags[flag] = nil
+                                end
+                            end
+                        end
+                    end
+
+
+                    if flag then
+                        flags.keybinds[flag] = function(key)
+                            keybindTypes:Set(key)
+                        end
+                    end
+
+
+                    return keybindTypes
                 end
-            end
-        end)
-    })
-
-    inputService.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            if input.KeyCode == keyChosen then
-                callback(keyChosen)
-            end
-        elseif input.UserInputType == keyChosen then
-            callback(keyChosen)
-        end
-    end)
-
-    local keybindTypes = utility.table()
-
-    function keybindTypes:Show()
-        keybind.Visible = true
-    end
-
-    function keybindTypes:Hide()
-        keybind.Visible = false
-    end
-
-    function keybindTypes:SetName(str)
-        title.Text = str
-    end
-
-    function keybindTypes:Set(newKey)
-        if typeof(newKey) == "EnumItem" then
-            if not table.find(blacklist, newKey) then
-                local keyName = keys[newKey] or tostring(newKey):gsub("Enum%.KeyCode%.", ""):gsub("Enum%.UserInputType%.", "")
-                value.Text = keyName
-                value.TextColor3 = Color3.fromRGB(180, 180, 180)
-
-                keyChosen = newKey
-
-                if flag then
-                    library.flags[flag] = newKey
-                end
-            else
-                keyChosen = nil
-                value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                value.Text = "NONE"
-
-                if flag then
-                    library.flags[flag] = nil
-                end
-            end
-        end
-    end
-
-    if flag then
-        flags.keybinds[flag] = function(key)
-            keybindTypes:Set(key)
-        end
-    end
-
-    return keybindTypes
-end
 
 
                 function sectionTypes:ToggleKeybind(opts)

@@ -2282,8 +2282,12 @@ function initLibrary()
 
 
                     keybind.MouseButton1Click:Connect(function()
-                                    local binding
-                    binding = inputService.InputBegan:Connect(function(input)
+                        value.Text = "..."
+                        value.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+
+                        local binding
+                        binding = inputService.InputBegan:Connect(function(input)
                             local key = keys[input.KeyCode] or keys[input.UserInputType]
                             value.Text = (keys[key] or tostring(input.KeyCode):gsub("Enum.KeyCode.", ""))
                             value.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -2337,7 +2341,6 @@ function initLibrary()
                                 end
                             end
                         end)
-                    
                     end)
 
 
@@ -2624,8 +2627,7 @@ function initLibrary()
                     
                                     binding:Disconnect()
                                 end
-                            else
-                                if not table.find(blacklist, input.UserInputType) then
+                            elseif not table.find(blacklist, input.UserInputType) then
                                     keyChosen = input.UserInputType
                     
                                     if keybindFlag then
@@ -2645,7 +2647,7 @@ function initLibrary()
                                     end
                     
                                     binding:Disconnect()
-                                end
+                                
                             end
                         end)
                     end)

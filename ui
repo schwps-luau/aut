@@ -2175,7 +2175,7 @@ function initLibrary()
                 end
 
 
-            function sectionTypes:Keybind(opts)
+               function sectionTypes:Keybind(opts)
     local options = utility.table(opts)
     local name = options.name or "Keybind"
     local default = options.default
@@ -2279,16 +2279,12 @@ function initLibrary()
         Parent = keybind
     })
 
-    -- Обработчик для выбора клавиши
     keybind.MouseButton1Click:Connect(function()
         value.Text = "..."
         value.TextColor3 = Color3.fromRGB(255, 255, 255)
 
         local binding
         binding = inputService.InputBegan:Connect(function(input)
-            -- Пропускаем, если событие уже обработано GUI (например, клик по другой кнопке)
-            if input.Handled then return end
-
             local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
             value.Text = keyString
             value.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -2320,9 +2316,7 @@ function initLibrary()
         end)
     end)
 
-    -- Глобальный обработчик для нажатий клавиш (кроме колесика мыши)
     inputService.InputBegan:Connect(function(input)
-        if input.Handled then return end
         if input.UserInputType == Enum.UserInputType.Keyboard then
             if input.KeyCode == keyChosen then
                 callback(keyChosen)
@@ -2334,9 +2328,7 @@ function initLibrary()
         end
     end)
 
-    -- Отдельный обработчик для колесика мыши (InputChanged)
     inputService.InputChanged:Connect(function(input)
-        if input.Handled then return end
         if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
             callback(keyChosen)
         end
@@ -2381,7 +2373,7 @@ function initLibrary()
     return keybindTypes
 end
 
-            function sectionTypes:ToggleKeybind(opts)
+             function sectionTypes:ToggleKeybind(opts)
     local options = utility.table(opts)
     local name = options.name or "Toggle Keybind"
     local default = options.default
@@ -2545,7 +2537,6 @@ end
 
     toggleKeybind.MouseButton1Click:Connect(toggleToggle)
 
-    -- Обработчик для выбора клавиши
     value.MouseButton1Click:Connect(function()
         value.Text = "..."
         value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
@@ -2554,8 +2545,6 @@ end
     
         local binding
         binding = inputService.InputBegan:Connect(function(input)
-            if input.Handled then return end
-
             local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
             value.Text = keyString
             value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
@@ -2592,9 +2581,7 @@ end
         end)
     end)
     
-    -- Глобальный обработчик для нажатий (кроме колесика)
     inputService.InputBegan:Connect(function(input)
-        if input.Handled then return end
         if input.UserInputType == Enum.UserInputType.Keyboard then
             if input.KeyCode == keyChosen then
                 toggleToggle()
@@ -2608,9 +2595,7 @@ end
         end
     end)
 
-    -- Отдельный обработчик для колесика мыши
     inputService.InputChanged:Connect(function(input)
-        if input.Handled then return end
         if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
             toggleToggle()
             keybindCallback(keyChosen)
@@ -2671,7 +2656,6 @@ end
     
     return toggleKeybindTypes
 end
-
 
                 function sectionTypes:ColorPicker(opts)
                     local options = utility.table(opts)

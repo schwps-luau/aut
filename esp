@@ -5,7 +5,7 @@ local camera = workspace.CurrentCamera
 local cache = {}
 
 local ESP_SETTINGS = {
-    BoxOutlineColor = Color3.fromRGB(255, 255, 255),
+    BoxOutlineColor = Color3.fromRGB(0, 0, 0),
     BoxColor = Color3.fromRGB(255, 255, 255),
     NameColor = Color3.fromRGB(255, 255, 255),
     HealthOutlineColor = Color3.fromRGB(0, 0, 0),
@@ -160,6 +160,15 @@ local function updateEsp()
     
                             local boxLines = esp.boxLines
     
+                            -- Update colors for all lines based on current settings
+                            for i = 1, 8 do
+                                boxLines[i].Color = ESP_SETTINGS.BoxColor
+                            end
+                            for i = 9, 16 do
+                                boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
+                            end
+    
+                            -- Update positions
                             boxLines[1].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y - lineT)
                             boxLines[1].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y - lineT)
                             boxLines[2].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y - lineT)
@@ -176,10 +185,6 @@ local function updateEsp()
                             boxLines[7].To = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + boxSize.Y + lineT)
                             boxLines[8].From = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + boxSize.Y - lineH)
                             boxLines[8].To = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + boxSize.Y + lineT)
-    
-                            for i = 9, 16 do
-                                boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
-                            end
     
                             boxLines[9].From = Vector2.new(boxPosition.X, boxPosition.Y)
                             boxLines[9].To = Vector2.new(boxPosition.X, boxPosition.Y + lineH)

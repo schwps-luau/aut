@@ -11,7 +11,6 @@ local ESP_SETTINGS = {
     HealthOutlineColor = Color3.new(0, 0, 0),
     HealthHighColor = Color3.new(0, 1, 0),
     HealthLowColor = Color3.new(1, 0, 0),
-    CharSize = Vector2.new(4, 6),
     Teamcheck = false,
     WallCheck = false,
     Enabled = false,
@@ -93,16 +92,18 @@ local function removeEsp(player)
     local esp = cache[player]
     if not esp then return end
 
-    for _, drawing in pairs(esp) do
-        pcall(function()
-            if drawing and type(drawing) ~= "table" then
-                drawing:Remove()
-            end
-        end)
-    end
+    if esp.tracer then pcall(function() esp.tracer:Remove() end) end
+    if esp.boxOutline then pcall(function() esp.boxOutline:Remove() end) end
+    if esp.box then pcall(function() esp.box:Remove() end) end
+    if esp.name then pcall(function() esp.name:Remove() end) end
+    if esp.healthOutline then pcall(function() esp.healthOutline:Remove() end) end
+    if esp.health then pcall(function() esp.health:Remove() end) end
+    if esp.distance then pcall(function() esp.distance:Remove() end) end
     
-    for _, line in ipairs(esp.boxLines) do
-        pcall(function() line:Remove() end)
+    if esp.boxLines then
+        for _, line in ipairs(esp.boxLines) do
+            pcall(function() line:Remove() end)
+        end
     end
 
     cache[player] = nil
@@ -286,7 +287,9 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
-    pcall(function() removeEsp(player) end)
+    pcall(function() 
+        removeEsp(player) 
+    end)
 end)
 
 RunService.RenderStepped:Connect(updateEsp)

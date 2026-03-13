@@ -1,40 +1,48 @@
+
 --[[
 Yun Founders: flash#9999, loris#9547, worldwide#0001, Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
+
+old yun menu, reworked w new funcs
+added mobile support to color picker sliders drag etc.
 --]]
 
 function initLibrary()
     local folderName = "config holder"
     local gameConfigFolder = "cfgs"
 
-    if not isfolder(folderName) then
-        makefolder(folderName)
-    end
 
     if not isfolder(gameConfigFolder) then
         makefolder(gameConfigFolder)
     end
+
 
     local inputService = game:GetService("UserInputService")
     local tweenService = game:GetService("TweenService")
     local runService = game:GetService("RunService")
     local coreGui = game:GetService("CoreGui")
 
+
     local utility = {}
+
 
     function utility.create(class, properties)
         properties = properties or {}
 
+
         local obj = Instance.new(class)
+
 
         local forcedProperties = {
             AutoButtonColor = false
         }
 
+
         for prop, v in next, properties do
             obj[prop] = v
         end
+
 
         for prop, v in next, forcedProperties do
             pcall(function()
@@ -45,33 +53,41 @@ function initLibrary()
         return obj
     end
 
+
     function utility.change_color(color, amount)
         local r = math.clamp(math.floor(color.r * 255) + amount, 0, 255)
         local g = math.clamp(math.floor(color.g * 255) + amount, 0, 255)
         local b = math.clamp(math.floor(color.b * 255) + amount, 0, 255)
 
+
         return Color3.fromRGB(r, g, b)
     end
+
 
     function utility.get_rgb(color)
         local r = math.floor(color.r * 255)
         local g = math.floor(color.g * 255)
         local b = math.floor(color.b * 255)
 
+
         return r, g, b
     end
+
 
     function utility.tween(obj, info, properties, callback)
         local anim = tweenService:Create(obj, TweenInfo.new(unpack(info)), properties)
         anim:Play()
+
 
         if callback then
             anim.Completed:Connect(callback)
         end
     end
 
+
     function utility.drag(obj, dragSpeed)
         local start, objPosition, dragging
+
 
         obj.InputBegan:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
@@ -81,11 +97,13 @@ function initLibrary()
             end
         end)
 
+
         obj.InputEnded:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
                 dragging = false
             end
         end)
+
 
         inputService.InputChanged:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
@@ -96,26 +114,32 @@ function initLibrary()
         end)
     end
 
+
     function utility.get_center(sizeX, sizeY)
         return UDim2.new(0.5, -(sizeX / 2), 0.5, -(sizeY / 2))
     end
+
 
     function utility.hex_to_rgb(hex)
         return Color3.fromRGB(tonumber("0x" .. hex:sub(2, 3)), tonumber("0x" .. hex:sub(4, 5)), tonumber("0x"..hex:sub(6, 7)))
     end
 
+
     function utility.rgb_to_hex(color)
         return string.format("#%02X%02X%02X", math.clamp(color.R * 255, 0, 255), math.clamp(color.G * 255, 0, 255), math.clamp(color.B * 255, 0, 255))
     end
+
 
     function utility.table(tbl)
         local oldtbl = tbl or {}
         local newtbl = {}
         local formattedtbl = {}
 
+
         for option, v in next, oldtbl do
             newtbl[option:lower()] = v
         end
+
 
         setmetatable(formattedtbl, {
             __newindex = function(t, k, v)
@@ -126,8 +150,10 @@ function initLibrary()
             end
         })
 
+
         return formattedtbl
     end
+
 
     local library = utility.table{
         flags = {}, 
@@ -137,7 +163,9 @@ function initLibrary()
         dragSpeed = 0.25
     }    
 
+
     local coloredGradients = {}
+
 
     function library:SetColor(color)
      library.color = color
@@ -148,6 +176,7 @@ function initLibrary()
    
 
     local gui = utility.create("ScreenGui")
+
 
     inputService.InputBegan:Connect(function(input)
         if input.KeyCode == library.keybind then
@@ -160,127 +189,66 @@ function initLibrary()
         syn.protect_gui(gui)
     end
 
+
     gui.Parent = coreGui
+
 
     local flags = {toggles = {}, boxes = {}, sliders = {}, dropdowns = {}, multidropdowns = {}, keybinds = {}, colorpickers = {}}
 
-    function library:GetConfigsList()
-        local configs = {}
-        if isfolder(gameConfigFolder) then
-            local files = listfiles(gameConfigFolder)
-            for _, file in ipairs(files) do
-                if file:sub(-4) == ".cfg" then
-                    local name = file:gsub(gameConfigFolder .. "\\", ""):gsub(".cfg", "")
-                    table.insert(configs, name)
-                end
-            end
-        end
-        return configs
-    end
-
-    function library:GetConfigsFromFolder()
-        local configs = {}
-        if isfolder(folderName) then
-            local files = listfiles(folderName)
-            for _, file in ipairs(files) do
-                if file:sub(-4) == ".cfg" then
-                    local name = file:gsub(folderName .. "\\", ""):gsub(".cfg", "")
-                    table.insert(configs, name)
-                end
-            end
-        end
-        return configs
-    end
-
-    function library:ViewConfig(file, source)
-        local folder = source or gameConfigFolder
-        local path = folder .. "/" .. file .. ".cfg"
-        
-        if isfile(path) then
-            local content = readfile(path)
-            local success, configData = pcall(loadstring, "return " .. content)
-            if success then
-                return configData
-            end
-        end
-        return nil
-    end
-
-    function library:ViewAllConfigs()
-        local allConfigs = {}
-        
-        local cfgs = library:GetConfigsList()
-        for _, cfg in ipairs(cfgs) do
-            allConfigs[cfg] = library:ViewConfig(cfg, gameConfigFolder)
-        end
-        
-        local folderConfigs = library:GetConfigsFromFolder()
-        for _, cfg in ipairs(folderConfigs) do
-            allConfigs[cfg] = library:ViewConfig(cfg, folderName)
-        end
-        
-        return allConfigs
-    end
 
     function library:LoadConfig(file)
         local str = readfile(gameConfigFolder .. "/" .. file .. ".cfg")
-        local success, tbl = pcall(loadstring, "return " .. str)
+        local tbl = loadstring(str)()
         
-        if success and tbl then
-            for flag, value in next, tbl.toggles do
-                if flags.toggles[flag] then
-                    flags.toggles[flag](value)
-                end
-            end
+        for flag, value in next, tbl.toggles do
+            flags.toggles[flag](value)
+        end
 
-            for flag, value in next, tbl.boxes do
-                if flags.boxes[flag] then
-                    flags.boxes[flag](value)
-                end
-            end
 
-            for flag, value in next, tbl.sliders do
-                if flags.sliders[flag] then
-                    flags.sliders[flag](value)
-                end
-            end
+        for flag, value in next, tbl.boxes do
+            flags.boxes[flag](value)
+        end
 
-            for flag, value in next, tbl.dropdowns do
-                if flags.dropdowns[flag] then
-                    flags.dropdowns[flag](value)
-                end
-            end
 
-            for flag, value in next, tbl.multidropdowns do
-                if flags.multidropdowns[flag] then
-                    flags.multidropdowns[flag](value)
-                end
-            end
+        for flag, value in next, tbl.sliders do
+            flags.sliders[flag](value)
+        end
 
-            for flag, value in next, tbl.keybinds do
-                if flags.keybinds[flag] then
-                    flags.keybinds[flag](value)
-                end
-            end
 
-            for flag, value in next, tbl.colorpickers do
-                if flags.colorpickers[flag] then
-                    flags.colorpickers[flag](value)
-                end
-            end
+        for flag, value in next, tbl.dropdowns do
+            flags.dropdowns[flag](value)
+        end
+
+
+        for flag, value in next, tbl.multidropdowns do
+            flags.multidropdowns[flag](value)
+        end
+
+
+        for flag, value in next, tbl.keybinds do
+            flags.keybinds[flag](value)
+        end
+
+
+        for flag, value in next, tbl.colorpickers do
+            flags.colorpickers[flag](value)
         end
     end
+
 
     function library:SaveConfig(name)
         local configstr = "{toggles={"
         local count = 0
+
 
         for flag, _ in next, flags.toggles do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},boxes={"
+
 
         count = 0
         for flag, _ in next, flags.boxes do
@@ -288,7 +256,9 @@ function initLibrary()
             configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},sliders={"
+
 
         count = 0
         for flag, _ in next, flags.sliders do
@@ -296,7 +266,9 @@ function initLibrary()
             configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},dropdowns={"
+
 
         count = 0
         for flag, _ in next, flags.dropdowns do
@@ -304,18 +276,19 @@ function initLibrary()
             configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},multidropdowns={"
+
 
         count = 0
         for flag, _ in next, flags.multidropdowns do
             count = count + 1
-            local value = library.flags[flag]
-            if type(value) == "table" then
-                configstr = configstr .. "['" .. flag .. "']={'" .. table.concat(value, "','") .. "'},"
-            end
+            configstr = configstr .. "['" .. flag .. "']={'" .. table.concat(library.flags[flag], "','") .. "'},"
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},keybinds={"
+
 
         count = 0
         for flag, _ in next, flags.keybinds do
@@ -323,7 +296,9 @@ function initLibrary()
             configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},colorpickers={"
+
 
         count = 0
         for flag, _ in next, flags.colorpickers do
@@ -331,10 +306,54 @@ function initLibrary()
             configstr = configstr .. "['" .. flag .. "']=Color3.new(" .. tostring(library.flags[flag]) .. "),"
         end
 
+
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "}}"
+
 
         writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
     end
+
+    function library:GetConfigsTable()
+        local configsTable = {
+            cfgs = {},
+            configHolder = {}
+        }
+        
+        if isfolder("cfgs") then
+            local files = listfiles("cfgs")
+            for _, file in ipairs(files) do
+                if file:sub(-4) == ".cfg" then
+                    local name = file:gsub("cfgs\\", ""):gsub(".cfg", "")
+                    local success, data = pcall(function()
+                        return loadstring("return " .. readfile(file))()
+                    end)
+                    
+                    if success and data then
+                        configsTable.cfgs[name] = data
+                    end
+                end
+            end
+        end
+        
+        if isfolder("config holder") then
+            local files = listfiles("config holder")
+            for _, file in ipairs(files) do
+                if file:sub(-4) == ".cfg" then
+                    local name = file:gsub("config holder\\", ""):gsub(".cfg", "")
+                    local success, data = pcall(function()
+                        return loadstring("return " .. readfile(file))()
+                    end)
+                    
+                    if success and data then
+                        configsTable.configHolder[name] = data
+                    end
+                end
+            end
+        end
+        
+        return configsTable
+    end
+
 
     function library:Load(opts)
         local options = utility.table(opts)
@@ -344,7 +363,9 @@ function initLibrary()
         local color = options.color or Color3.fromRGB(255, 255, 255)
         local dragSpeed = options.dragSpeed or 0
 
+
         library.color = color
+
 
         local topbar = utility.create("Frame", {
             ZIndex = 2,
@@ -355,7 +376,9 @@ function initLibrary()
             Parent = gui
         })
 
+
         utility.drag(topbar, dragSpeed)
+
 
         utility.create("TextLabel", {
             ZIndex = 3,
@@ -378,6 +401,7 @@ function initLibrary()
             Parent = topbar
         })
 
+
         local tabs = utility.create("Frame", {
             ZIndex = 2,
             Size = UDim2.new(1, -8, 1, -64),
@@ -396,11 +420,13 @@ function initLibrary()
             Parent = main
         })
 
+
         local tabTogglesHolder = utility.create("Frame", {
             Size = UDim2.new(1, -12, 1, 0),
             Position = UDim2.new(0, 6, 0, 0),
             Parent = tabToggles
         })
+
 
         utility.create("UIListLayout", {
             FillDirection = Enum.FillDirection.Horizontal,
@@ -409,21 +435,27 @@ function initLibrary()
             Parent = tabTogglesHolder
         })
 
+
         local windowTypes = utility.table({count = 0})
+
 
         function windowTypes:Show()
             gui.Enabled = true
         end
 
+
         function windowTypes:Hide()
             gui.Enabled = false
         end
+
 
         function windowTypes:Tab(name)
             windowTypes.count = windowTypes.count + 1
             name = name or "Tab"
 
+
             local toggled = windowTypes.count == 1
+
 
             local tabToggle = utility.create("TextButton", {
                 ZIndex = 3,
@@ -438,6 +470,7 @@ function initLibrary()
             })
             
             tabToggle.Size = UDim2.new(0, tabToggle.TextBounds.X + 12, 1, 0)
+
 
             local tab = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 1, 0),
@@ -459,15 +492,18 @@ function initLibrary()
                 Parent = tab
             })
 
+
             local column1List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column1
             })
 
+
             column1List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
             end)
+
 
             local column2 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 1, 0),
@@ -483,15 +519,18 @@ function initLibrary()
                 Parent = tab
             })
 
+
             local column2List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column2
             })
 
+
             column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
             end)
+
 
             local function openTab()
                 for _, obj in next, tabTogglesHolder:GetChildren() do
@@ -500,18 +539,24 @@ function initLibrary()
                     end
                 end
 
+
                 tabToggle.Font = Enum.Font.GothamSemibold
+
 
                 for _, obj in next, tabs:GetChildren() do
                     obj.Visible = false
                 end
 
+
                 tab.Visible = true
             end
 
+
             tabToggle.MouseButton1Click:Connect(openTab)
 
+
             local tabTypes = utility.table()
+
 
             function tabTypes:Open()
                 openTab()
@@ -548,6 +593,7 @@ function initLibrary()
                     Parent = section
                 })
 
+
                 utility.create("TextLabel", {
                     ZIndex = 3,
                     Size = UDim2.new(0, 0, 1, 0),
@@ -563,6 +609,7 @@ function initLibrary()
                     Parent = sectionTopbar
                 })
 
+
                 local sectionContent = utility.create("Frame", {
                     Size = UDim2.new(1, -12, 1, -36),
                     Position = UDim2.new(0, 6, 0, 30),
@@ -576,19 +623,24 @@ function initLibrary()
                     Parent = sectionContent
                 })
 
+
                 sectionContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     sectionHolder.Size = UDim2.new(1, 0, 0, sectionContentList.AbsoluteContentSize.Y + 38)
                 end)
 
+
                 local sectionTypes = utility.table()
+
 
                 function sectionTypes:Show()
                     sectionHolder.Visible = true
                 end
 
+
                 function sectionTypes:Hide()
                     sectionHolder.Visible = false
                 end
+
 
                 function sectionTypes:Label(text)
                     local label = utility.create("TextLabel", {
@@ -606,22 +658,28 @@ function initLibrary()
                         Parent = sectionContent
                     })
 
+
                     local labelTypes = utility.table()
+
 
                     function labelTypes:Show()
                         label.Visible = true
                     end
 
+
                     function labelTypes:Hide()
                         label.Visible = false
                     end
+
 
                     function labelTypes:Set(str)
                         label.Text = str
                     end
 
+
                     return labelTypes
                 end
+
 
                 function sectionTypes:SpecialLabel(text)
                     local specialLabel = utility.create("TextLabel", {
@@ -637,6 +695,7 @@ function initLibrary()
                         Font = Enum.Font.Gotham,
                         Parent = sectionContent
                     })
+
 
                     utility.create("Frame", {
                         ZIndex = 3,
@@ -656,32 +715,40 @@ function initLibrary()
                         Parent = specialLabel
                     })
 
+
                     specialLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
                         lineBlock.Size = UDim2.new(0, specialLabel.TextBounds.X + 6, 0, 1)
                         lineBlock.Position = UDim2.new(0.5, -((specialLabel.TextBounds.X + 6) / 2), 0.5, 1)
                     end)
 
+
                     local specialLabelTypes = utility.table()
+
 
                     function specialLabelTypes:Show()
                         specialLabel.Visible = true
                     end
 
+
                     function specialLabelTypes:Hide()
                         specialLabel.Visible = false
                     end
+
 
                     function specialLabelTypes:Set(str)
                         specialLabel.Text = str
                     end
 
+
                     return specialLabelTypes
                 end
+
 
                 function sectionTypes:Button(opts)
                     local options = utility.table(opts)
                     local name = options.name
                     local callback = options.callback
+
 
                     local button = utility.create("TextButton", {
                         ZIndex = 3,
@@ -717,11 +784,14 @@ function initLibrary()
                         Parent = button
                     })
 
+
                     local buttonTypes = utility.table()
+
 
                     button.MouseButton1Click:Connect(function()
                         callback(buttonTypes)
                     end)
+
 
                     function buttonTypes:Show()
                         button.Visible = true
@@ -735,6 +805,7 @@ function initLibrary()
                         title.Text = str
                     end
 
+
                     function buttonTypes:SetCallback(func)
                         callback = func
                     end
@@ -742,19 +813,24 @@ function initLibrary()
                     return buttonTypes
                 end
 
+
                 function sectionTypes:Toggle(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Toggle"
                     local flag = options.flag 
                     local callback = options.callback or function() end
 
+
                     local toggled = false
+
 
                     if flag then
                         library.flags[flag] = toggled
                     end
 
+
                     callback(toggled)
+
 
                     local toggle = utility.create("TextButton", {
                         Size = UDim2.new(1, 0, 0, 16),
@@ -772,6 +848,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = toggle
                     })
+
 
                     local iconGradient = utility.create("UIGradient", {
                         Rotation = 90,
@@ -797,14 +874,17 @@ function initLibrary()
                         Parent = icon
                     })
 
+
                     local function toggleToggle()
                         toggled = not toggled
+
 
                         if toggled then
                             table.insert(coloredGradients, iconGradient)
                         else
                             table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
                         end
+
 
                         local textColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                         local gradientColor
@@ -820,19 +900,25 @@ function initLibrary()
                             }
                         end
 
+
                         iconGradient.Color = gradientColor
                         title.TextColor3 = textColor
+
 
                         if flag then
                             library.flags[flag] = toggled
                         end
 
+
                         callback(toggled)
                     end
 
+
                     toggle.MouseButton1Click:Connect(toggleToggle)
 
+
                     local toggleTypes = utility.table()
+
 
                     function toggleTypes:Show()
                         toggle.Visible = true
@@ -846,11 +932,13 @@ function initLibrary()
                         title.Text = str
                     end
 
+
                     function toggleTypes:Toggle(bool)
                         if toggled ~= bool then
                             toggleToggle()
                         end
                     end
+
 
                     if flag then
                         flags.toggles[flag] = function(bool)
@@ -860,8 +948,10 @@ function initLibrary()
                         end
                     end
 
+
                     return toggleTypes
                 end
+
 
                 function sectionTypes:Box(opts)
                     local options = utility.table(opts)
@@ -872,10 +962,13 @@ function initLibrary()
                     local flag = options.flag
                     local callback = options.callback or function() end
 
+
                     boxType = boxType:lower()
+
 
                     if boxType == "number" then
                         default = default:gsub("%D+", "")
+
 
                         if flag then
                             library.flags[flag] = tonumber(default)
@@ -887,8 +980,10 @@ function initLibrary()
                             library.flags[flag] = default
                         end
 
+
                         callback(default)
                     end
+
 
                     local boxHolder = utility.create("Frame", {
                         Size = UDim2.new(1, 0, 0, 36),
@@ -913,6 +1008,7 @@ function initLibrary()
                         Parent = boxHolder
                     })
 
+
                     local bg = utility.create("Frame", {
                         ZIndex = 3,
                         Size = UDim2.new(1, 0, 1, 0),
@@ -921,6 +1017,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = box
                     })
+
 
                     utility.create("UIGradient", {
                         Rotation = 90,
@@ -942,13 +1039,16 @@ function initLibrary()
                         Parent = boxHolder
                     })
 
+
                     box:GetPropertyChangedSignal("Text"):Connect(function()
                         if boxType == "number" then
                             box.Text = box.Text:gsub("%D+", "")
                         end
                     end)
 
+
                     local boxTypes = utility.table()
+
 
                     function boxTypes:Show()
                         boxHolder.Visible = true
@@ -962,34 +1062,42 @@ function initLibrary()
                         title.Text = str
                     end
 
+
                     function boxTypes:SetPlaceholder(str)
                         box.PlaceholderText = str
                     end
+
 
                     function boxTypes:Set(str)
                         if boxType == "string" then
                             box.Text = str
 
+
                             if flag then
                                 library.flags[flag] = str
                             end
+
 
                             callback(str)
                         else
                             str = str:gsub("%D+", "")
                             box.Text = str
 
+
                             if flag then
                                 library.flags[flag] = str
                             end
+
 
                             callback(tonumber(str))
                         end
                     end
 
+
                     box.FocusLost:Connect(function()
                         boxTypes:Set(box.Text)
                     end)
+
 
                     function boxTypes:SetType(str)
                         if str:lower() == "number" or str:lower() == "string" then
@@ -997,31 +1105,38 @@ function initLibrary()
                         end
                     end
 
+
                     if flag then
                         flags.boxes[flag] = function(str)
                             if boxType == "string" then
                                 box.Text = str
 
+
                                 if flag then
                                     library.flags[flag] = str
                                 end
+
 
                                 callback(str)
                             else
                                 str = str:gsub("%D+", "")
                                 box.Text = str
 
+
                                 if flag then
                                     library.flags[flag] = str
                                 end
+
 
                                 callback(tonumber(str))
                             end
                         end
                     end
 
+
                     return boxTypes
                 end
+
 
                 function sectionTypes:Slider(opts)
                     local options = utility.table(opts)
@@ -1033,17 +1148,23 @@ function initLibrary()
                     local flag = options.flag
                     local callback = options.callback or function() end
 
+
                     decimals = math.floor(10^decimals)
+
 
                     if flag then
                         library.flags[flag] = default
                     end
 
+
                     callback(default)
+
 
                     local value = default
 
+
                     local sliding = false
+
 
                     local slider = utility.create("Frame", {
                         ZIndex = 3,
@@ -1071,6 +1192,7 @@ function initLibrary()
                         Parent = fill
                     })
 
+
                     table.insert(coloredGradients, fillGradient)
                     
                     utility.create("UIGradient", {
@@ -1081,6 +1203,7 @@ function initLibrary()
                         },
                         Parent = slider
                     })
+
 
                     local title = utility.create("TextLabel", {
                         ZIndex = 5,
@@ -1095,19 +1218,24 @@ function initLibrary()
                         Parent = slider
                     })
 
+
                     local function slide(input)
                         local sizeX = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
                         fill.Size = UDim2.new(sizeX, 0, 1, 0)
 
+
                         value = math.floor((((max - min) * sizeX) + min) * decimals) / decimals
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+
 
                         if flag then 
                             library.flags[flag] = value
                         end
 
+
                         callback(value)
                     end
+
 
                     slider.InputBegan:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
@@ -1116,11 +1244,13 @@ function initLibrary()
                         end
                     end)
 
+
                     slider.InputEnded:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
                             sliding = false
                         end
                     end)
+
 
                     inputService.InputChanged:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
@@ -1130,20 +1260,25 @@ function initLibrary()
                         end
                     end)
 
+
                     local sliderTypes = utility.table()
+
 
                     function sliderTypes:Show()
                         slider.Visible = true
                     end
 
+
                     function sliderTypes:Hide()
                         slider.Visible = false
                     end
+
 
                     function sliderTypes:SetValueText(str)
                         valueText = str
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
                     end
+
 
                     function sliderTypes:Set(num)
                         num = math.floor(math.clamp(num, min, max) * decimals) / decimals
@@ -1154,32 +1289,40 @@ function initLibrary()
                             library.flags[flag] = value
                         end
 
+
                         callback(value)
                     end
+
 
                     function sliderTypes:SetMin(num)
                         min = num
                         value = math.floor(math.clamp(value, min, max) * decimals) / decimals
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
 
+
                         if flag then 
                             library.flags[flag] = value
                         end
 
+
                         callback(value)
                     end
+
 
                     function sliderTypes:SetMax(num)
                         max = num
                         value = math.floor(math.clamp(value, min, max) * decimals) / decimals
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
 
+
                         if flag then 
                             library.flags[flag] = value
                         end
 
+
                         callback(value)
                     end
+
 
                     if flag then
                         flags.sliders[flag] = function(num)
@@ -1187,8 +1330,10 @@ function initLibrary()
                         end
                     end
 
+
                     return sliderTypes
                 end
+
 
                 function sectionTypes:ToggleSlider(opts)
                     local options = utility.table(opts)
@@ -1203,23 +1348,30 @@ function initLibrary()
                     local toggleCallback = options.toggleCallback or function() end
                     local sliderCallback = options.sliderCallback or function() end
 
+
                     decimals = math.floor(10^decimals)
+
 
                     local value = default
                     local toggled = false
                     local sliding = false
 
+
                     if sliderFlag then
                         library.flags[sliderFlag] = default
                     end
 
+
                     sliderCallback(default)
+
 
                     if toggleFlag then
                         library.flags[toggleFlag] = toggled
                     end
 
+
                     toggleCallback(toggled)
+
 
                     local toggleSliderHolder = utility.create("Frame", {
                         Size = UDim2.new(1, 0, 0, 35),
@@ -1254,6 +1406,7 @@ function initLibrary()
                         Parent = fill
                     })
 
+
                     table.insert(coloredGradients, fillGradient)
                     
                     utility.create("UIGradient", {
@@ -1274,6 +1427,7 @@ function initLibrary()
                         Font = Enum.Font.Gotham,
                         Parent = slider
                     })
+
 
                     local toggle = utility.create("TextButton", {
                         Size = UDim2.new(1, 0, 0, 16),
@@ -1320,14 +1474,17 @@ function initLibrary()
                         Parent = icon
                     })
 
+
                     local function toggleToggle()
                         toggled = not toggled
+
 
                         if toggled then
                             table.insert(coloredGradients, iconGradient)
                         else
                             table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
                         end
+
 
                         local textColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                         local gradientColor
@@ -1343,31 +1500,40 @@ function initLibrary()
                             }
                         end
 
+
                         iconGradient.Color = gradientColor
                         toggleTitle.TextColor3 = textColor
+
 
                         if toggleFlag then
                             library.flags[toggleFlag] = toggled
                         end
 
+
                         toggleCallback(toggled)
                     end
 
+
                     toggle.MouseButton1Click:Connect(toggleToggle)
+
 
                     local function slide(input)
                         local sizeX = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
                         fill.Size = UDim2.new(sizeX, 0, 1, 0)
 
+
                         value = math.floor((((max - min) * sizeX) + min) * decimals) / decimals
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+
 
                         if sliderFlag then 
                             library.flags[sliderFlag] = value
                         end
 
+
                         sliderCallback(value)
                     end
+
 
                     slider.InputBegan:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
@@ -1376,11 +1542,13 @@ function initLibrary()
                         end
                     end)
 
+
                     slider.InputEnded:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
                             sliding = false
                         end
                     end)
+
 
                     inputService.InputChanged:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
@@ -1390,20 +1558,25 @@ function initLibrary()
                         end
                     end)
 
+
                     local toggleSliderTypes = utility.table()
+
 
                     function toggleSliderTypes:Show()
                         toggleSliderHolder.Visible = true
                     end
 
+
                     function toggleSliderTypes:Hide()
                         toggleSliderHolder.Visible = false
                     end
+
 
                     function toggleSliderTypes:SetValueText(str)
                         valueText = str
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
                     end
+
 
                     function toggleSliderTypes:Set(num)
                         num = math.floor(math.clamp(num, min, max) * decimals) / decimals
@@ -1415,8 +1588,10 @@ function initLibrary()
                             library.flags[sliderFlag] = value
                         end
 
+
                         sliderCallback(value)
                     end
+
 
                     function toggleSliderTypes:SetMin(num)
                         min = num
@@ -1424,12 +1599,15 @@ function initLibrary()
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
 
+
                         if sliderFlag then 
                             library.flags[sliderFlag] = value
                         end
 
+
                         sliderCallback(value)
                     end
+
 
                     function toggleSliderTypes:SetMax(num)
                         max = num
@@ -1437,18 +1615,22 @@ function initLibrary()
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
 
+
                         if sliderFlag then 
                             library.flags[sliderFlag] = value
                         end
 
+
                         sliderCallback(value)
                     end
+
 
                     function toggleSliderTypes:Toggle(bool)
                         if toggled ~= bool then
                             toggleToggle()
                         end
                     end
+
 
                     if toggleFlag then
                         flags.toggles[toggleFlag] = function(bool)
@@ -1458,14 +1640,17 @@ function initLibrary()
                         end
                     end
 
+
                     if sliderFlag then
                         flags.sliders[sliderFlag] = function(num)
                             toggleSliderTypes:Set(num)
                         end
                     end
 
+
                     return toggleSliderTypes
                 end
+
 
                 function sectionTypes:Dropdown(opts)
                     local options = utility.table(opts)
@@ -1476,15 +1661,21 @@ function initLibrary()
                     local flag = options.flag
                     local callback = options.callback or function() end
 
+
+
+
                     if flag then
                         library.flags[flag] = default
                     end
                     callback(default)
 
+
                     local opened = false
+
 
                     local current = default
                     local chosen = {}
+
 
                     local dropdownHolder = utility.create("Frame", {
                         Size = UDim2.new(1, 0, 0, 36),
@@ -1567,14 +1758,17 @@ function initLibrary()
                         Parent = contentFrame
                     })
 
+
                     local contentList = utility.create("UIListLayout", {
                         SortOrder = Enum.SortOrder.LayoutOrder,
                         Parent = contentHolder
                     })
 
+
                     contentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                         contentFrame.Size = UDim2.new(1, 0, 0, contentList.AbsoluteContentSize.Y + 4)
                     end)
+
 
                     local function openDropdown()
                         opened = not opened
@@ -1582,6 +1776,7 @@ function initLibrary()
                         contentFrame.Visible = opened
                         dropdownHolder.Size = UDim2.new(1, 0, 0, opened and dropdownHolder.AbsoluteSize.Y + contentFrame.AbsoluteSize.Y + 3 or 36)
                     end
+
 
                     local function selectObj(obj, padding, bool)
                         for i, v in next, contentHolder:GetChildren() do
@@ -1591,10 +1786,12 @@ function initLibrary()
                             end
                         end
 
+
                         obj.Font = bool and Enum.Font.GothamSemibold or Enum.Font.Gotham
                         padding.PaddingLeft = bool and UDim.new(0, 10) or UDim.new(0, 6)
                         value.TextColor3 = bool and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                     end
+
 
                     local function multiSelectObj(obj, padding, bool)
                         obj.Font = bool and Enum.Font.GothamSemibold or Enum.Font.Gotham
@@ -1602,6 +1799,7 @@ function initLibrary()
                     end
                     
                     open.MouseButton1Click:Connect(openDropdown)
+
 
                     for _, opt in next, content do
                         local option = utility.create("TextButton", {
@@ -1624,6 +1822,7 @@ function initLibrary()
                             Parent = option
                         })
 
+
                         option.MouseButton1Click:Connect(function()
                             if not multiChoice then
                                 if current ~= opt then
@@ -1635,21 +1834,25 @@ function initLibrary()
                                         library.flags[flag] = opt
                                     end
 
+
                                     callback(opt)
                                 else
                                     current = nil
                                     selectObj(option, optionPadding, false)
                                     value.Text = "NONE"
 
+
                                     if flag then
                                         library.flags[flag] = nil
                                     end
+
 
                                     callback(nil)
                                 end
                             else
                                 if not table.find(chosen, opt) then
                                     table.insert(chosen, opt)
+
 
                                     multiSelectObj(option, optionPadding, true)
                                     value.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1659,17 +1862,21 @@ function initLibrary()
                                         library.flags[flag] = chosen
                                     end
 
+
                                     callback(chosen)
                                 else
                                     table.remove(chosen, table.find(chosen, opt))
+
 
                                     multiSelectObj(option, optionPadding, false)
                                     value.TextColor3 = #chosen > 0 and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                                     value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
 
+
                                     if flag then
                                         library.flags[flag] = chosen
                                     end
+
 
                                     callback(chosen)
                                 end
@@ -1677,19 +1884,24 @@ function initLibrary()
                         end)
                     end
 
+
                     local dropdownTypes = utility.table()
+
 
                     function dropdownTypes:Show()
                         dropdownHolder.Visible = true
                     end
 
+
                     function dropdownTypes:Hide()
                         dropdownHolder.Visible = false
                     end
 
+
                     function dropdownTypes:SetName(str)
                         title.Text = str
                     end
+
 
                     function dropdownTypes:Set(opt)
                         if opt then
@@ -1704,9 +1916,11 @@ function initLibrary()
                                             library.flags[flag] = opt
                                         end
 
+
                                         callback(opt)
                                     else
                                         table.insert(chosen, opt)
+
 
                                         multiSelectObj(contentHolder:FindFirstChild(opt), contentHolder:FindFirstChild(opt):FindFirstChildOfClass("UIPadding"), true)
                                         value.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1716,6 +1930,7 @@ function initLibrary()
                                             library.flags[flag] = chosen
                                         end
 
+
                                         callback(chosen)
                                     end
                                 end
@@ -1723,9 +1938,11 @@ function initLibrary()
                                 table.clear(chosen)
                                 chosen = opt
 
+
                                 for i, v in next, opt do
                                     if contentHolder:FindFirstChild(v) then
                                         multiSelectObj(contentHolder:FindFirstChild(v), contentHolder:FindFirstChild(v):FindFirstChildOfClass("UIPadding"), true)
+
 
                                         value.TextColor3 = Color3.fromRGB(255, 255, 255)
                                         value.Text = table.concat(chosen, ", ")
@@ -1736,6 +1953,7 @@ function initLibrary()
                             if not multiChoice then
                                 current = nil
 
+
                                 for i, v in next, contentHolder:GetChildren() do
                                     if v:IsA("TextButton") then
                                         v:FindFirstChildOfClass("UIPadding").PaddingLeft = UDim.new(0, 6)
@@ -1743,16 +1961,20 @@ function initLibrary()
                                     end
                                 end
 
+
                                 value.Text = "NONE"
                                 value.TextColor3 = Color3.fromRGB(180, 180, 180)
+
 
                                 if flag then
                                     library.flags[flag] = nil
                                 end
 
+
                                 callback(nil)
                             elseif multiChoice then
                                 table.clear(chosen)
+
 
                                 for i, v in next, contentHolder:GetChildren() do
                                     if v:IsA("TextButton") then
@@ -1761,20 +1983,25 @@ function initLibrary()
                                     end
                                 end
 
+
                                 value.TextColor3 = Color3.fromRGB(180, 180, 180)
                                 value.Text = "NONE"
+
 
                                 if flag then
                                     library.flags[flag] = chosen
                                 end
+
 
                                 callback(chosen)
                             end
                         end
                     end
 
+
                     function dropdownTypes:Add(opt)
                         table.insert(content, opt)
+
 
                         local option = utility.create("TextButton", {
                             Name = opt,
@@ -1796,6 +2023,7 @@ function initLibrary()
                             Parent = option
                         })
 
+
                         option.MouseButton1Click:Connect(function()
                             if not multiChoice then
                                 if current ~= opt then
@@ -1807,21 +2035,25 @@ function initLibrary()
                                         library.flags[flag] = opt
                                     end
 
+
                                     callback(opt)
                                 else
                                     current = nil
                                     selectObj(option, optionPadding, false)
                                     value.Text = "NONE"
 
+
                                     if flag then
                                         library.flags[flag] = nil
                                     end
+
 
                                     callback(nil)
                                 end
                             else
                                 if not table.find(chosen, opt) then
                                     table.insert(chosen, opt)
+
 
                                     multiSelectObj(option, optionPadding, true)
                                     value.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1831,17 +2063,21 @@ function initLibrary()
                                         library.flags[flag] = chosen
                                     end
 
+
                                     callback(chosen)
                                 else
                                     table.remove(chosen, table.find(chosen, opt))
+
 
                                     multiSelectObj(option, optionPadding, false)
                                     value.TextColor3 = #chosen > 0 and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                                     value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
 
+
                                     if flag then
                                         library.flags[flag] = chosen
                                     end
+
 
                                     callback(chosen)
                                 end
@@ -1849,12 +2085,14 @@ function initLibrary()
                         end)
                     end
 
+
                     function dropdownTypes:Remove(opt)
                         if table.find(content, opt) then
                             if not multiChoice then
                                 if current == opt then
                                     dropdownTypes:Set(nil)
                                 end
+
 
                                 if contentHolder:FindFirstChild(opt) then
                                     contentHolder:FindFirstChild(opt):Destroy()
@@ -1866,12 +2104,14 @@ function initLibrary()
                                     value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
                                 end
 
+
                                 if contentHolder:FindFirstChild(opt) then
                                     contentHolder:FindFirstChild(opt):Destroy()
                                 end
                             end
                         end
                     end
+
 
                     function dropdownTypes:Refresh(tbl)
                         content = tbl
@@ -1881,7 +2121,9 @@ function initLibrary()
                             end
                         end
 
+
                         dropdownTypes:Set(nil)
+
 
                         for _, opt in next, content do
                             local option = utility.create("TextButton", {
@@ -1958,6 +2200,7 @@ function initLibrary()
                         end
                     end
 
+
                     if flag then
                         if not multiChoice then
                             flags.dropdowns[flag] = function(opt)
@@ -1970,489 +2213,492 @@ function initLibrary()
                         end
                     end
 
+
                     return dropdownTypes
                 end
 
-                function sectionTypes:Keybind(opts)
-                    local options = utility.table(opts)
-                    local name = options.name or "Keybind"
-                    local default = options.default
-                    local blacklist = options.blacklist or {}
-                    local flag = options.flag
-                    local callback = options.callback or function() end
 
-                    if flag then
-                        library.flags[flag] = default
-                    end
+               function sectionTypes:Keybind(opts)
+    local options = utility.table(opts)
+    local name = options.name or "Keybind"
+    local default = options.default
+    local blacklist = options.blacklist or {}
+    local flag = options.flag
+    local callback = options.callback or function() end
 
-                    local keys = {
-                        [Enum.KeyCode.LeftShift] = "LeftShift";
-                        [Enum.KeyCode.RightShift] = "RightShift";
-                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
-                        [Enum.KeyCode.RightControl] = "RightCtrl";
-                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
-                        [Enum.KeyCode.RightAlt] = "RightAlt";
-                        [Enum.KeyCode.CapsLock] = "CapsLock";
-                        [Enum.KeyCode.One] = "1";
-                        [Enum.KeyCode.Two] = "2";
-                        [Enum.KeyCode.Three] = "3";
-                        [Enum.KeyCode.Four] = "4";
-                        [Enum.KeyCode.Five] = "5";
-                        [Enum.KeyCode.Six] = "6";
-                        [Enum.KeyCode.Seven] = "7";
-                        [Enum.KeyCode.Eight] = "8";
-                        [Enum.KeyCode.Nine] = "9";
-                        [Enum.KeyCode.Zero] = "0";
-                        [Enum.KeyCode.KeypadOne] = "N1";
-                        [Enum.KeyCode.KeypadTwo] = "N2";
-                        [Enum.KeyCode.KeypadThree] = "N3";
-                        [Enum.KeyCode.KeypadFour] = "N4";
-                        [Enum.KeyCode.KeypadFive] = "N5";
-                        [Enum.KeyCode.KeypadSix] = "N6";
-                        [Enum.KeyCode.KeypadSeven] = "N7";
-                        [Enum.KeyCode.KeypadEight] = "N8";
-                        [Enum.KeyCode.KeypadNine] = "N9";
-                        [Enum.KeyCode.KeypadZero] = "N0";
-                        [Enum.KeyCode.Minus] = "-";
-                        [Enum.KeyCode.Equals] = "=";
-                        [Enum.KeyCode.Tilde] = "~";
-                        [Enum.KeyCode.LeftBracket] = "[";
-                        [Enum.KeyCode.RightBracket] = "]";
-                        [Enum.KeyCode.RightParenthesis] = ")";
-                        [Enum.KeyCode.LeftParenthesis] = "(";
-                        [Enum.KeyCode.Semicolon] = ";";
-                        [Enum.KeyCode.Quote] = "'";
-                        [Enum.KeyCode.BackSlash] = "\\";
-                        [Enum.KeyCode.Comma] = ";";
-                        [Enum.KeyCode.Period] = ".";
-                        [Enum.KeyCode.Slash] = "/";
-                        [Enum.KeyCode.Asterisk] = "*";
-                        [Enum.KeyCode.Plus] = "+";
-                        [Enum.KeyCode.Period] = ".";
-                        [Enum.KeyCode.Backquote] = "`";
-                        [Enum.UserInputType.MouseButton1] = "Mouse1";
-                        [Enum.UserInputType.MouseButton2] = "Mouse2";
-                        [Enum.UserInputType.MouseButton3] = "Mouse3";
-                        [Enum.UserInputType.MouseWheel] = "MouseWheel";
-                    }
+    if flag then
+        library.flags[flag] = default
+    end
 
-                    local keyChosen = default
+    local keys = {
+        [Enum.KeyCode.LeftShift] = "LeftShift";
+        [Enum.KeyCode.RightShift] = "RightShift";
+        [Enum.KeyCode.LeftControl] = "LeftCtrl";
+        [Enum.KeyCode.RightControl] = "RightCtrl";
+        [Enum.KeyCode.LeftAlt] = "LeftAlt";
+        [Enum.KeyCode.RightAlt] = "RightAlt";
+        [Enum.KeyCode.CapsLock] = "CapsLock";
+        [Enum.KeyCode.One] = "1";
+        [Enum.KeyCode.Two] = "2";
+        [Enum.KeyCode.Three] = "3";
+        [Enum.KeyCode.Four] = "4";
+        [Enum.KeyCode.Five] = "5";
+        [Enum.KeyCode.Six] = "6";
+        [Enum.KeyCode.Seven] = "7";
+        [Enum.KeyCode.Eight] = "8";
+        [Enum.KeyCode.Nine] = "9";
+        [Enum.KeyCode.Zero] = "0";
+        [Enum.KeyCode.KeypadOne] = "N1";
+        [Enum.KeyCode.KeypadTwo] = "N2";
+        [Enum.KeyCode.KeypadThree] = "N3";
+        [Enum.KeyCode.KeypadFour] = "N4";
+        [Enum.KeyCode.KeypadFive] = "N5";
+        [Enum.KeyCode.KeypadSix] = "N6";
+        [Enum.KeyCode.KeypadSeven] = "N7";
+        [Enum.KeyCode.KeypadEight] = "N8";
+        [Enum.KeyCode.KeypadNine] = "N9";
+        [Enum.KeyCode.KeypadZero] = "N0";
+        [Enum.KeyCode.Minus] = "-";
+        [Enum.KeyCode.Equals] = "=";
+        [Enum.KeyCode.Tilde] = "~";
+        [Enum.KeyCode.LeftBracket] = "[";
+        [Enum.KeyCode.RightBracket] = "]";
+        [Enum.KeyCode.RightParenthesis] = ")";
+        [Enum.KeyCode.LeftParenthesis] = "(";
+        [Enum.KeyCode.Semicolon] = ";";
+        [Enum.KeyCode.Quote] = "'";
+        [Enum.KeyCode.BackSlash] = "\\";
+        [Enum.KeyCode.Comma] = ";";
+        [Enum.KeyCode.Period] = ".";
+        [Enum.KeyCode.Slash] = "/";
+        [Enum.KeyCode.Asterisk] = "*";
+        [Enum.KeyCode.Plus] = "+";
+        [Enum.KeyCode.Period] = ".";
+        [Enum.KeyCode.Backquote] = "`";
+        [Enum.UserInputType.MouseButton1] = "Mouse1";
+        [Enum.UserInputType.MouseButton2] = "Mouse2";
+        [Enum.UserInputType.MouseButton3] = "Mouse3";
+        [Enum.UserInputType.MouseWheel] = "MouseWheel";
+    }
 
-                    local keybind = utility.create("TextButton", {
-                        Size = UDim2.new(1, 0, 0, 16),
-                        BackgroundTransparency = 1,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 14,
-                        TextColor3 = Color3.fromRGB(0, 0, 0),
-                        Font = Enum.Font.SourceSans,
-                        Parent = sectionContent
-                    })
-                    
-                    local title = utility.create("TextLabel", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 13,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        Text = name,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Parent = keybind
-                    })
-                    
-                    local value = utility.create("TextLabel", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Position = UDim2.new(1, 0, 0, 0),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 13,
-                        TextColor3 = Color3.fromRGB(180, 180, 180),
-                        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Right,
-                        Parent = keybind
-                    })
+    local keyChosen = default
 
-                    keybind.MouseButton1Click:Connect(function()
-                        value.Text = "..."
-                        value.TextColor3 = Color3.fromRGB(255, 255, 255)
+    local keybind = utility.create("TextButton", {
+        Size = UDim2.new(1, 0, 0, 16),
+        BackgroundTransparency = 1,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontSize = Enum.FontSize.Size14,
+        TextSize = 14,
+        TextColor3 = Color3.fromRGB(0, 0, 0),
+        Font = Enum.Font.SourceSans,
+        Parent = sectionContent
+    })
+    
+    local title = utility.create("TextLabel", {
+        ZIndex = 3,
+        Size = UDim2.new(0, 0, 1, 0),
+        BackgroundTransparency = 1,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontSize = Enum.FontSize.Size14,
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Text = name,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = keybind
+    })
+    
+    local value = utility.create("TextLabel", {
+        ZIndex = 3,
+        Size = UDim2.new(0, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, 0, 0, 0),
+        FontSize = Enum.FontSize.Size14,
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(180, 180, 180),
+        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        Parent = keybind
+    })
 
-                        local binding
-                        binding = inputService.InputBegan:Connect(function(input)
-                            local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
-                            value.Text = keyString
-                            value.TextColor3 = Color3.fromRGB(180, 180, 180)
+    keybind.MouseButton1Click:Connect(function()
+        value.Text = "..."
+        value.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-                            if input.UserInputType == Enum.UserInputType.Keyboard then
-                                if not table.find(blacklist, input.KeyCode) then
-                                    keyChosen = input.KeyCode
-                                    if flag then library.flags[flag] = input.KeyCode end
-                                    binding:Disconnect()
-                                else
-                                    keyChosen = nil
-                                    value.Text = "NONE"
-                                    if flag then library.flags[flag] = nil end
-                                    binding:Disconnect()
-                                end
-                            else
-                                if not table.find(blacklist, input.UserInputType) then
-                                    keyChosen = input.UserInputType
-                                    if flag then library.flags[flag] = input.UserInputType end
-                                    binding:Disconnect()
-                                else
-                                    keyChosen = nil
-                                    value.Text = "NONE"
-                                    if flag then library.flags[flag] = nil end
-                                    binding:Disconnect()
-                                end
-                            end
-                        end)
-                    end)
+        local binding
+        binding = inputService.InputBegan:Connect(function(input)
+            local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+            value.Text = keyString
+            value.TextColor3 = Color3.fromRGB(180, 180, 180)
 
-                    inputService.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.Keyboard then
-                            if input.KeyCode == keyChosen then
-                                callback(keyChosen)
-                            end
-                        elseif input.UserInputType ~= Enum.UserInputType.MouseWheel then
-                            if input.UserInputType == keyChosen then
-                                callback(keyChosen)
-                            end
-                        end
-                    end)
-
-                    inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
-                            callback(keyChosen)
-                        end
-                    end)
-
-                    local keybindTypes = utility.table()
-
-                    function keybindTypes:Show()
-                        keybind.Visible = true
-                    end
-
-                    function keybindTypes:Hide()
-                        keybind.Visible = false
-                    end
-
-                    function keybindTypes:SetName(str)
-                        title.Text = str
-                    end
-
-                    function keybindTypes:Set(newKey)
-                        if typeof(newKey) == "EnumItem" then
-                            if not table.find(blacklist, newKey) then
-                                local keyString = keys[newKey] or tostring(newKey):gsub("Enum.KeyCode.", "")
-                                value.Text = keyString
-                                value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                                keyChosen = newKey
-                                if flag then library.flags[flag] = newKey end
-                            else
-                                keyChosen = nil
-                                value.Text = "NONE"
-                                if flag then library.flags[flag] = nil end
-                            end
-                        end
-                    end
-
-                    if flag then
-                        flags.keybinds[flag] = function(key)
-                            keybindTypes:Set(key)
-                        end
-                    end
-
-                    return keybindTypes
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                if not table.find(blacklist, input.KeyCode) then
+                    keyChosen = input.KeyCode
+                    if flag then library.flags[flag] = input.KeyCode end
+                    binding:Disconnect()
+                else
+                    keyChosen = nil
+                    value.Text = "NONE"
+                    if flag then library.flags[flag] = nil end
+                    binding:Disconnect()
                 end
+            else
+                -- Для мыши (включая колесико)
+                if not table.find(blacklist, input.UserInputType) then
+                    keyChosen = input.UserInputType
+                    if flag then library.flags[flag] = input.UserInputType end
+                    binding:Disconnect()
+                else
+                    keyChosen = nil
+                    value.Text = "NONE"
+                    if flag then library.flags[flag] = nil end
+                    binding:Disconnect()
+                end
+            end
+        end)
+    end)
 
-                function sectionTypes:ToggleKeybind(opts)
-                    local options = utility.table(opts)
-                    local name = options.name or "Toggle Keybind"
-                    local default = options.default
-                    local blacklist = options.blacklist or {}
-                    local toggleFlag = options.toggleFlag
-                    local keybindFlag = options.keybindFlag
-                    local toggleCallback = options.toggleCallback or function() end
-                    local keybindCallback = options.keybindCallback or function() end
+    inputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == keyChosen then
+                callback(keyChosen)
+            end
+        elseif input.UserInputType ~= Enum.UserInputType.MouseWheel then
+            if input.UserInputType == keyChosen then
+                callback(keyChosen)
+            end
+        end
+    end)
 
-                    local keys = {
-                        [Enum.KeyCode.LeftShift] = "LeftShift";
-                        [Enum.KeyCode.RightShift] = "RightShift";
-                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
-                        [Enum.KeyCode.RightControl] = "RightCtrl";
-                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
-                        [Enum.KeyCode.RightAlt] = "RightAlt";
-                        [Enum.KeyCode.CapsLock] = "CapsLock";
-                        [Enum.KeyCode.One] = "1";
-                        [Enum.KeyCode.Two] = "2";
-                        [Enum.KeyCode.Three] = "3";
-                        [Enum.KeyCode.Four] = "4";
-                        [Enum.KeyCode.Five] = "5";
-                        [Enum.KeyCode.Six] = "6";
-                        [Enum.KeyCode.Seven] = "7";
-                        [Enum.KeyCode.Eight] = "8";
-                        [Enum.KeyCode.Nine] = "9";
-                        [Enum.KeyCode.Zero] = "0";
-                        [Enum.KeyCode.KeypadOne] = "N1";
-                        [Enum.KeyCode.KeypadTwo] = "N2";
-                        [Enum.KeyCode.KeypadThree] = "N3";
-                        [Enum.KeyCode.KeypadFour] = "N4";
-                        [Enum.KeyCode.KeypadFive] = "N5";
-                        [Enum.KeyCode.KeypadSix] = "N6";
-                        [Enum.KeyCode.KeypadSeven] = "N7";
-                        [Enum.KeyCode.KeypadEight] = "N8";
-                        [Enum.KeyCode.KeypadNine] = "N9";
-                        [Enum.KeyCode.KeypadZero] = "N0";
-                        [Enum.KeyCode.Minus] = "-";
-                        [Enum.KeyCode.Equals] = "=";
-                        [Enum.KeyCode.Tilde] = "~";
-                        [Enum.KeyCode.LeftBracket] = "[";
-                        [Enum.KeyCode.RightBracket] = "]";
-                        [Enum.KeyCode.RightParenthesis] = ")";
-                        [Enum.KeyCode.LeftParenthesis] = "(";
-                        [Enum.KeyCode.Semicolon] = ";";
-                        [Enum.KeyCode.Quote] = "'";
-                        [Enum.KeyCode.BackSlash] = "\\";
-                        [Enum.KeyCode.Comma] = ";";
-                        [Enum.KeyCode.Period] = ".";
-                        [Enum.KeyCode.Slash] = "/";
-                        [Enum.KeyCode.Asterisk] = "*";
-                        [Enum.KeyCode.Plus] = "+";
-                        [Enum.KeyCode.Period] = ".";
-                        [Enum.KeyCode.Backquote] = "`";
-                        [Enum.UserInputType.MouseButton1] = "Mouse1";
-                        [Enum.UserInputType.MouseButton2] = "Mouse2";
-                        [Enum.UserInputType.MouseButton3] = "Mouse3";
-                        [Enum.UserInputType.MouseWheel] = "MouseWheel";
-                    }
+    inputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
+            callback(keyChosen)
+        end
+    end)
 
-                    local toggled = false
-                    local keyChosen = default
+    local keybindTypes = utility.table()
 
-                    if toggleFlag then
-                        library.flags[toggleFlag] = toggled
-                    end
+    function keybindTypes:Show()
+        keybind.Visible = true
+    end
 
-                    if keybindFlag then
-                        library.flags[keybindFlag] = default
-                    end
+    function keybindTypes:Hide()
+        keybind.Visible = false
+    end
 
-                    local toggleKeybind = utility.create("TextButton", {
-                        Size = UDim2.new(1, 0, 0, 16),
-                        BackgroundTransparency = 1,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 14,
-                        TextColor3 = Color3.fromRGB(0, 0, 0),
-                        Font = Enum.Font.SourceSans,
-                        Parent = sectionContent
-                    })
+    function keybindTypes:SetName(str)
+        title.Text = str
+    end
 
-                    local title = utility.create("TextLabel", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Position = UDim2.new(0, 21, 0, 0),
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 13,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        Text = name,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Parent = toggleKeybind
-                    })
+    function keybindTypes:Set(newKey)
+        if typeof(newKey) == "EnumItem" then
+            if not table.find(blacklist, newKey) then
+                local keyString = keys[newKey] or tostring(newKey):gsub("Enum.KeyCode.", "")
+                value.Text = keyString
+                value.TextColor3 = Color3.fromRGB(180, 180, 180)
+                keyChosen = newKey
+                if flag then library.flags[flag] = newKey end
+            else
+                keyChosen = nil
+                value.Text = "NONE"
+                if flag then library.flags[flag] = nil end
+            end
+        end
+    end
 
-                    local icon = utility.create("Frame", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0, 14, 1, -2),
-                        BorderColor3 = Color3.fromRGB(37, 37, 37),
-                        Position = UDim2.new(0, 0, 0, 1),
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        Parent = toggleKeybind
-                    })
-                    
-                    local iconGradient = utility.create("UIGradient", {
-                        Rotation = 90,
-                        Color = ColorSequence.new(Color3.fromRGB(32, 32, 32), Color3.fromRGB(17, 17, 17)),
-                        Parent = icon
-                    })
-                    
-                    local value = utility.create("TextButton", {
-                        ZIndex = 3,
-                        BackgroundTransparency = 1,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 13,
-                        TextColor3 = Color3.fromRGB(180, 180, 180),
-                        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Right,
-                        Parent = toggleKeybind
-                    })
+    if flag then
+        flags.keybinds[flag] = function(key)
+            keybindTypes:Set(key)
+        end
+    end
 
+    return keybindTypes
+end
+
+             function sectionTypes:ToggleKeybind(opts)
+    local options = utility.table(opts)
+    local name = options.name or "Toggle Keybind"
+    local default = options.default
+    local blacklist = options.blacklist or {}
+    local toggleFlag = options.toggleFlag
+    local keybindFlag = options.keybindFlag
+    local toggleCallback = options.toggleCallback or function() end
+    local keybindCallback = options.keybindCallback or function() end
+
+    local keys = {
+        [Enum.KeyCode.LeftShift] = "LeftShift";
+        [Enum.KeyCode.RightShift] = "RightShift";
+        [Enum.KeyCode.LeftControl] = "LeftCtrl";
+        [Enum.KeyCode.RightControl] = "RightCtrl";
+        [Enum.KeyCode.LeftAlt] = "LeftAlt";
+        [Enum.KeyCode.RightAlt] = "RightAlt";
+        [Enum.KeyCode.CapsLock] = "CapsLock";
+        [Enum.KeyCode.One] = "1";
+        [Enum.KeyCode.Two] = "2";
+        [Enum.KeyCode.Three] = "3";
+        [Enum.KeyCode.Four] = "4";
+        [Enum.KeyCode.Five] = "5";
+        [Enum.KeyCode.Six] = "6";
+        [Enum.KeyCode.Seven] = "7";
+        [Enum.KeyCode.Eight] = "8";
+        [Enum.KeyCode.Nine] = "9";
+        [Enum.KeyCode.Zero] = "0";
+        [Enum.KeyCode.KeypadOne] = "N1";
+        [Enum.KeyCode.KeypadTwo] = "N2";
+        [Enum.KeyCode.KeypadThree] = "N3";
+        [Enum.KeyCode.KeypadFour] = "N4";
+        [Enum.KeyCode.KeypadFive] = "N5";
+        [Enum.KeyCode.KeypadSix] = "N6";
+        [Enum.KeyCode.KeypadSeven] = "N7";
+        [Enum.KeyCode.KeypadEight] = "N8";
+        [Enum.KeyCode.KeypadNine] = "N9";
+        [Enum.KeyCode.KeypadZero] = "N0";
+        [Enum.KeyCode.Minus] = "-";
+        [Enum.KeyCode.Equals] = "=";
+        [Enum.KeyCode.Tilde] = "~";
+        [Enum.KeyCode.LeftBracket] = "[";
+        [Enum.KeyCode.RightBracket] = "]";
+        [Enum.KeyCode.RightParenthesis] = ")";
+        [Enum.KeyCode.LeftParenthesis] = "(";
+        [Enum.KeyCode.Semicolon] = ";";
+        [Enum.KeyCode.Quote] = "'";
+        [Enum.KeyCode.BackSlash] = "\\";
+        [Enum.KeyCode.Comma] = ";";
+        [Enum.KeyCode.Period] = ".";
+        [Enum.KeyCode.Slash] = "/";
+        [Enum.KeyCode.Asterisk] = "*";
+        [Enum.KeyCode.Plus] = "+";
+        [Enum.KeyCode.Period] = ".";
+        [Enum.KeyCode.Backquote] = "`";
+        [Enum.UserInputType.MouseButton1] = "Mouse1";
+        [Enum.UserInputType.MouseButton2] = "Mouse2";
+        [Enum.UserInputType.MouseButton3] = "Mouse3";
+        [Enum.UserInputType.MouseWheel] = "MouseWheel";
+    }
+
+    local toggled = false
+    local keyChosen = default
+
+    if toggleFlag then
+        library.flags[toggleFlag] = toggled
+    end
+
+    if keybindFlag then
+        library.flags[keybindFlag] = default
+    end
+
+    local toggleKeybind = utility.create("TextButton", {
+        Size = UDim2.new(1, 0, 0, 16),
+        BackgroundTransparency = 1,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontSize = Enum.FontSize.Size14,
+        TextSize = 14,
+        TextColor3 = Color3.fromRGB(0, 0, 0),
+        Font = Enum.Font.SourceSans,
+        Parent = sectionContent
+    })
+
+    local title = utility.create("TextLabel", {
+        ZIndex = 3,
+        Size = UDim2.new(0, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 21, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontSize = Enum.FontSize.Size14,
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Text = name,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = toggleKeybind
+    })
+
+    local icon = utility.create("Frame", {
+        ZIndex = 3,
+        Size = UDim2.new(0, 14, 1, -2),
+        BorderColor3 = Color3.fromRGB(37, 37, 37),
+        Position = UDim2.new(0, 0, 0, 1),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        Parent = toggleKeybind
+    })
+    
+    local iconGradient = utility.create("UIGradient", {
+        Rotation = 90,
+        Color = ColorSequence.new(Color3.fromRGB(32, 32, 32), Color3.fromRGB(17, 17, 17)),
+        Parent = icon
+    })
+    
+    local value = utility.create("TextButton", {
+        ZIndex = 3,
+        BackgroundTransparency = 1,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontSize = Enum.FontSize.Size14,
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(180, 180, 180),
+        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        Parent = toggleKeybind
+    })
+
+    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+
+    local function toggleToggle()
+        toggled = not toggled
+
+        if toggled then
+            table.insert(coloredGradients, iconGradient)
+        else
+            table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
+        end
+
+        local textColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+        local gradientColor
+        if toggled then
+            gradientColor = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, library.color), 
+                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+            }
+        else
+            gradientColor = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(32, 32, 32)), 
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(17, 17, 17))
+            }
+        end
+
+        iconGradient.Color = gradientColor
+        title.TextColor3 = textColor
+
+        if toggleFlag then
+            library.flags[toggleFlag] = toggled
+        end
+
+        toggleCallback(toggled)
+    end
+
+    toggleKeybind.MouseButton1Click:Connect(toggleToggle)
+
+    value.MouseButton1Click:Connect(function()
+        value.Text = "..."
+        value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+        value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+        value.TextColor3 = Color3.fromRGB(255, 255, 255)
+    
+        local binding
+        binding = inputService.InputBegan:Connect(function(input)
+            local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+            value.Text = keyString
+            value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+            value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+            value.TextColor3 = Color3.fromRGB(180, 180, 180)
+    
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                if not table.find(blacklist, input.KeyCode) then
+                    keyChosen = input.KeyCode
+                    if keybindFlag then library.flags[keybindFlag] = input.KeyCode end
+                    binding:Disconnect()
+                else
+                    keyChosen = nil
+                    value.Text = "NONE"
                     value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
                     value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-
-                    local function toggleToggle()
-                        toggled = not toggled
-
-                        if toggled then
-                            table.insert(coloredGradients, iconGradient)
-                        else
-                            table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
-                        end
-
-                        local textColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-                        local gradientColor
-                        if toggled then
-                            gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, library.color), 
-                                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
-                            }
-                        else
-                            gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, Color3.fromRGB(32, 32, 32)), 
-                                ColorSequenceKeypoint.new(1, Color3.fromRGB(17, 17, 17))
-                            }
-                        end
-
-                        iconGradient.Color = gradientColor
-                        title.TextColor3 = textColor
-
-                        if toggleFlag then
-                            library.flags[toggleFlag] = toggled
-                        end
-
-                        toggleCallback(toggled)
-                    end
-
-                    toggleKeybind.MouseButton1Click:Connect(toggleToggle)
-
-                    value.MouseButton1Click:Connect(function()
-                        value.Text = "..."
-                        value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
-                        value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                        value.TextColor3 = Color3.fromRGB(255, 255, 255)
-                    
-                        local binding
-                        binding = inputService.InputBegan:Connect(function(input)
-                            local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
-                            value.Text = keyString
-                            value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
-                            value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                            value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                    
-                            if input.UserInputType == Enum.UserInputType.Keyboard then
-                                if not table.find(blacklist, input.KeyCode) then
-                                    keyChosen = input.KeyCode
-                                    if keybindFlag then library.flags[keybindFlag] = input.KeyCode end
-                                    binding:Disconnect()
-                                else
-                                    keyChosen = nil
-                                    value.Text = "NONE"
-                                    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
-                                    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                    if keybindFlag then library.flags[keybindFlag] = nil end
-                                    binding:Disconnect()
-                                end
-                            else
-                                if not table.find(blacklist, input.UserInputType) then
-                                    keyChosen = input.UserInputType
-                                    if keybindFlag then library.flags[keybindFlag] = input.UserInputType end
-                                    binding:Disconnect()
-                                else
-                                    keyChosen = nil
-                                    value.Text = "NONE"
-                                    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
-                                    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                    if keybindFlag then library.flags[keybindFlag] = nil end
-                                    binding:Disconnect()
-                                end
-                            end
-                        end)
-                    end)
-                    
-                    inputService.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.Keyboard then
-                            if input.KeyCode == keyChosen then
-                                toggleToggle()
-                                keybindCallback(keyChosen)
-                            end
-                        elseif input.UserInputType ~= Enum.UserInputType.MouseWheel then
-                            if input.UserInputType == keyChosen then
-                                toggleToggle()
-                                keybindCallback(keyChosen)
-                            end
-                        end
-                    end)
-
-                    inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
-                            toggleToggle()
-                            keybindCallback(keyChosen)
-                        end
-                    end)
-                    
-                    local toggleKeybindTypes = utility.table()
-                    
-                    function toggleKeybindTypes:Show()
-                        toggleKeybind.Visible = true
-                    end
-                    
-                    function toggleKeybindTypes:Hide()
-                        toggleKeybind.Visible = false
-                    end
-                    
-                    function toggleKeybindTypes:SetName(str)
-                        title.Text = str
-                    end
-
-                    function toggleKeybindTypes:Toggle(bool)
-                        if toggled ~= bool then
-                            toggleToggle()
-                        end
-                    end
-                    
-                    function toggleKeybindTypes:Set(newKey)
-                        if typeof(newKey) == "EnumItem" then
-                            if not table.find(blacklist, newKey) then
-                                local keyString = keys[newKey] or tostring(newKey):gsub("Enum.KeyCode.", "")
-                                value.Text = keyString
-                                value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
-                                value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                value.TextColor3 = Color3.fromRGB(180, 180, 180)
-                                keyChosen = newKey
-                                if keybindFlag then library.flags[keybindFlag] = newKey end
-                            else
-                                keyChosen = nil
-                                value.Text = "NONE"
-                                value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
-                                value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                if keybindFlag then library.flags[keybindFlag] = nil end
-                            end
-                        end
-                    end
-                    
-                    if keybindFlag then
-                        flags.keybinds[keybindFlag] = function(key)
-                            toggleKeybindTypes:Set(key)
-                        end
-                    end
-
-                    if toggleFlag then
-                        flags.toggles[toggleFlag] = function(bool)
-                            toggleKeybindTypes:Toggle(bool)
-                        end
-                    end
-                    
-                    return toggleKeybindTypes
+                    if keybindFlag then library.flags[keybindFlag] = nil end
+                    binding:Disconnect()
                 end
+            else
+                if not table.find(blacklist, input.UserInputType) then
+                    keyChosen = input.UserInputType
+                    if keybindFlag then library.flags[keybindFlag] = input.UserInputType end
+                    binding:Disconnect()
+                else
+                    keyChosen = nil
+                    value.Text = "NONE"
+                    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                    if keybindFlag then library.flags[keybindFlag] = nil end
+                    binding:Disconnect()
+                end
+            end
+        end)
+    end)
+    
+    inputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == keyChosen then
+                toggleToggle()
+                keybindCallback(keyChosen)
+            end
+        elseif input.UserInputType ~= Enum.UserInputType.MouseWheel then
+            if input.UserInputType == keyChosen then
+                toggleToggle()
+                keybindCallback(keyChosen)
+            end
+        end
+    end)
+
+    inputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
+            toggleToggle()
+            keybindCallback(keyChosen)
+        end
+    end)
+    
+    local toggleKeybindTypes = utility.table()
+    
+    function toggleKeybindTypes:Show()
+        toggleKeybind.Visible = true
+    end
+    
+    function toggleKeybindTypes:Hide()
+        toggleKeybind.Visible = false
+    end
+    
+    function toggleKeybindTypes:SetName(str)
+        title.Text = str
+    end
+
+    function toggleKeybindTypes:Toggle(bool)
+        if toggled ~= bool then
+            toggleToggle()
+        end
+    end
+    
+    function toggleKeybindTypes:Set(newKey)
+        if typeof(newKey) == "EnumItem" then
+            if not table.find(blacklist, newKey) then
+                local keyString = keys[newKey] or tostring(newKey):gsub("Enum.KeyCode.", "")
+                value.Text = keyString
+                value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                value.TextColor3 = Color3.fromRGB(180, 180, 180)
+                keyChosen = newKey
+                if keybindFlag then library.flags[keybindFlag] = newKey end
+            else
+                keyChosen = nil
+                value.Text = "NONE"
+                value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                if keybindFlag then library.flags[keybindFlag] = nil end
+            end
+        end
+    end
+    
+    if keybindFlag then
+        flags.keybinds[keybindFlag] = function(key)
+            toggleKeybindTypes:Set(key)
+        end
+    end
+
+    if toggleFlag then
+        flags.toggles[toggleFlag] = function(bool)
+            toggleKeybindTypes:Toggle(bool)
+        end
+    end
+    
+    return toggleKeybindTypes
+end
 
                 function sectionTypes:ColorPicker(opts)
                     local options = utility.table(opts)
@@ -2461,19 +2707,25 @@ function initLibrary()
                     local flag = options.flag
                     local callback = options.callback or function() end
 
+
                     local open = false
                     local hue, sat, val = default:ToHSV()
+
 
                     local slidingHue = false
                     local slidingSaturation = false
 
+
                     local hsv = Color3.fromHSV(hue, sat, val)
+
 
                     if flag then
                         library.flags[flag] = default
                     end
 
+
                     callback(default)
+
 
                     local colorPickerHolder = utility.create("Frame", {
                         Size = UDim2.new(1, 0, 0, 16),
@@ -2481,6 +2733,7 @@ function initLibrary()
                         BackgroundTransparency = 1,
                         Parent = sectionContent
                     })
+
 
                     local colorPicker = utility.create("TextButton", {
                         Size = UDim2.new(1, 0, 0, 16),
@@ -2641,34 +2894,43 @@ function initLibrary()
                         Parent = bg
                     })
 
+
                     local function openPicker()
                         open = not open
                         picker.Visible = open
                         colorPickerHolder.Size = UDim2.new(1, 0, 0, open and colorPicker.AbsoluteSize.Y + picker.AbsoluteSize.Y + 3 or 16)
                     end
 
+
                     colorPicker.MouseButton1Click:connect(openPicker)
+
 
                     local function updateHue(input)
                         local sizeY = 1 - math.clamp((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y, 0, 1)
                         local posY = math.clamp(((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 2)
                         huePicker.Position = UDim2.new(0, 0, 0, posY)
 
+
                         hue = sizeY
+
 
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
 
                         hsv = Color3.fromHSV(hue, sat, val)
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
 
+
                         if flag then 
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
 
+
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
+
 
                     hueFrame.InputBegan:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
@@ -2677,11 +2939,13 @@ function initLibrary()
                         end
                     end)
 
+
                     hueFrame.InputEnded:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
                             slidingHue = false
                         end
                     end)
+
 
                     inputService.InputChanged:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
@@ -2691,31 +2955,40 @@ function initLibrary()
                         end
                     end)
 
+
                     local function updateSatVal(input)
                         local sizeX = math.clamp((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X, 0, 1)
                         local sizeY = 1 - math.clamp((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y, 0, 1)
                         local posY = math.clamp(((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)
                         local posX = math.clamp(((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X) * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)
 
+
                         saturationPicker.Position = UDim2.new(0, posX, 0, posY)
+
 
                         sat = sizeX
                         val = sizeY
 
+
                         hsv = Color3.fromHSV(hue, sat, val)
+
 
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
 
+
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
+
 
                         if flag then 
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
 
+
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
+
 
                     saturationFrame.InputBegan:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
@@ -2724,11 +2997,13 @@ function initLibrary()
                         end
                     end)
 
+
                     saturationFrame.InputEnded:Connect(function(input)
                         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
                             slidingSaturation = false
                         end
                     end)
+
 
                     inputService.InputChanged:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
@@ -2738,7 +3013,9 @@ function initLibrary()
                         end
                     end)
 
+
                     local colorPickerTypes = utility.table()
+
 
                     function colorPickerTypes:Show()
                         colorPickerHolder.Visible = true
@@ -2752,24 +3029,30 @@ function initLibrary()
                         title.Text = str
                     end
 
+
                     function colorPickerTypes:SetRGB(color)
                         hue, sat, val = color:ToHSV()
                         hsv = Color3.fromHSV(hue, sat, val)
+
 
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
                         saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
                         huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
 
+
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
 
                         if flag then 
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
 
+
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
+
 
                     function colorPickerTypes:SetHex(hexValue)
                         color = utility.hex_to_rgb(hexValue)
@@ -2777,20 +3060,25 @@ function initLibrary()
                         hue, sat, val = color:ToHSV()
                         hsv = Color3.fromHSV(hue, sat, val)
 
+
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
                         saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
                         huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
 
+
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
 
                         if flag then 
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
 
+
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
+
 
                     rgb.FocusLost:Connect(function()
                         local _, amount = rgb.Text:gsub(", ", "")
@@ -2811,11 +3099,13 @@ function initLibrary()
                         end
                     end)
 
+
                     hex:GetPropertyChangedSignal("Text"):Connect(function()
                         if hex.Text == "" then
                             hex.Text = "#"
                         end
                     end)
+
 
                     if flag then
                         flags.colorpickers[flag] = function(color)
@@ -2823,8 +3113,10 @@ function initLibrary()
                         end
                     end
 
+
                     return colorPickerTypes
                 end
+
 
                 function sectionTypes:ToggleColorPicker(opts)
                     local options = utility.table(opts)
@@ -2835,26 +3127,34 @@ function initLibrary()
                     local toggleCallback = options.toggleCallback or function() end
                     local colorPickerCallback = options.colorPickerCallback or function() end
 
+
                     local open = false
                     local toggled = false
                     local hue, sat, val = default:ToHSV()
 
+
                     local slidingHue = false
                     local slidingSaturation = false
 
+
                     local hsv = Color3.fromHSV(hue, sat, val)
+
 
                     if colorPickerFlag then
                         library.flags[colorPickerFlag] = default
                     end
 
+
                     colorPickerCallback(default)
+
 
                     if toggleFlag then
                         library.flags[toggleFlag] = toggled
                     end
 
+
                     toggleCallback(false)
+
 
                     local toggleColorPickerHolder = utility.create("Frame", {
                         Size = UDim2.new(1, 0, 0, 16),
@@ -2862,6 +3162,7 @@ function initLibrary()
                         BackgroundTransparency = 1,
                         Parent = sectionContent
                     })
+
 
                     local colorPicker = utility.create("TextButton", {
                         Size = UDim2.new(1, 0, 0, 16),
@@ -2873,6 +3174,7 @@ function initLibrary()
                         Font = Enum.Font.SourceSans,
                         Parent = toggleColorPickerHolder
                     })
+
 
                     local icon = utility.create("Frame", {
                         ZIndex = 3,
@@ -2888,6 +3190,7 @@ function initLibrary()
                         Color = ColorSequence.new(Color3.fromRGB(32, 32, 32), Color3.fromRGB(17, 17, 17)),
                         Parent = icon
                     })
+
 
                     local colorPickerIcon = utility.create("TextButton", {
                         ZIndex = 3,
@@ -3039,14 +3342,17 @@ function initLibrary()
                         Parent = bg
                     })
 
+
                     local function toggleToggle()
                         toggled = not toggled
+
 
                         if toggled then
                             table.insert(coloredGradients, iconGradient)
                         else
                             table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
                         end
+
 
                         local textColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                         local gradientColor
@@ -3062,17 +3368,22 @@ function initLibrary()
                             }
                         end
 
+
                         iconGradient.Color = gradientColor
                         title.TextColor3 = textColor
+
 
                         if toggleFlag then
                             library.flags[toggleFlag] = toggled
                         end
 
+
                         toggleCallback(toggled)
                     end
 
+
                     colorPicker.MouseButton1Click:Connect(toggleToggle)
+
 
                     local function openPicker()
                         open = not open
@@ -3185,6 +3496,7 @@ function initLibrary()
                         title.Text = str
                     end
 
+
                     function toggleColorPickerTypes:Toggle(bool)
                         if toggled ~= bool then
                             toggleToggle()
@@ -3262,6 +3574,7 @@ function initLibrary()
                         end
                     end
 
+
                     if toggleFlag then
                         flags.toggles[toggleFlag] = function(bool)
                             toggleColorPickerTypes:Toggle(bool)
@@ -3271,275 +3584,18 @@ function initLibrary()
                     return toggleColorPickerTypes
                 end
 
-                function sectionTypes:ConfigsViewer(opts)
-                    local options = utility.table(opts)
-                    local name = options.name or "Configs Viewer"
-                    
-                    local viewerHolder = utility.create("Frame", {
-                        Size = UDim2.new(1, 0, 0, 50),
-                        BackgroundTransparency = 1,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        Parent = sectionContent
-                    })
-
-                    local title = utility.create("TextLabel", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0, 0, 0, 14),
-                        BackgroundTransparency = 1,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        FontSize = Enum.FontSize.Size14,
-                        TextSize = 13,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        Text = name,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Parent = viewerHolder
-                    })
-
-                    local refreshBtn = utility.create("TextButton", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0.3, -2, 0, 14),
-                        Position = UDim2.new(1, -90, 0, 0),
-                        BorderColor3 = Color3.fromRGB(22, 22, 22),
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        Text = "Refresh",
-                        Font = Enum.Font.Gotham,
-                        TextSize = 11,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        Parent = viewerHolder
-                    })
-
-                    utility.create("UIGradient", {
-                        Rotation = 90,
-                        Color = ColorSequence.new(Color3.fromRGB(32, 32, 32), Color3.fromRGB(17, 17, 17)),
-                        Parent = refreshBtn
-                    })
-
-                    local configList = utility.create("ScrollingFrame", {
-                        ZIndex = 3,
-                        Size = UDim2.new(1, 0, 0, 50),
-                        Position = UDim2.new(0, 0, 0, 20),
-                        BackgroundTransparency = 1,
-                        Active = true,
-                        BorderSizePixel = 0,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
-                        ScrollBarImageTransparency = 1,
-                        ScrollBarThickness = 0,
-                        Parent = viewerHolder
-                    })
-
-                    local listLayout = utility.create("UIListLayout", {
-                        SortOrder = Enum.SortOrder.LayoutOrder,
-                        Padding = UDim.new(0, 2),
-                        Parent = configList
-                    })
-
-                    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                        configList.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-                        viewerHolder.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y + 25)
-                    end)
-
-                    local function refreshConfigs()
-                        for _, child in ipairs(configList:GetChildren()) do
-                            if child:IsA("TextButton") then
-                                child:Destroy()
-                            end
-                        end
-
-                        local cfgs = library:GetConfigsList()
-                        local folderCfgs = library:GetConfigsFromFolder()
-
-                        if #cfgs > 0 then
-                            local folderLabel = utility.create("TextLabel", {
-                                ZIndex = 4,
-                                Size = UDim2.new(1, 0, 0, 14),
-                                BackgroundTransparency = 1,
-                                FontSize = Enum.FontSize.Size12,
-                                TextSize = 11,
-                                TextColor3 = Color3.fromRGB(180, 180, 180),
-                                Text = "📁 cfgs/",
-                                Font = Enum.Font.GothamSemibold,
-                                TextXAlignment = Enum.TextXAlignment.Left,
-                                Parent = configList
-                            })
-
-                            for _, cfg in ipairs(cfgs) do
-                                local cfgBtn = utility.create("TextButton", {
-                                    ZIndex = 4,
-                                    Size = UDim2.new(1, 0, 0, 12),
-                                    BackgroundTransparency = 1,
-                                    Text = "",
-                                    Parent = configList
-                                })
-
-                                local cfgLabel = utility.create("TextLabel", {
-                                    ZIndex = 5,
-                                    Size = UDim2.new(1, -15, 1, 0),
-                                    BackgroundTransparency = 1,
-                                    Position = UDim2.new(0, 15, 0, 0),
-                                    FontSize = Enum.FontSize.Size12,
-                                    TextSize = 11,
-                                    TextColor3 = Color3.fromRGB(200, 200, 200),
-                                    Text = "📄 " .. cfg,
-                                    Font = Enum.Font.Gotham,
-                                    TextXAlignment = Enum.TextXAlignment.Left,
-                                    Parent = cfgBtn
-                                })
-
-                                local viewBtn = utility.create("TextButton", {
-                                    ZIndex = 5,
-                                    Size = UDim2.new(0, 30, 1, 0),
-                                    Position = UDim2.new(1, -30, 0, 0),
-                                    BackgroundTransparency = 1,
-                                    Text = "👁",
-                                    Font = Enum.Font.Gotham,
-                                    TextSize = 10,
-                                    TextColor3 = Color3.fromRGB(150, 150, 150),
-                                    Parent = cfgBtn
-                                })
-
-                                cfgBtn.MouseButton1Click:Connect(function()
-                                    local config = library:ViewConfig(cfg, gameConfigFolder)
-                                    if config then
-                                        print("Config loaded:", cfg)
-                                    end
-                                end)
-
-                                viewBtn.MouseButton1Click:Connect(function()
-                                    local config = library:ViewConfig(cfg, gameConfigFolder)
-                                    if config then
-                                        local content = ""
-                                        for k, v in pairs(config) do
-                                            if type(v) == "table" then
-                                                content = content .. k .. ": {table}\n"
-                                            else
-                                                content = content .. k .. ": " .. tostring(v) .. "\n"
-                                            end
-                                        end
-                                        print("Config " .. cfg .. ":\n" .. content)
-                                    end
-                                end)
-                            end
-                        end
-
-                        if #folderCfgs > 0 then
-                            local folderLabel = utility.create("TextLabel", {
-                                ZIndex = 4,
-                                Size = UDim2.new(1, 0, 0, 14),
-                                BackgroundTransparency = 1,
-                                FontSize = Enum.FontSize.Size12,
-                                TextSize = 11,
-                                TextColor3 = Color3.fromRGB(180, 180, 180),
-                                Text = "📁 config holder/",
-                                Font = Enum.Font.GothamSemibold,
-                                TextXAlignment = Enum.TextXAlignment.Left,
-                                Parent = configList
-                            })
-
-                            for _, cfg in ipairs(folderCfgs) do
-                                local cfgBtn = utility.create("TextButton", {
-                                    ZIndex = 4,
-                                    Size = UDim2.new(1, 0, 0, 12),
-                                    BackgroundTransparency = 1,
-                                    Text = "",
-                                    Parent = configList
-                                })
-
-                                local cfgLabel = utility.create("TextLabel", {
-                                    ZIndex = 5,
-                                    Size = UDim2.new(1, -15, 1, 0),
-                                    BackgroundTransparency = 1,
-                                    Position = UDim2.new(0, 15, 0, 0),
-                                    FontSize = Enum.FontSize.Size12,
-                                    TextSize = 11,
-                                    TextColor3 = Color3.fromRGB(200, 200, 200),
-                                    Text = "📄 " .. cfg,
-                                    Font = Enum.Font.Gotham,
-                                    TextXAlignment = Enum.TextXAlignment.Left,
-                                    Parent = cfgBtn
-                                })
-
-                                local viewBtn = utility.create("TextButton", {
-                                    ZIndex = 5,
-                                    Size = UDim2.new(0, 30, 1, 0),
-                                    Position = UDim2.new(1, -30, 0, 0),
-                                    BackgroundTransparency = 1,
-                                    Text = "👁",
-                                    Font = Enum.Font.Gotham,
-                                    TextSize = 10,
-                                    TextColor3 = Color3.fromRGB(150, 150, 150),
-                                    Parent = cfgBtn
-                                })
-
-                                cfgBtn.MouseButton1Click:Connect(function()
-                                    local config = library:ViewConfig(cfg, folderName)
-                                    if config then
-                                        print("Config loaded:", cfg)
-                                    end
-                                end)
-
-                                viewBtn.MouseButton1Click:Connect(function()
-                                    local config = library:ViewConfig(cfg, folderName)
-                                    if config then
-                                        local content = ""
-                                        for k, v in pairs(config) do
-                                            if type(v) == "table" then
-                                                content = content .. k .. ": {table}\n"
-                                            else
-                                                content = content .. k .. ": " .. tostring(v) .. "\n"
-                                            end
-                                        end
-                                        print("Config " .. cfg .. ":\n" .. content)
-                                    end
-                                end)
-                            end
-                        end
-
-                        if #cfgs == 0 and #folderCfgs == 0 then
-                            local emptyLabel = utility.create("TextLabel", {
-                                ZIndex = 4,
-                                Size = UDim2.new(1, 0, 0, 14),
-                                BackgroundTransparency = 1,
-                                FontSize = Enum.FontSize.Size12,
-                                TextSize = 11,
-                                TextColor3 = Color3.fromRGB(150, 150, 150),
-                                Text = "No configs found",
-                                Font = Enum.Font.Gotham,
-                                TextXAlignment = Enum.TextXAlignment.Left,
-                                Parent = configList
-                            })
-                        end
-                    end
-
-                    refreshBtn.MouseButton1Click:Connect(refreshConfigs)
-                    refreshConfigs()
-
-                    local viewerTypes = utility.table()
-
-                    function viewerTypes:Show()
-                        viewerHolder.Visible = true
-                    end
-
-                    function viewerTypes:Hide()
-                        viewerHolder.Visible = false
-                    end
-
-                    function viewerTypes:Refresh()
-                        refreshConfigs()
-                    end
-
-                    return viewerTypes
-                end
 
                 return sectionTypes
             end
 
+
             return tabTypes
         end
 
+
         return windowTypes
     end
+
 
     return library
 end

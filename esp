@@ -130,7 +130,7 @@ end
 
 local function updateEsp()
     for player, esp in pairs(cache) do
-        -- ОБНОВЛЯЕМ ЦВЕТА КАЖДЫЙ КАДР для всех элементов
+        -- Берем логику обновления цветов из корнер бокса и применяем ко всему
         if esp.tracer then
             esp.tracer.Color = ESP_SETTINGS.TracerColor
         end
@@ -138,14 +138,14 @@ local function updateEsp()
             esp.boxOutline.Color = ESP_SETTINGS.BoxOutlineColor
         end
         if esp.box then
-            esp.box.Color = ESP_SETTINGS.BoxColor  -- Теперь 2D бокс тоже обновляет цвет каждый кадр
+            esp.box.Color = ESP_SETTINGS.BoxColor
         end
         if esp.name then
             esp.name.Color = ESP_SETTINGS.NameColor
         end
         
-        -- Обновляем цвета для линий корнер бокса если они есть
-        if esp.boxLines then
+        -- Обновляем цвета для линий корнер бокса как в оригинале
+        if esp.boxLines and #esp.boxLines > 0 then
             for i = 1, 8 do
                 if esp.boxLines[i] then
                     esp.boxLines[i].Color = ESP_SETTINGS.BoxColor
@@ -192,6 +192,10 @@ local function updateEsp()
 
                     if ESP_SETTINGS.ShowBox then
                         if ESP_SETTINGS.BoxType == "2D" then
+                            -- Принудительно обновляем цвета прямо перед отрисовкой
+                            esp.boxOutline.Color = ESP_SETTINGS.BoxOutlineColor
+                            esp.box.Color = ESP_SETTINGS.BoxColor
+                            
                             esp.boxOutline.Size = boxSize
                             esp.boxOutline.Position = boxPosition
                             esp.box.Size = boxSize
@@ -215,7 +219,13 @@ local function updateEsp()
     
                             local boxLines = esp.boxLines
     
-                            -- Цвета уже обновлены в начале функции
+                            -- Обновляем цвета для корнер бокса
+                            for i = 1, 8 do
+                                boxLines[i].Color = ESP_SETTINGS.BoxColor
+                            end
+                            for i = 9, 16 do
+                                boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
+                            end
     
                             boxLines[1].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y - lineT)
                             boxLines[1].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y - lineT)

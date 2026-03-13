@@ -6,6 +6,8 @@ local Settings = {
     Combat = {
         Aimlock = {
             Enabled = false,
+            PersonType = "first person",
+            AimingMethod = "velocity",
             TeamCheck = false,
             AliveCheck = false,
             WallCheck = false,
@@ -124,6 +126,32 @@ p1t1:Toggle {
     end
 }
 
+p1t1:dropdown {
+    name = "person type",
+    content = {"first person","third person"},
+    callback = function(value)
+        Settings.Combat.Aimlock.PersonType = value
+        if value == "first person" then
+            firstperson:Show()
+            firstperson2:Show()
+            thirdperson:Hide()
+        elseif value == "third person" then
+            firstperson:Hide()
+            firstperson2:Hide()
+            thirdperson:Show()
+        end
+    end
+}
+
+
+firstperson2 = p1t1:dropdown {
+    name = "person type",
+    content = {"velocity","movedirection"},
+    callback = function(value)
+        Settings.Combat.Aimlock.AimingMethod = value
+    end
+}
+
 p1t1:Toggle {
     Name = "toggle",
     callback = function(value)
@@ -175,7 +203,7 @@ p1t1:dropdown {
     end
 }
 
-p1t1:Slider {
+thirdperson = p1t1:Slider {
     Name = "smoothness",
     Default = 0,
     Min = 0,
@@ -185,6 +213,18 @@ p1t1:Slider {
         Settings.Combat.Aimlock.Smoothness = tonumber(value)
     end
 }
+
+firstperson = p1t1:Box {
+    Name = "prediction",
+    Default = nil,
+    callback = function(value)
+        Settings.Combat.Aimlock.Prediction = tonumber(value)
+    end
+}
+
+firstperson:Hide()
+firstperson2:Hide()
+thirdperson:Hide()
 
 p1t1:Keybind {
     Name = "keybind",
@@ -699,6 +739,7 @@ p1t4:Slider {
 
 
 local Players = game:GetService("Players")
+local viewportSize = workspace.CurrentCamera.ViewportSize
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
@@ -757,7 +798,15 @@ local function GetClosestPlayer()
     if Settings.Combat.Aimlock.HoldCheck and not HasItemInHands() then return nil end
     local ClosestPlayer = nil
     local ClosestDistance = Settings.Combat.Aimlock.FOV
-    local MousePosition = UserInputService:GetMouseLocation()
+    local MousePosition
+    local viewportSize = Camera.ViewportSize
+    
+    if Settings.Combat.Aimlock.PersonType == "third person" then
+        MousePosition = UserInputService:GetMouseLocation()
+    elseif Settings.Combat.Aimlock.PersonType == "first person" then
+        MousePosition = Vector2.new(viewportSize.X/2, viewportSize.Y/2)
+    end
+    
     for _, Player in pairs(Players:GetPlayers()) do
         if Player == LocalPlayer then continue end
         local Character = Player.Character
@@ -794,41 +843,54 @@ end
 local function MoveMouseToTarget()
     if not Running or not Target then FOVCircle.Color = Color3.fromRGB(255, 255, 255); return end
     if not ValidateTarget() then return end
-    local Character = Target.Character
-    local Part = Character[Settings.Combat.Aimlock.LockPart]
-    if not Part then Target = nil; return end
-    local TargetPosition = Part.Position
-    if Settings.Combat.Aimlock.Prediction > 0 and Character:FindFirstChild("HumanoidRootPart") then
-        local RootPart = Character.HumanoidRootPart
-        local Velocity = RootPart.Velocity
-        TargetPosition = TargetPosition + (Velocity * Settings.Combat.Aimlock.Prediction)
-    end
-    local Success, PartPosition = pcall(function()
-        return Camera:WorldToViewportPoint(TargetPosition)
-    end)
-    if not Success then Target = nil; return end
-    local MousePosition = UserInputService:GetMouseLocation()
-    local DeltaX = (PartPosition.X - MousePosition.X) / Settings.Combat.Aimlock.Smoothness
-    local DeltaY = (PartPosition.Y - MousePosition.Y) / Settings.Combat.Aimlock.Smoothness
-    local baseMaxDelta = 200
-    local MaxDelta = baseMaxDelta / Settings.Combat.Aimlock.Smoothness
-    DeltaX = math.clamp(DeltaX, -MaxDelta, MaxDelta)
-    DeltaY = math.clamp(DeltaY, -MaxDelta, MaxDelta)
-    if math.abs(DeltaX) > 0.5 or math.abs(DeltaY) > 0.5 then
-        pcall(function()
-            mousemoverel(DeltaX, DeltaY)
+    if Settings.Combat.Aimlock.PersonType == "third person" then
+        local Character = Target.Character
+        local Part = Character[Settings.Combat.Aimlock.LockPart]
+        if not Part then Target = nil; return end
+        local TargetPosition = Part.Position
+        local Success, PartPosition = pcall(function()
+            return Camera:WorldToViewportPoint(TargetPosition)
         end)
-    end
+        if not Success then Target = nil; return end
+            local MousePosition = UserInputService:GetMouseLocation()
+            local DeltaX = (PartPosition.X - MousePosition.X) / Settings.Combat.Aimlock.Smoothness
+            local DeltaY = (PartPosition.Y - MousePosition.Y) / Settings.Combat.Aimlock.Smoothness
+            local baseMaxDelta = 200
+            local MaxDelta = baseMaxDelta / Settings.Combat.Aimlock.Smoothness
+            DeltaX = math.clamp(DeltaX, -MaxDelta, MaxDelta)
+            DeltaY = math.clamp(DeltaY, -MaxDelta, MaxDelta)
+                if math.abs(DeltaX) > 0.5 or math.abs(DeltaY) > 0.5 then
+                    pcall(function()            
+                        mousemoverel(DeltaX, DeltaY)
+                    end)
+                end
+        FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+    elseif Settings.Combat.Aimlock.PersonType == "first person" then
+        local Part = Target.Character[Settings.Combat.Aimlock.LockPart]
+        if Settings.Combat.Aimlock.AimingMethod == "velocity" then
+            workspace.Camera.CFrame = CFrame.new(workspace.Camera.CFrame.Position, Part.Position + (Part.Velocity * Settings.Combat.Aimlock.Prediction))
+        elseif Settings.Combat.Aimlock.AimingMethod == "movedirection" then
+            workspace.Camera.CFrame = CFrame.new(workspace.Camera.CFrame.Position, Part.Position + (Target.Character.Humanoid.MoveDirection * Settings.Combat.Aimlock.Prediction))
+        end
     FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+    end
 end
 
 local function UpdateFOVCircle()
     if Settings.Combat.Aimlock.ShowFOV and Settings.Combat.Aimlock.Enabled then
-        FOVCircle.Visible = true
-        FOVCircle.Position = UserInputService:GetMouseLocation()
-        FOVCircle.Radius = Settings.Combat.Aimlock.FOV
-        FOVCircle.Filled = Settings.Combat.Aimlock.Filled
-        FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
+        if Settings.Combat.Aimlock.PersonType == "third person" then
+            FOVCircle.Visible = true
+            FOVCircle.Position = UserInputService:GetMouseLocation()
+            FOVCircle.Radius = Settings.Combat.Aimlock.FOV
+            FOVCircle.Filled = Settings.Combat.Aimlock.Filled
+            FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
+        elseif Settings.Combat.Aimlock.PersonType == "first person" then
+            FOVCircle.Visible = true
+            FOVCircle.Position = Vector2.new(viewportSize.X/2, viewportSize.Y/2)
+            FOVCircle.Radius = Settings.Combat.Aimlock.FOV
+            FOVCircle.Filled = Settings.Combat.Aimlock.Filled
+            FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
+        end
     else
         FOVCircle.Visible = false
     end

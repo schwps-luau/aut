@@ -130,7 +130,7 @@ end
 
 local function updateEsp()
     for player, esp in pairs(cache) do
-        -- Всегда обновляем цвета при каждой отрисовке
+        -- ОБНОВЛЯЕМ ЦВЕТА КАЖДЫЙ КАДР для всех элементов
         if esp.tracer then
             esp.tracer.Color = ESP_SETTINGS.TracerColor
         end
@@ -138,13 +138,26 @@ local function updateEsp()
             esp.boxOutline.Color = ESP_SETTINGS.BoxOutlineColor
         end
         if esp.box then
-            esp.box.Color = ESP_SETTINGS.BoxColor
+            esp.box.Color = ESP_SETTINGS.BoxColor  -- Теперь 2D бокс тоже обновляет цвет каждый кадр
         end
         if esp.name then
             esp.name.Color = ESP_SETTINGS.NameColor
         end
         
-        -- Проверяем включен ли ESP
+        -- Обновляем цвета для линий корнер бокса если они есть
+        if esp.boxLines then
+            for i = 1, 8 do
+                if esp.boxLines[i] then
+                    esp.boxLines[i].Color = ESP_SETTINGS.BoxColor
+                end
+            end
+            for i = 9, 16 do
+                if esp.boxLines[i] then
+                    esp.boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
+                end
+            end
+        end
+        
         if not ESP_SETTINGS.Enabled then
             hideAllEspElements(esp)
             continue
@@ -202,12 +215,7 @@ local function updateEsp()
     
                             local boxLines = esp.boxLines
     
-                            for i = 1, 8 do
-                                boxLines[i].Color = ESP_SETTINGS.BoxColor
-                            end
-                            for i = 9, 16 do
-                                boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
-                            end
+                            -- Цвета уже обновлены в начале функции
     
                             boxLines[1].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y - lineT)
                             boxLines[1].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y - lineT)

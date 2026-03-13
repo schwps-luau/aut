@@ -89,6 +89,24 @@ local function isPlayerBehindWall(player)
     return hit ~= nil
 end
 
+local function hideAllEspElements(esp)
+    if esp.tracer then esp.tracer.Visible = false end
+    if esp.boxOutline then esp.boxOutline.Visible = false end
+    if esp.box then esp.box.Visible = false end
+    if esp.name then esp.name.Visible = false end
+    if esp.healthOutline then esp.healthOutline.Visible = false end
+    if esp.health then esp.health.Visible = false end
+    if esp.distance then esp.distance.Visible = false end
+    
+    if esp.boxLines then
+        for _, line in ipairs(esp.boxLines) do
+            if line then
+                line.Visible = false
+            end
+        end
+    end
+end
+
 local function removeEsp(player)
     local esp = cache[player]
     if not esp then return end
@@ -112,12 +130,32 @@ end
 
 local function updateEsp()
     for player, esp in pairs(cache) do
+        -- Всегда обновляем цвета при каждой отрисовке
+        if esp.tracer then
+            esp.tracer.Color = ESP_SETTINGS.TracerColor
+        end
+        if esp.boxOutline then
+            esp.boxOutline.Color = ESP_SETTINGS.BoxOutlineColor
+        end
+        if esp.box then
+            esp.box.Color = ESP_SETTINGS.BoxColor
+        end
+        if esp.name then
+            esp.name.Color = ESP_SETTINGS.NameColor
+        end
+        
+        -- Проверяем включен ли ESP
+        if not ESP_SETTINGS.Enabled then
+            hideAllEspElements(esp)
+            continue
+        end
+        
         local character = player.Character
         if character and (not ESP_SETTINGS.Teamcheck or (player.Team and player.Team ~= localPlayer.Team)) then
             local rootPart = character:FindFirstChild("HumanoidRootPart")
             local humanoid = character:FindFirstChild("Humanoid")
             local isBehindWall = ESP_SETTINGS.WallCheck and isPlayerBehindWall(player)
-            local shouldShow = not isBehindWall and ESP_SETTINGS.Enabled
+            local shouldShow = not isBehindWall
             
             if rootPart and humanoid and humanoid.Health > 0 and shouldShow then
                 local hrp2D, onScreen = camera:WorldToViewportPoint(rootPart.Position)
@@ -149,9 +187,8 @@ local function updateEsp()
                             esp.boxOutline.Visible = true
                             
                             for _, line in ipairs(esp.boxLines) do
-                                pcall(function() line:Remove() end)
+                                line.Visible = false
                             end
-                            esp.boxLines = {}
                         else
                             local lineW = boxSize.X / 5
                             local lineH = boxSize.Y / 6
@@ -216,9 +253,8 @@ local function updateEsp()
                         esp.box.Visible = false
                         esp.boxOutline.Visible = false
                         for _, line in ipairs(esp.boxLines) do
-                            pcall(function() line:Remove() end)
+                            line.Visible = false
                         end
-                        esp.boxLines = {}
                     end
 
                     if ESP_SETTINGS.ShowHealth then
@@ -253,31 +289,13 @@ local function updateEsp()
                         esp.tracer.Visible = false
                     end
                 else
-                    esp.name.Visible = false
-                    esp.box.Visible = false
-                    esp.boxOutline.Visible = false
-                    esp.healthOutline.Visible = false
-                    esp.health.Visible = false
-                    esp.distance.Visible = false
-                    esp.tracer.Visible = false
+                    hideAllEspElements(esp)
                 end
             else
-                esp.name.Visible = false
-                esp.box.Visible = false
-                esp.boxOutline.Visible = false
-                esp.healthOutline.Visible = false
-                esp.health.Visible = false
-                esp.distance.Visible = false
-                esp.tracer.Visible = false
+                hideAllEspElements(esp)
             end
         else
-            esp.name.Visible = false
-            esp.box.Visible = false
-            esp.boxOutline.Visible = false
-            esp.healthOutline.Visible = false
-            esp.health.Visible = false
-            esp.distance.Visible = false
-            esp.tracer.Visible = false
+            hideAllEspElements(esp)
         end
     end
 end

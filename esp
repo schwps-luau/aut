@@ -5,24 +5,28 @@ local camera = workspace.CurrentCamera
 local cache = {}
 
 local ESP_SETTINGS = {
-    Enabled = true,
+    BoxOutlineColor = Color3.fromRGB(0, 0, 0),
+    BoxColor = Color3.fromRGB(255, 255, 255),
+    NameColor = Color3.fromRGB(255, 255, 255),
+    HealthOutlineColor = Color3.fromRGB(0, 0, 0),
+    HealthHighColor = Color3.fromRGB(0, 255, 0),
+    HealthLowColor = Color3.fromRGB(255, 0, 0),
     Teamcheck = false,
     WallCheck = false,
-    ShowBox = true,
+    Enabled = false,
+    ShowBox = false,
     BoxType = "2D",
-    BoxColor = Color3.fromRGB(255, 255, 255),
-    BoxOutlineColor = Color3.fromRGB(0, 0, 0),
-    ShowName = true,
-    NameColor = Color3.fromRGB(255, 255, 255),
-    UseDisplayName = true,  -- Вот эта настройка включает DisplayName
+    ShowName = false,
+    UseDisplayName = true,
     ShowHealth = false,
     ShowDistance = false,
     ShowTracer = false,
-    TracerColor = Color3.fromRGB(255, 255, 255),
+    TracerColor = Color3.fromRGB(255, 255, 255), 
+    TracerThickness = 1,
     TracerPosition = "Bottom",
 }
 
-local function createDrawing(class, properties)
+local function create(class, properties)
     local drawing = Drawing.new(class)
     for property, value in pairs(properties) do
         drawing[property] = value
@@ -30,270 +34,272 @@ local function createDrawing(class, properties)
     return drawing
 end
 
-local function createESP(player)
+local function createEsp(player)
     local esp = {
-        box = createDrawing("Square", {
-            Color = ESP_SETTINGS.BoxColor,
-            Thickness = 2,
-            Filled = false,
-            Visible = false
+        tracer = create("Line", {
+            Thickness = ESP_SETTINGS.TracerThickness,
+            Color = ESP_SETTINGS.TracerColor,
+            Transparency = 0.5
         }),
-        boxOutline = createDrawing("Square", {
+        boxOutline = create("Square", {
             Color = ESP_SETTINGS.BoxOutlineColor,
-            Thickness = 3,
-            Filled = false,
-            Visible = false
+            Thickness = 1,
+            Filled = false
         }),
-        name = createDrawing("Text", {
+        box = create("Square", {
+            Color = ESP_SETTINGS.BoxColor,
+            Thickness = 1,
+            Filled = false
+        }),
+        name = create("Text", {
             Color = ESP_SETTINGS.NameColor,
-            Size = 13,
             Outline = true,
             Center = true,
-            Visible = false
+            Size = 13
         }),
-        healthBar = createDrawing("Line", {
-            Thickness = 3,
-            Color = Color3.fromRGB(0, 255, 0),
-            Visible = false
+        healthOutline = create("Line", {
+            Thickness = 1,
+            Color = ESP_SETTINGS.HealthOutlineColor
         }),
-        healthOutline = createDrawing("Line", {
-            Thickness = 4,
-            Color = Color3.fromRGB(0, 0, 0),
-            Visible = false
+        health = create("Line", {
+            Thickness = 1
         }),
-        distance = createDrawing("Text", {
+        distance = create("Text", {
             Color = Color3.fromRGB(255, 255, 255),
             Size = 12,
             Outline = true,
-            Center = true,
-            Visible = false
+            Center = true
         }),
-        tracer = createDrawing("Line", {
-            Thickness = 2,
-            Color = ESP_SETTINGS.TracerColor,
-            Visible = false
-        })
+        boxLines = {}
     }
-    
+
     cache[player] = esp
 end
 
-local function removeESP(player)
-    local esp = cache[player]
-    if esp then
-        for _, drawing in pairs(esp) do
-            pcall(function()
-                drawing:Remove()
-            end)
-        end
-        cache[player] = nil
-    end
-end
-
-local function isPlayerVisible(player)
-    if not ESP_SETTINGS.WallCheck then return true end
-    
+local function isPlayerBehindWall(player)
     local character = player.Character
     if not character then return false end
-    
+
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return false end
+
+    local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * (rootPart.Position - camera.CFrame.Position).Magnitude)
+    local hit = workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character, character})
     
-    local cameraPos = camera.CFrame.Position
-    local direction = (rootPart.Position - cameraPos).Unit
-    local ray = Ray.new(cameraPos, direction * 1000)
-    
-    local hit, position = workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character, character})
-    
-    return hit == nil
+    return hit ~= nil
 end
 
-local function updateESP()
-    if not ESP_SETTINGS.Enabled then
-        -- Если ESP выключен, скрываем всё
-        for player, esp in pairs(cache) do
-            for _, drawing in pairs(esp) do
-                pcall(function()
-                    drawing.Visible = false
-                end)
-            end
-        end
-        return
-    end
+local function removeEsp(player)
+    local esp = cache[player]
+    if not esp then return end
+
+    if esp.tracer then pcall(function() esp.tracer:Remove() end) end
+    if esp.boxOutline then pcall(function() esp.boxOutline:Remove() end) end
+    if esp.box then pcall(function() esp.box:Remove() end) end
+    if esp.name then pcall(function() esp.name:Remove() end) end
+    if esp.healthOutline then pcall(function() esp.healthOutline:Remove() end) end
+    if esp.health then pcall(function() esp.health:Remove() end) end
+    if esp.distance then pcall(function() esp.distance:Remove() end) end
     
+    if esp.boxLines then
+        for _, line in ipairs(esp.boxLines) do
+            pcall(function() line:Remove() end)
+        end
+    end
+
+    cache[player] = nil
+end
+
+local function updateEsp()
     for player, esp in pairs(cache) do
-        -- Проверяем, что игрок существует
-        if not player or not player.Parent then
-            removeESP(player)
-            continue
-        end
-        
         local character = player.Character
-        if not character then
-            -- Если нет персонажа, скрываем всё
-            for _, drawing in pairs(esp) do
-                pcall(function()
-                    drawing.Visible = false
-                end)
-            end
-            continue
-        end
-        
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character:FindFirstChild("Humanoid")
-        
-        if not rootPart or not humanoid or humanoid.Health <= 0 then
-            for _, drawing in pairs(esp) do
-                pcall(function()
-                    drawing.Visible = false
-                end)
-            end
-            continue
-        end
-        
-        -- Проверка на свою команду
-        if ESP_SETTINGS.Teamcheck and player.Team == localPlayer.Team then
-            for _, drawing in pairs(esp) do
-                pcall(function()
-                    drawing.Visible = false
-                end)
-            end
-            continue
-        end
-        
-        -- Проверка видимости через стены
-        if not isPlayerVisible(player) then
-            for _, drawing in pairs(esp) do
-                pcall(function()
-                    drawing.Visible = false
-                end)
-            end
-            continue
-        end
-        
-        -- Конвертируем позицию в экранные координаты
-        local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-        
-        if onScreen then
-            -- Получаем позиции головы и ног для расчета высоты
-            local head = character:FindFirstChild("Head")
-            local headPos = head and camera:WorldToViewportPoint(head.Position) or screenPos
-            local footPos = camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
+        if character and (not ESP_SETTINGS.Teamcheck or (player.Team and player.Team ~= localPlayer.Team)) then
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            local humanoid = character:FindFirstChild("Humanoid")
+            local isBehindWall = ESP_SETTINGS.WallCheck and isPlayerBehindWall(player)
+            local shouldShow = not isBehindWall and ESP_SETTINGS.Enabled
             
-            -- Вычисляем размеры бокса
-            local height = math.abs(headPos.Y - footPos.Y)
-            local width = height * 0.8
-            local boxY = headPos.Y
-            local boxX = screenPos.X - width/2
-            
-            -- Обновляем имя (здесь используется DisplayName)
-            if ESP_SETTINGS.ShowName then
-                esp.name.Visible = true
-                -- Вот здесь выбираем между DisplayName и обычным именем
-                if ESP_SETTINGS.UseDisplayName then
-                    esp.name.Text = player.DisplayName or player.Name
+            if rootPart and humanoid and humanoid.Health > 0 and shouldShow then
+                local hrp2D, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+                
+                if onScreen then
+                    local charSize = (camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0)).Y - camera:WorldToViewportPoint(rootPart.Position + Vector3.new(0, 2.6, 0)).Y) / 2
+                    local boxSize = Vector2.new(math.floor(charSize * 1.8), math.floor(charSize * 1.9))
+                    local boxPosition = Vector2.new(math.floor(hrp2D.X - charSize * 1.8 / 2), math.floor(hrp2D.Y - charSize * 1.6 / 2))
+
+                    if ESP_SETTINGS.ShowName then
+                        esp.name.Visible = true
+                        if ESP_SETTINGS.UseDisplayName then
+                            esp.name.Text = player.DisplayName or player.Name
+                        else
+                            esp.name.Text = player.Name
+                        end
+                        esp.name.Position = Vector2.new(boxSize.X / 2 + boxPosition.X, boxPosition.Y - 16)
+                    else
+                        esp.name.Visible = false
+                    end
+
+                    if ESP_SETTINGS.ShowBox then
+                        if ESP_SETTINGS.BoxType == "2D" then
+                            esp.boxOutline.Size = boxSize
+                            esp.boxOutline.Position = boxPosition
+                            esp.box.Size = boxSize
+                            esp.box.Position = boxPosition
+                            esp.box.Visible = true
+                            esp.boxOutline.Visible = true
+                            
+                            for _, line in ipairs(esp.boxLines) do
+                                pcall(function() line:Remove() end)
+                            end
+                            esp.boxLines = {}
+                        else
+                            local lineW = boxSize.X / 5
+                            local lineH = boxSize.Y / 6
+                            local lineT = 1
+    
+                            if #esp.boxLines == 0 then
+                                for i = 1, 16 do
+                                    table.insert(esp.boxLines, create("Line", {Thickness = 1, Color = ESP_SETTINGS.BoxColor, Transparency = 1}))
+                                end
+                            end
+    
+                            local boxLines = esp.boxLines
+    
+                            for i = 1, 8 do
+                                boxLines[i].Color = ESP_SETTINGS.BoxColor
+                            end
+                            for i = 9, 16 do
+                                boxLines[i].Color = ESP_SETTINGS.BoxOutlineColor
+                            end
+    
+                            boxLines[1].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y - lineT)
+                            boxLines[1].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y - lineT)
+                            boxLines[2].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y - lineT)
+                            boxLines[2].To = Vector2.new(boxPosition.X - lineT, boxPosition.Y + lineH)
+                            boxLines[3].From = Vector2.new(boxPosition.X + boxSize.X - lineW, boxPosition.Y - lineT)
+                            boxLines[3].To = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y - lineT)
+                            boxLines[4].From = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y - lineT)
+                            boxLines[4].To = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + lineH)
+                            boxLines[5].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y + boxSize.Y - lineH)
+                            boxLines[5].To = Vector2.new(boxPosition.X - lineT, boxPosition.Y + boxSize.Y + lineT)
+                            boxLines[6].From = Vector2.new(boxPosition.X - lineT, boxPosition.Y + boxSize.Y + lineT)
+                            boxLines[6].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y + boxSize.Y + lineT)
+                            boxLines[7].From = Vector2.new(boxPosition.X + boxSize.X - lineW, boxPosition.Y + boxSize.Y + lineT)
+                            boxLines[7].To = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + boxSize.Y + lineT)
+                            boxLines[8].From = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + boxSize.Y - lineH)
+                            boxLines[8].To = Vector2.new(boxPosition.X + boxSize.X + lineT, boxPosition.Y + boxSize.Y + lineT)
+    
+                            boxLines[9].From = Vector2.new(boxPosition.X, boxPosition.Y)
+                            boxLines[9].To = Vector2.new(boxPosition.X, boxPosition.Y + lineH)
+                            boxLines[10].From = Vector2.new(boxPosition.X, boxPosition.Y)
+                            boxLines[10].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y)
+                            boxLines[11].From = Vector2.new(boxPosition.X + boxSize.X - lineW, boxPosition.Y)
+                            boxLines[11].To = Vector2.new(boxPosition.X + boxSize.X, boxPosition.Y)
+                            boxLines[12].From = Vector2.new(boxPosition.X + boxSize.X, boxPosition.Y)
+                            boxLines[12].To = Vector2.new(boxPosition.X + boxSize.X, boxPosition.Y + lineH)
+                            boxLines[13].From = Vector2.new(boxPosition.X, boxPosition.Y + boxSize.Y - lineH)
+                            boxLines[13].To = Vector2.new(boxPosition.X, boxPosition.Y + boxSize.Y)
+                            boxLines[14].From = Vector2.new(boxPosition.X, boxPosition.Y + boxSize.Y)
+                            boxLines[14].To = Vector2.new(boxPosition.X + lineW, boxPosition.Y + boxSize.Y)
+                            boxLines[15].From = Vector2.new(boxPosition.X + boxSize.X - lineW, boxPosition.Y + boxSize.Y)
+                            boxLines[15].To = Vector2.new(boxPosition.X + boxSize.X, boxPosition.Y + boxSize.Y)
+                            boxLines[16].From = Vector2.new(boxPosition.X + boxSize.X, boxPosition.Y + boxSize.Y - lineH)
+                            boxLines[16].To = Vector2.new(boxPosition.X + boxSize.X, boxPosition.Y + boxSize.Y)
+    
+                            for _, line in ipairs(boxLines) do
+                                line.Visible = true
+                            end
+                            esp.box.Visible = false
+                            esp.boxOutline.Visible = false
+                        end
+                    else
+                        esp.box.Visible = false
+                        esp.boxOutline.Visible = false
+                        for _, line in ipairs(esp.boxLines) do
+                            pcall(function() line:Remove() end)
+                        end
+                        esp.boxLines = {}
+                    end
+
+                    if ESP_SETTINGS.ShowHealth then
+                        local healthPercent = humanoid.Health / humanoid.MaxHealth
+                        esp.healthOutline.From = Vector2.new(boxPosition.X - 6, boxPosition.Y + boxSize.Y)
+                        esp.healthOutline.To = Vector2.new(esp.healthOutline.From.X, esp.healthOutline.From.Y - boxSize.Y)
+                        esp.health.From = Vector2.new(boxPosition.X - 5, boxPosition.Y + boxSize.Y)
+                        esp.health.To = Vector2.new(esp.health.From.X, esp.health.From.Y - healthPercent * boxSize.Y)
+                        esp.health.Color = ESP_SETTINGS.HealthLowColor:Lerp(ESP_SETTINGS.HealthHighColor, healthPercent)
+                        esp.healthOutline.Visible = true
+                        esp.health.Visible = true
+                    else
+                        esp.healthOutline.Visible = false
+                        esp.health.Visible = false
+                    end
+
+                    if ESP_SETTINGS.ShowDistance then
+                        local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
+                        esp.distance.Text = string.format("%.1f", distance)
+                        esp.distance.Position = Vector2.new(boxPosition.X + boxSize.X / 2, boxPosition.Y + boxSize.Y + 5)
+                        esp.distance.Visible = true
+                    else
+                        esp.distance.Visible = false
+                    end
+
+                    if ESP_SETTINGS.ShowTracer then
+                        local tracerY = ESP_SETTINGS.TracerPosition == "Top" and 0 or ESP_SETTINGS.TracerPosition == "Middle" and camera.ViewportSize.Y / 2 or camera.ViewportSize.Y
+                        esp.tracer.From = Vector2.new(camera.ViewportSize.X / 2, tracerY)
+                        esp.tracer.To = Vector2.new(hrp2D.X, hrp2D.Y)
+                        esp.tracer.Visible = true
+                    else
+                        esp.tracer.Visible = false
+                    end
                 else
-                    esp.name.Text = player.Name
+                    esp.name.Visible = false
+                    esp.box.Visible = false
+                    esp.boxOutline.Visible = false
+                    esp.healthOutline.Visible = false
+                    esp.health.Visible = false
+                    esp.distance.Visible = false
+                    esp.tracer.Visible = false
                 end
-                esp.name.Position = Vector2.new(screenPos.X, boxY - 20)
-                esp.name.Color = ESP_SETTINGS.NameColor
             else
                 esp.name.Visible = false
-            end
-            
-            -- Обновляем бокс
-            if ESP_SETTINGS.ShowBox then
-                esp.box.Visible = true
-                esp.boxOutline.Visible = true
-                
-                esp.box.Size = Vector2.new(width, height)
-                esp.box.Position = Vector2.new(boxX, boxY)
-                esp.box.Color = ESP_SETTINGS.BoxColor
-                
-                esp.boxOutline.Size = Vector2.new(width, height)
-                esp.boxOutline.Position = Vector2.new(boxX, boxY)
-                esp.boxOutline.Color = ESP_SETTINGS.BoxOutlineColor
-            else
                 esp.box.Visible = false
                 esp.boxOutline.Visible = false
-            end
-            
-            -- Обновляем здоровье
-            if ESP_SETTINGS.ShowHealth then
-                esp.healthBar.Visible = true
-                esp.healthOutline.Visible = true
-                
-                local healthPercent = humanoid.Health / humanoid.MaxHealth
-                local healthColor = Color3.fromRGB(
-                    255 * (1 - healthPercent),
-                    255 * healthPercent,
-                    0
-                )
-                
-                esp.healthBar.From = Vector2.new(boxX - 8, boxY + height)
-                esp.healthBar.To = Vector2.new(boxX - 8, boxY + height - (height * healthPercent))
-                esp.healthBar.Color = healthColor
-                
-                esp.healthOutline.From = Vector2.new(boxX - 9, boxY + height)
-                esp.healthOutline.To = Vector2.new(boxX - 9, boxY)
-            else
-                esp.healthBar.Visible = false
                 esp.healthOutline.Visible = false
-            end
-            
-            -- Обновляем дистанцию
-            if ESP_SETTINGS.ShowDistance then
-                esp.distance.Visible = true
-                local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
-                esp.distance.Text = string.format("%.1f", distance)
-                esp.distance.Position = Vector2.new(screenPos.X, boxY + height + 15)
-            else
+                esp.health.Visible = false
                 esp.distance.Visible = false
-            end
-            
-            -- Обновляем трейсер
-            if ESP_SETTINGS.ShowTracer then
-                esp.tracer.Visible = true
-                
-                local startY = ESP_SETTINGS.TracerPosition == "Top" and 0 
-                    or ESP_SETTINGS.TracerPosition == "Middle" and camera.ViewportSize.Y/2 
-                    or camera.ViewportSize.Y
-                
-                esp.tracer.From = Vector2.new(camera.ViewportSize.X/2, startY)
-                esp.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
-                esp.tracer.Color = ESP_SETTINGS.TracerColor
-            else
                 esp.tracer.Visible = false
             end
         else
-            -- Если игрок не на экране, скрываем всё
-            for _, drawing in pairs(esp) do
-                pcall(function()
-                    drawing.Visible = false
-                end)
-            end
+            esp.name.Visible = false
+            esp.box.Visible = false
+            esp.boxOutline.Visible = false
+            esp.healthOutline.Visible = false
+            esp.health.Visible = false
+            esp.distance.Visible = false
+            esp.tracer.Visible = false
         end
     end
 end
 
--- Создаем ESP для всех существующих игроков
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= localPlayer then
-        createESP(player)
+        createEsp(player)
     end
 end
 
--- Подписываемся на новых игроков
 Players.PlayerAdded:Connect(function(player)
     if player ~= localPlayer then
-        createESP(player)
+        createEsp(player)
     end
 end)
 
--- Подписываемся на удаление игроков
 Players.PlayerRemoving:Connect(function(player)
-    removeESP(player)
+    pcall(function() 
+        removeEsp(player) 
+    end)
 end)
 
--- Запускаем обновление
-RunService.RenderStepped:Connect(updateESP)
+RunService.RenderStepped:Connect(updateEsp)
+
+return ESP_SETTINGS

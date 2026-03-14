@@ -63,9 +63,6 @@ local Settings = {
             SmoothPos = Vector3.new(),
             Speed = 10,
             Power = 1
-        },
-        InstantTurn = {
-            Enabled = false
         }
     },
     Target = {
@@ -83,6 +80,14 @@ local Settings = {
             OldPos = nil,
             FallenParts = workspace.FallenPartsDestroyHeight,
             BodyVelocity = nil
+        }
+    },
+    Other = {
+        InstantTurn = false,
+        FallenParts = workspace.FallenPartsDestroyHeight,
+        OldPosiiton = nil,
+        Config = {
+            Input = nil
         }
     }
 }
@@ -119,13 +124,6 @@ local Tab5 = Window:Tab("other")
 local p1t5 = Tab5:Section{name = "config", column = 1}
 local p2t5 = Tab5:Section{name = "other", column = 2}
 
-p1t1:Toggle {
-    Name = "enabled",
-    callback = function(value)
-        Settings.Combat.Aimlock.Enabled = value
-    end
-}
-
 p1t1:dropdown {
     name = "person type",
     content = {"first person","third person"},
@@ -143,12 +141,27 @@ p1t1:dropdown {
     end
 }
 
-
 firstperson2 = p1t1:dropdown {
     name = "person type",
     content = {"velocity","movedirection"},
     callback = function(value)
         Settings.Combat.Aimlock.AimingMethod = value
+    end
+}
+
+p1t1:dropdown {
+    name = "part",
+    content = {"Head","HumanoidRootPart","UpperTorso", "LowerTorso"},
+    multichoice = false,
+    callback = function(value)
+        Settings.Combat.Aimlock.LockPart = value
+    end
+}
+
+p1t1:Toggle {
+    Name = "enabled",
+    callback = function(value)
+        Settings.Combat.Aimlock.Enabled = value
     end
 }
 
@@ -191,15 +204,6 @@ p1t1:Toggle {
     Name = "rotateto",
     callback = function(value)
         Settings.Combat.Aimlock.RotateTo = value
-    end
-}
-
-p1t1:dropdown {
-    name = "part",
-    content = {"Head","HumanoidRootPart","UpperTorso", "LowerTorso"},
-    multichoice = false,
-    callback = function(value)
-        Settings.Combat.Aimlock.LockPart = value
     end
 }
 
@@ -675,7 +679,53 @@ p1t4:Slider {
     end
 }
 
+p1t5:Box {
+    Name = "config",
+    Default = "nil",
+    callback = function(value)
+        Settings.Other.Config.Input = value
+    end
+}
 
+p1t5:Button {
+    Name = "save",
+    callback = function()
+        Library:SaveConfig(Settings.Other.Config.Input)
+    end
+}
+
+p1t5:Button {
+    Name = "load",
+    callback = function()
+        Library:LoadConfig(Settings.Other.Config.Input)
+    end
+}
+
+p2t5:Toggle {
+    Name = "instant turn",
+    callback = function(value)
+        Settings.Other.InstantTurn = value
+    end
+}
+
+p2t5:Button {
+    Name = "rejoin",
+    callback = function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
+    end
+}
+
+p2t5:Button {
+    Name = "kill attached",
+    callback = function()
+        Settings.Other.OldPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+        workspace.FallenPartsDestroyHeight = 0/1/0
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, Settings.Other.FallenParts - 100, 0))
+        task.wait(2)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Other.OldPosition
+        workspace.FallenPartsDestroyHeight = Settings.Other.FallenParts
+    end
+}
 
 
 
@@ -1244,7 +1294,7 @@ function StartAntiAim()
 end
 
 RunService.Heartbeat:Connect(function()
-    if not Settings.Player.InstantTurn.Enabled then return end
+    if not Settings.Other.InstantTurn then return end
     local player = game.Players.LocalPlayer
     local character = player.Character
     if not character then return end

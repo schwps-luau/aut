@@ -313,24 +313,24 @@ function initLibrary()
         local name = options.name or "Epic UI Library"
         local sizeX = options.sizeX or 466
         local sizeY = options.sizeY or 350
-        local color = options.color or Color3.fromRGB(255, 255, 255)
+        local color = options.color or Color3.fromRGB(128, 128, 128)
         local dragSpeed = options.dragSpeed or 0
         local theme = options.theme or "dark"
 
         local themeColors = {
             dark = Color3.fromRGB(128, 128, 128),      
             light = Color3.fromRGB(240, 240, 240),     
-            blue = Color3.fromRGB(10, 20, 40),       
+            blue = Color3.fromRGB(200, 220, 240),       
             ["light blue"] = Color3.fromRGB(200, 220, 240), 
-            red = Color3.fromRGB(40, 10, 10),         
+            red = Color3.fromRGB(250, 220, 220),         
             ["light red"] = Color3.fromRGB(250, 220, 220),
-            purple = Color3.fromRGB(30, 10, 40),    
+            purple = Color3.fromRGB(230, 210, 250),    
             ["light purple"] = Color3.fromRGB(230, 210, 250), 
-            green = Color3.fromRGB(10, 30, 10),   
+            green = Color3.fromRGB(210, 240, 210),   
             ["light green"] = Color3.fromRGB(210, 240, 210) 
         }
 
-        if color == Color3.fromRGB(255, 255, 255) and theme:lower() ~= "dark" then
+        if color == Color3.fromRGB(128, 128, 128) and theme:lower() ~= "dark" then
             color = themeColors[theme:lower()] or color
         end
 

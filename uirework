@@ -1,13 +1,9 @@
 
 --[[
-Yun Founders: flash#9999, loris#9547, worldwide#0001, Saul Goodman#2345
+Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
-
-old yun menu, reworked w new funcs
-added mobile support to color picker sliders drag etc.
 --]]
-
 function initLibrary()
     local folderName = "config holder"
     local gameConfigFolder = "cfgs"
@@ -313,46 +309,7 @@ function initLibrary()
         writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
     end
 
-    function library:GetConfigsTable()
-        local configsTable = {
-            cfgs = {},
-            configHolder = {}
-        }
-        
-        if isfolder("cfgs") then
-            local files = listfiles("cfgs")
-            for _, file in ipairs(files) do
-                if file:sub(-4) == ".cfg" then
-                    local name = file:gsub("cfgs\\", ""):gsub(".cfg", "")
-                    local success, data = pcall(function()
-                        return loadstring("return " .. readfile(file))()
-                    end)
-                    
-                    if success and data then
-                        configsTable.cfgs[name] = data
-                    end
-                end
-            end
-        end
-        
-        if isfolder("config holder") then
-            local files = listfiles("config holder")
-            for _, file in ipairs(files) do
-                if file:sub(-4) == ".cfg" then
-                    local name = file:gsub("config holder\\", ""):gsub(".cfg", "")
-                    local success, data = pcall(function()
-                        return loadstring("return " .. readfile(file))()
-                    end)
-                    
-                    if success and data then
-                        configsTable.configHolder[name] = data
-                    end
-                end
-            end
-        end
-        
-        return configsTable
-    end
+
 
 
     function library:Load(opts)
@@ -362,7 +319,152 @@ function initLibrary()
         local sizeY = options.sizeY or 350
         local color = options.color or Color3.fromRGB(255, 255, 255)
         local dragSpeed = options.dragSpeed or 0
+        local theme = options.theme or "dark"
 
+        local themes = {
+            dark = {
+                background = Color3.fromRGB(22, 22, 22),
+                secondary = Color3.fromRGB(32, 32, 32),
+                tertiary = Color3.fromRGB(26, 26, 26),
+                quaternary = Color3.fromRGB(28, 28, 28),
+                quinary = Color3.fromRGB(22, 22, 22),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(180, 180, 180),
+                border = Color3.fromRGB(20, 20, 20),
+                gradient1 = Color3.fromRGB(32, 32, 32),
+                gradient2 = Color3.fromRGB(17, 17, 17),
+                dropdown = Color3.fromRGB(33, 33, 33),
+                picker = Color3.fromRGB(20, 20, 20)
+            },
+            light = {
+                background = Color3.fromRGB(240, 240, 240),
+                secondary = Color3.fromRGB(255, 255, 255),
+                tertiary = Color3.fromRGB(230, 230, 230),
+                quaternary = Color3.fromRGB(250, 250, 250),
+                quinary = Color3.fromRGB(240, 240, 240),
+                text = Color3.fromRGB(0, 0, 0),
+                textSecondary = Color3.fromRGB(80, 80, 80),
+                border = Color3.fromRGB(200, 200, 200),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(220, 220, 220),
+                dropdown = Color3.fromRGB(245, 245, 245),
+                picker = Color3.fromRGB(255, 255, 255)
+            },
+            blue = {
+                background = Color3.fromRGB(10, 20, 40),
+                secondary = Color3.fromRGB(20, 35, 60),
+                tertiary = Color3.fromRGB(15, 30, 50),
+                quaternary = Color3.fromRGB(25, 40, 70),
+                quinary = Color3.fromRGB(10, 25, 45),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(180, 200, 255),
+                border = Color3.fromRGB(30, 50, 90),
+                gradient1 = Color3.fromRGB(25, 45, 80),
+                gradient2 = Color3.fromRGB(10, 25, 50),
+                dropdown = Color3.fromRGB(30, 45, 75),
+                picker = Color3.fromRGB(20, 35, 65)
+            },
+            ["light blue"] = {
+                background = Color3.fromRGB(200, 220, 240),
+                secondary = Color3.fromRGB(220, 235, 250),
+                tertiary = Color3.fromRGB(210, 225, 245),
+                quaternary = Color3.fromRGB(230, 240, 255),
+                quinary = Color3.fromRGB(200, 220, 240),
+                text = Color3.fromRGB(0, 20, 40),
+                textSecondary = Color3.fromRGB(40, 80, 120),
+                border = Color3.fromRGB(150, 180, 210),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(200, 220, 240),
+                dropdown = Color3.fromRGB(210, 225, 245),
+                picker = Color3.fromRGB(220, 235, 250)
+            },
+            red = {
+                background = Color3.fromRGB(40, 10, 10),
+                secondary = Color3.fromRGB(60, 20, 20),
+                tertiary = Color3.fromRGB(50, 15, 15),
+                quaternary = Color3.fromRGB(70, 25, 25),
+                quinary = Color3.fromRGB(45, 10, 10),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(255, 180, 180),
+                border = Color3.fromRGB(90, 30, 30),
+                gradient1 = Color3.fromRGB(80, 25, 25),
+                gradient2 = Color3.fromRGB(50, 10, 10),
+                dropdown = Color3.fromRGB(70, 25, 25),
+                picker = Color3.fromRGB(60, 20, 20)
+            },
+            ["light red"] = {
+                background = Color3.fromRGB(250, 220, 220),
+                secondary = Color3.fromRGB(255, 235, 235),
+                tertiary = Color3.fromRGB(245, 225, 225),
+                quaternary = Color3.fromRGB(255, 240, 240),
+                quinary = Color3.fromRGB(250, 220, 220),
+                text = Color3.fromRGB(80, 0, 0),
+                textSecondary = Color3.fromRGB(150, 60, 60),
+                border = Color3.fromRGB(210, 150, 150),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(250, 220, 220),
+                dropdown = Color3.fromRGB(245, 225, 225),
+                picker = Color3.fromRGB(255, 235, 235)
+            },
+            purple = {
+                background = Color3.fromRGB(30, 10, 40),
+                secondary = Color3.fromRGB(45, 20, 60),
+                tertiary = Color3.fromRGB(35, 15, 50),
+                quaternary = Color3.fromRGB(50, 25, 70),
+                quinary = Color3.fromRGB(30, 15, 45),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(220, 180, 255),
+                border = Color3.fromRGB(60, 30, 90),
+                gradient1 = Color3.fromRGB(55, 25, 80),
+                gradient2 = Color3.fromRGB(30, 10, 50),
+                dropdown = Color3.fromRGB(50, 25, 70),
+                picker = Color3.fromRGB(40, 20, 60)
+            },
+            ["light purple"] = {
+                background = Color3.fromRGB(230, 210, 250),
+                secondary = Color3.fromRGB(245, 225, 255),
+                tertiary = Color3.fromRGB(235, 215, 250),
+                quaternary = Color3.fromRGB(250, 235, 255),
+                quinary = Color3.fromRGB(230, 210, 245),
+                text = Color3.fromRGB(40, 10, 60),
+                textSecondary = Color3.fromRGB(100, 50, 140),
+                border = Color3.fromRGB(180, 140, 210),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(230, 210, 245),
+                dropdown = Color3.fromRGB(235, 215, 250),
+                picker = Color3.fromRGB(245, 225, 255)
+            },
+            green = {
+                background = Color3.fromRGB(10, 30, 10),
+                secondary = Color3.fromRGB(20, 45, 20),
+                tertiary = Color3.fromRGB(15, 35, 15),
+                quaternary = Color3.fromRGB(25, 50, 25),
+                quinary = Color3.fromRGB(10, 30, 10),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(180, 255, 180),
+                border = Color3.fromRGB(30, 70, 30),
+                gradient1 = Color3.fromRGB(25, 60, 25),
+                gradient2 = Color3.fromRGB(10, 40, 10),
+                dropdown = Color3.fromRGB(25, 55, 25),
+                picker = Color3.fromRGB(20, 45, 20)
+            },
+            ["light green"] = {
+                background = Color3.fromRGB(210, 240, 210),
+                secondary = Color3.fromRGB(225, 250, 225),
+                tertiary = Color3.fromRGB(215, 240, 215),
+                quaternary = Color3.fromRGB(235, 255, 235),
+                quinary = Color3.fromRGB(210, 240, 210),
+                text = Color3.fromRGB(0, 40, 0),
+                textSecondary = Color3.fromRGB(40, 100, 40),
+                border = Color3.fromRGB(150, 200, 150),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(210, 240, 210),
+                dropdown = Color3.fromRGB(215, 240, 215),
+                picker = Color3.fromRGB(225, 250, 225)
+            }
+        }
+        
+        local selectedTheme = themes[theme:lower()] or themes.dark
 
         library.color = color
 

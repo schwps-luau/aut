@@ -68,7 +68,8 @@ local Settings = {
     Target = {
         Selected = nil,  
         Aimlock = false,         
-        Spectate = false,      
+        Spectate = false,  
+        Attach = false,    
         Orbit = {
             Enabled = false,  
             Speed = 0.2,
@@ -608,6 +609,13 @@ p1t4:Toggle {
                 ResetFling()
             end
         end
+    end
+}
+
+p1t4:Toggle {
+    Name = "attach",
+    callback = function(value)
+    Settings.Target.Attach = value
     end
 }
 
@@ -1322,6 +1330,10 @@ function StartAntiAim()
                 root.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(moveDirection.X, 0, moveDirection.Z))
             end
             root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
         end
     end))
 
@@ -1362,7 +1374,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Исправленный флинг
 task.spawn(function()
     while task.wait() do
         if Settings.Target.Fling.Enabled and Settings.Target.Selected then
@@ -1578,3 +1589,9 @@ local function ResetFling()
         Settings.Target.Fling.OldPos = nil
     end
 end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Settings.Target.Attach == true and Settings.Target.Selected ~= nil then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0, 10, 0)
+    end
+end)

@@ -320,13 +320,13 @@ function initLibrary()
         local themeColors = {
             dark = Color3.fromRGB(128, 128, 128),      
             light = Color3.fromRGB(240, 240, 240),     
-            blue = Color3.fromRGB(100, 108, 116),          
+            blue = Color3.fromRGB(30, 50, 90),          
             ["light blue"] = Color3.fromRGB(200, 220, 240), 
-            red = Color3.fromRGB(120, 108, 108),          
+            red = Color3.fromRGB(90, 30, 30),          
             ["light red"] = Color3.fromRGB(250, 220, 220),
-            purple = Color3.fromRGB(112, 104, 120),       
+            purple = Color3.fromRGB(60, 30, 90),       
             ["light purple"] = Color3.fromRGB(230, 210, 250), 
-            green = Color3.fromRGB(104, 116, 104),         
+            green = Color3.fromRGB(30, 70, 30),         
             ["light green"] = Color3.fromRGB(210, 240, 210) 
         }
 

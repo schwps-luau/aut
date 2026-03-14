@@ -317,7 +317,23 @@ function initLibrary()
         local dragSpeed = options.dragSpeed or 0
         local theme = options.theme or "dark"
 
-        -- Предустановленные темы
+        local themeColors = {
+            dark = Color3.fromRGB(255, 80, 80),      
+            light = Color3.fromRGB(100, 100, 100),     
+            blue = Color3.fromRGB(0, 120, 255),       
+            ["light blue"] = Color3.fromRGB(0, 150, 255), 
+            red = Color3.fromRGB(255, 80, 80),         
+            ["light red"] = Color3.fromRGB(255, 120, 120),
+            purple = Color3.fromRGB(180, 100, 255),    
+            ["light purple"] = Color3.fromRGB(200, 150, 255), 
+            green = Color3.fromRGB(80, 200, 80),   
+            ["light green"] = Color3.fromRGB(120, 220, 120) 
+        }
+
+        if color == Color3.fromRGB(255, 255, 255) and theme:lower() ~= "dark" then
+            color = themeColors[theme:lower()] or color
+        end
+
         local themes = {
             dark = {
                 background = Color3.fromRGB(22, 22, 22),

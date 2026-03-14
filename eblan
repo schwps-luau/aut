@@ -22,7 +22,7 @@ local Settings = {
             FOV = 90,
             Filled = false,
             ShowFOV = false,
-            DeathCooldown = 2,
+            DeathCooldown = 0.5,
         },
         Triggerbot = {
             Enabled = false,
@@ -126,6 +126,7 @@ local p2t5 = Tab5:Section{name = "other", column = 2}
 
 p1t1:dropdown {
     name = "person type",
+    flag = "person_type",
     content = {"first person","third person"},
     callback = function(value)
         Settings.Combat.Aimlock.PersonType = value
@@ -143,6 +144,7 @@ p1t1:dropdown {
 
 firstperson2 = p1t1:dropdown {
     name = "person type",
+    flag = "aiming_method",
     content = {"velocity","movedirection"},
     callback = function(value)
         Settings.Combat.Aimlock.AimingMethod = value
@@ -151,6 +153,7 @@ firstperson2 = p1t1:dropdown {
 
 p1t1:dropdown {
     name = "part",
+    flag = "lock_part",
     content = {"Head","HumanoidRootPart","UpperTorso", "LowerTorso"},
     multichoice = false,
     callback = function(value)
@@ -160,6 +163,7 @@ p1t1:dropdown {
 
 p1t1:Toggle {
     Name = "enabled",
+    flag = "aimlock_enabled",
     callback = function(value)
         Settings.Combat.Aimlock.Enabled = value
     end
@@ -167,6 +171,7 @@ p1t1:Toggle {
 
 p1t1:Toggle {
     Name = "toggle",
+    flag = "aimlock_toggle",
     callback = function(value)
         Settings.Combat.Aimlock.Toggle = value
     end
@@ -174,6 +179,7 @@ p1t1:Toggle {
 
 p1t1:Toggle {
     Name = "teamcheck",
+    flag = "aimlock_teamcheck",
     callback = function(value)
         Settings.Combat.Aimlock.TeamCheck = value
     end
@@ -181,6 +187,7 @@ p1t1:Toggle {
 
 p1t1:Toggle {
     Name = "wallcheck",
+    flag = "aimlock_wallcheck",
     callback = function(value)
         Settings.Combat.Aimlock.WallCheck = value
     end
@@ -188,6 +195,7 @@ p1t1:Toggle {
 
 p1t1:Toggle {
     Name = "alivecheck",
+    flag = "aimlock_alivecheck",
     callback = function(value)
         Settings.Combat.Aimlock.AliveCheck = value
     end
@@ -195,6 +203,7 @@ p1t1:Toggle {
 
 p1t1:Toggle {
     Name = "holdcheck",
+    flag = "aimlock_holdcheck",
     callback = function(value)
         Settings.Combat.Aimlock.HoldCheck = value
     end
@@ -202,6 +211,7 @@ p1t1:Toggle {
 
 p1t1:Toggle {
     Name = "rotateto",
+    flag = "aimlock_rotateto",
     callback = function(value)
         Settings.Combat.Aimlock.RotateTo = value
     end
@@ -209,6 +219,7 @@ p1t1:Toggle {
 
 thirdperson = p1t1:Slider {
     Name = "smoothness",
+    flag = "aimlock_smoothness",
     Default = 0,
     Min = 0,
     Max = 10,
@@ -220,6 +231,7 @@ thirdperson = p1t1:Slider {
 
 firstperson = p1t1:Box {
     Name = "prediction",
+    flag = "aimlock_prediction",
     Default = nil,
     callback = function(value)
         Settings.Combat.Aimlock.Prediction = tonumber(value)
@@ -232,6 +244,7 @@ thirdperson:Hide()
 
 p1t1:Keybind {
     Name = "keybind",
+    flag = "aimlock_keybind",
     Default = Enum.KeyCode.Q,
     callback = function(value)
         Settings.Combat.Aimlock.TriggerKey = value
@@ -240,6 +253,7 @@ p1t1:Keybind {
 
 p2t1:Toggle {
     Name = "triggerbot",
+    flag = "triggerbot_enabled",
     callback = function(value)
         Settings.Combat.Triggerbot.Enabled = value
     end
@@ -247,6 +261,7 @@ p2t1:Toggle {
 
 p2t1:Toggle {
     Name = "team check",
+    flag = "triggerbot_teamcheck",
     callback = function(value)
         Settings.Combat.Triggerbot.TeamCheck = value
     end
@@ -254,6 +269,7 @@ p2t1:Toggle {
 
 p2t1:Toggle {
     Name = "toggle",
+    flag = "triggerbot_toggle",
     callback = function(value)
         Settings.Combat.Triggerbot.Toggle = value
     end
@@ -261,6 +277,7 @@ p2t1:Toggle {
 
 p2t1:Slider {
     Name = "shot delay (ms)",
+    flag = "triggerbot_cooldown",
     Default = 150,
     Min = 50,
     Max = 500,
@@ -272,6 +289,7 @@ p2t1:Slider {
 
 p1t2:Toggle {
     Name = "field of view",
+    flag = "fov_show",
     callback = function(value)
         Settings.Combat.Aimlock.ShowFOV = value
     end
@@ -279,6 +297,7 @@ p1t2:Toggle {
 
 p1t2:Toggle {
     Name = "filled",
+    flag = "fov_filled",
     callback = function(value)
         Settings.Combat.Aimlock.Filled = value
         FOVCircle.Filled = value
@@ -287,7 +306,7 @@ p1t2:Toggle {
 
 p1t2:Slider {
     Name = "field of view",
-    flag = "11",
+    flag = "fov_size",
     Default = 90,
     Min = 30,
     Max = 360,
@@ -300,6 +319,7 @@ p1t2:Slider {
 
 p1t2:Slider {
     Name = "transparency",
+    flag = "fov_transparency",
     Default = 10,
     Min = 1,
     Max = 10,
@@ -313,7 +333,7 @@ p1t2:Slider {
 local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/esp"))()
 p2t2:Toggle {
     Name = "enabled",
-    flag = "17",
+    flag = "esp_enabled",
     callback = function(value)
         ESP.Enabled = value
     end
@@ -321,7 +341,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "team check",
-    flag = "18",
+    flag = "esp_teamcheck",
     callback = function(value)
         ESP.Teamcheck = value
     end
@@ -329,7 +349,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "wall check",
-    flag = "19",
+    flag = "esp_wallcheck",
     callback = function(value)
         ESP.WallCheck = value
     end
@@ -337,6 +357,7 @@ p2t2:Toggle {
 
 boxtype = p2t2:dropdown {
     name = "box type",
+    flag = "esp_boxtype",
     content = {"2D","Corner"},
     multichoice = false,
     callback = function(value)
@@ -347,7 +368,7 @@ boxtype:Hide()
 
 p2t2:Toggle {
     Name = "box",
-    flag = "20",
+    flag = "esp_box",
     callback = function(value)
         ESP.ShowBox = value
         if ESP.ShowBox == true then
@@ -360,7 +381,7 @@ p2t2:Toggle {
 
 nametype = p2t2:Toggle {
     Name = "displayname",
-    flag = "21",
+    flag = "esp_displayname",
     callback = function(value)
         ESP.UseDisplayName = value
     end
@@ -369,7 +390,7 @@ nametype:Hide()
 
 p2t2:Toggle {
     Name = "name",
-    flag = "21",
+    flag = "esp_name",
     callback = function(value)
         ESP.ShowName = value
         if ESP.ShowName == true then
@@ -382,7 +403,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "health",
-    flag = "22",
+    flag = "esp_health",
     callback = function(value)
         ESP.ShowHealth = value
     end
@@ -390,7 +411,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "tracer",
-    flag = "23",
+    flag = "esp_tracer",
     callback = function(value)
         ESP.ShowTracer = value
     end
@@ -398,7 +419,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "distance",
-    flag = "24",
+    flag = "esp_distance",
     callback = function(value)
         ESP.ShowDistance = value
     end
@@ -408,6 +429,7 @@ p1t3:Label("speed")
 
 p1t3:Toggle {
     Name = "enabled",
+    flag = "speed_enabled",
     callback = function(value)
         Settings.Player.Speed.Enabled = value
     end
@@ -415,6 +437,7 @@ p1t3:Toggle {
 
 p1t3:dropdown {
     name = "type",
+    flag = "speed_type",
     content = {"velocity","cframe"},
     multichoice = false,
     callback = function(value)
@@ -424,12 +447,15 @@ p1t3:dropdown {
 
 p1t3:Toggle {
     Name = "toggle",
+    flag = "speed_toggle",
     callback = function(value)
         Settings.Player.Speed.Toggle = value
     end
 }
 
 p1t3:Slider {
+    Name = "speed",
+    flag = "speed_value",
     Default = 0,
     Min = 1,
     Max = 50,
@@ -442,6 +468,7 @@ p1t3:Slider {
 p1t3:Keybind {
     Default = Enum.KeyCode.LeftShift,
     Name = "keybind",
+    flag = "speed_keybind",
     callback = function(value)
         Settings.Player.Speed.Keybind = value
     end
@@ -451,6 +478,7 @@ p1t3:Label("fly")
 
 p1t3:Toggle {
     Name = "enabled",
+    flag = "fly_enabled",
     callback = function(value)
         Settings.Player.Flight.Enabled = value
     end
@@ -458,6 +486,7 @@ p1t3:Toggle {
 
 p1t3:dropdown {
     name = "type",
+    flag = "fly_type",
     content = {"vehicle","cframe"},
     multichoice = false,
     callback = function(value)
@@ -466,6 +495,8 @@ p1t3:dropdown {
 }
 
 p1t3:Slider {
+    Name = "speed",
+    flag = "fly_speed",
     Default = 0,
     Min = 1,
     Max = 50,
@@ -478,6 +509,7 @@ p1t3:Slider {
 p1t3:Keybind {
     Default = Enum.KeyCode.F,
     Name = "keybind",
+    flag = "fly_keybind",
     callback = function(value)
         Settings.Player.Flight.Keybind = value
     end
@@ -500,6 +532,7 @@ p2t3:Toggle {
 
 p2t3:Slider {
     Name = "speed",
+    flag = "antiaim_speed",
     Default = 10,
     Min = 1,
     Max = 50,
@@ -511,6 +544,7 @@ p2t3:Slider {
 
 p2t3:Slider {
     Name = "power",
+    flag = "antiaim_power",
     Default = 5,
     Min = 1,
     Max = 20,
@@ -519,8 +553,6 @@ p2t3:Slider {
         Settings.Player.Antiaim.Power = value
     end
 }
-
-
 
 p1t4:Box {
     Name = "target",
@@ -659,6 +691,7 @@ p1t4:Toggle {
 
 p1t4:Slider {
     Name = "orbit speed",
+    flag = "orbit_speed",
     Default = 1,
     Min = 1,
     Max = 1500,
@@ -670,6 +703,7 @@ p1t4:Slider {
 
 p1t4:Slider {
     Name = "orbit distance",
+    flag = "orbit_distance",
     Default = 5,
     Min = 1,
     Max = 50,
@@ -703,6 +737,7 @@ p1t5:Button {
 
 p2t5:Toggle {
     Name = "instant turn",
+    flag = "instant_turn",
     callback = function(value)
         Settings.Other.InstantTurn = value
     end
@@ -726,6 +761,8 @@ p2t5:Button {
         workspace.FallenPartsDestroyHeight = Settings.Other.FallenParts
     end
 }
+
+
 
 
 

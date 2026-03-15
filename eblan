@@ -48,6 +48,8 @@ local Settings = {
             Value = 1,
             Type = "cframe",
             Keybind = Enum.KeyCode.F,
+            TargetPos = Vector3.new(),
+            SmoothPos = Vector3.new(),
             Active = false,
             Connections = {
                 CFrame = nil,
@@ -503,7 +505,7 @@ p1t3:Toggle {
 p1t3:dropdown {
     name = "type",
     flag = "fly_type",
-    content = {"vehicle","cframe"},
+    content = {"vehicle","cframe","velocity"},
     multichoice = false,
     callback = function(value)
         Settings.Player.Flight.Type = value
@@ -1343,6 +1345,60 @@ function Fly(type)
                 end
             end
         end)
+    elseif type == "velocity" then
+    if not Settings.Player.Flight.Enabled then return end
+    local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid then return end
+    Unfly(type)
+    Settings.Player.Flight.Part = Instance.new("Part")
+    Settings.Player.Flight.Part.Name = "FlightPart"
+    Settings.Player.Flight.Part.Anchored = true
+    Settings.Player.Flight.Part.CanCollide = false
+    Settings.Player.Flight.Part.Transparency = 1
+    Settings.Player.Flight.Part.Size = Vector3.new(1,1,1)
+    Settings.Player.Flight.Part.Position = root.Position
+    Settings.Player.Flight.Part.Parent = workspace
+    Settings.Player.Flight.TargetPos = root.Position
+    Settings.Player.Flight.SmoothPos = root.Position
+    Settings.Player.Flight.Active = true
+    workspace.CurrentCamera.CameraSubject = Settings.Player.Flight.Part
+    workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+
+    table.insert(Settings.Player.Flight.Connections, RunService.Heartbeat:Connect(function()
+        if not Settings.Player.Flight.Active then return end
+        local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            local move = humanoid.MoveDirection * (Settings.Player.Flight.Value / 10)
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Flight.Value / 10, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move = move + Vector3.new(0, -Settings.Player.Flight.Value / 10, 0) end
+            if move.Magnitude > 0 then Settings.Player.Flight.TargetPos = Settings.Player.Flight.TargetPos + move end
+        end
+    end))
+
+    table.insert(Settings.Player.Flight.Connections, RunService.Heartbeat:Connect(function()
+        if not Settings.Player.Flight.Active or not Settings.Player.Flight.Part then return end
+        Settings.Player.Flight.SmoothPos = Settings.Player.Flight.SmoothPos:Lerp(Settings.Player.Flight.TargetPos, 0.1)
+        Settings.Player.Flight.Part.Position = Settings.Player.Flight.SmoothPos
+    end))
+
+    table.insert(Settings.Player.Flight.Connections, RunService.Heartbeat:Connect(function()
+        if not Settings.Player.Flight.Active then return end
+        local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if root and humanoid and humanoid.Health > 0 and Settings.Player.Flight.Part then
+            root.CFrame = CFrame.new(Settings.Player.Flight.Part.Position)
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+        end
+    end))
+
+    table.insert(Settings.Player.Flight.Connections, humanoid.Died:Connect(function()
+        if Settings.Player.Flight.Active then Unfly(type) end
+    end))
     end
 end
 
@@ -1363,6 +1419,20 @@ function Unfly(type)
             if head then head.Anchored = false end
         end
         if Settings.Player.Flight.Connections.CFrame then Settings.Player.Flight.Connections.CFrame:Disconnect() end
+    elseif type == "velocity" then
+    if Settings.Player.Flight.Active then
+        Settings.Player.Flight.Active = false
+        for _, c in pairs(Settings.Player.Flight.Connections) do c:Disconnect() end
+        Settings.Player.Flight.Connections = {}
+        if game.Players.LocalPlayer.Character then
+            workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
+        end
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+        if Settings.Player.Flight.Part then Settings.Player.Flight.Part:Destroy() Settings.Player.Flight.Part = nil end
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+        end
+    end
     end
 end
 

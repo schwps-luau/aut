@@ -82,6 +82,11 @@ local Settings = {
             OldPos = nil,
             FallenParts = workspace.FallenPartsDestroyHeight,
             BodyVelocity = nil
+        },
+        UseTool = {
+            oldPlrCFrame = nil,
+            oldCamCFrame = nil,
+            Cycle = nil
         }
     },
     Other = {
@@ -766,6 +771,55 @@ p2t4:Button {
     end
 }
 
+p2t4:Button {
+    Name = "teleport to",
+    callback = function()
+        if Settings.Target.Selected ~= nil then
+            if game.Players.LocalPlayer.Character ~= nil then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0,5,0)
+            end
+        end
+    end
+}
+
+p2t4:Button {
+    Name = "use tool",
+    callback = function()
+        if Settings.Target.Selected ~= nil and game.Players[Settings.Target.Selected].Character and game.Players[Settings.Target.Selected].Character:FindFirstChild("HumanoidRootPart") then
+            Settings.Target.UseTool.oldPlrCFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+            Settings.Target.UseTool.oldCamCFrame = workspace.Camera.CFrame
+            local omaxz = game.Players.LocalPlayer.CameraMaxZoomDistance
+            local ominz = game.Players.LocalPlayer.CameraMinZoomDistance
+            game.Players.LocalPlayer.CameraMaxZoomDistance = 0
+            game.Players.LocalPlayer.CameraMinZoomDistance = 5
+            Settings.Target.UseTool.Cycle = game:GetService("RunService").RenderStepped:Connect(function()
+                if game.Players[Settings.Target.Selected] and 
+                   game.Players[Settings.Target.Selected].Character and 
+                   game.Players[Settings.Target.Selected].Character:FindFirstChild("HumanoidRootPart") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = 
+                    game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+                    workspace.Camera.CFrame = CFrame.new(
+                        workspace.Camera.CFrame.Position, 
+                        game.Players[Settings.Target.Selected].Character.HumanoidRootPart.Position
+                    )
+                    mouse1press()
+                    task.wait(0.1)
+                    mouse1release()
+                end
+            end)
+            
+            
+            task.wait(1)
+            
+            
+            Settings.Target.UseTool.Cycle:Disconnect()
+            game.Players.LocalPlayer.CameraMaxZoomDistance = omaxz
+            game.Players.LocalPlayer.CameraMinZoomDistance = ominz
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Target.UseTool.oldPlrCFrame
+            workspace.Camera.CFrame = Settings.Target.UseTool.oldCamCFrame
+        end
+    end
+}
 
 p1t5:Box {
     Name = "config",

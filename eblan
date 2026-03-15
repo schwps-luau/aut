@@ -109,7 +109,7 @@ local Window = Library:Load({
     name = "epstein.island", 
     sizeX = 350, 
     sizeY = 350, 
-    theme = "light red",
+    theme = "light",
 })
 
 --light, blue light, red light, purple light, green light

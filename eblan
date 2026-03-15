@@ -66,7 +66,8 @@ local Settings = {
         }
     },
     Target = {
-        Selected = nil,  
+        Selected = nil, 
+        TargetPicker = false, 
         Aimlock = false,         
         Spectate = false,  
         Attach = false,    
@@ -108,7 +109,7 @@ local Window = Library:Load({
     name = "epstein.island", 
     sizeX = 350, 
     sizeY = 350, 
-    theme = "light",
+    theme = "light red",
 })
 
 --light, blue light, red light, purple light, green light
@@ -564,7 +565,7 @@ p2t3:Slider {
     end
 }
 
-p1t4:Box {
+targetselect = p1t4:Box {
     Name = "target",
     Default = "nil",
     callback = function(value)
@@ -724,6 +725,47 @@ p1t4:Slider {
         Settings.Target.Orbit.Distance = value
     end
 }
+
+p2t4:Button {
+    Name = "target picker",
+    callback = function()
+        Settings.Target.TargetPicker = true
+        local connection
+        connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if Settings.Target.TargetPicker and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local closestPlayer = nil
+                local closestDistance = 100
+                local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+                local camera = workspace.CurrentCamera
+                
+                for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+                    if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local rootPart = player.Character.HumanoidRootPart
+                        local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+                        
+                        if onScreen then
+                            local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                closestPlayer = player
+                            end
+                        end
+                    end
+                end
+                
+                if closestPlayer then
+                    Settings.Target.Selected = closestPlayer.Name
+                    targetselect:Set(closestPlayer.DisplayName)
+                else
+                end
+                
+                Settings.Target.TargetPicker = false
+                connection:Disconnect()
+            end
+        end)
+    end
+}
+
 
 p1t5:Box {
     Name = "config",
@@ -1382,7 +1424,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
 task.spawn(function()
     while task.wait() do
         if Settings.Target.Fling.Enabled and Settings.Target.Selected then
@@ -1405,7 +1446,7 @@ task.spawn(function()
                             if not Settings.Target.Fling.OldPos then
                                 Settings.Target.Fling.OldPos = lr.CFrame
                                 Settings.Target.Fling.FallenParts = workspace.FallenPartsDestroyHeight
-                                workspace.FallenPartsDestroyHeight = 0/1/0
+                                workspace.FallenPartsDestroyHeight = 0/0
                                 
                                 lh:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
                                 
@@ -1568,7 +1609,7 @@ task.spawn(function()
             Settings.Target.Fling.OldPos = nil
         end
     end
-end) 
+end)
 
 game:GetService("RunService").RenderStepped:Connect(function()
     if Settings.Target.Attach == true and Settings.Target.Selected ~= nil then

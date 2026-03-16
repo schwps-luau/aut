@@ -95,6 +95,10 @@ local Settings = {
         InstantTurn = false,
         FallenParts = workspace.FallenPartsDestroyHeight,
         OldPosiiton = nil,
+        FieldOfView = {
+            Enabled = false,
+            Value = workspace.Camera.FieldOfView,
+        },
         AKA = false,
         Config = {
             Input = nil
@@ -860,6 +864,33 @@ p2t5:Toggle {
         Settings.Other.AKA = value
     end
 }
+
+fovsliderp2t5 = p2t5:Slider {
+    Name = "field of view",
+    flag = "fieldofview",
+    Default = workspace.Camera.FieldOfView,
+    Min = 70,
+    Max = 120,
+    valueText = "fov - [VALUE]",
+    callback = function(value)
+        Settings.Other.FieldOfView.Value = value
+    end
+}
+
+p2t5:Toggle {
+    Name = "field of view",
+    flag = "fieldofview_tgl",
+    callback = function(value)
+        Settings.Other.FieldOfView.Enabled = value
+        if value == true then
+            fovsliderp2t5:Show()
+        else
+            fovsliderp2t5:Hide()
+        end
+    end
+}
+
+fovsliderp2t5:Hide()
 
 p2t5:Button {
     Name = "kill attached",
@@ -1801,5 +1832,11 @@ spawn(function()
         if Settings.Other.AKA == true then
         checkTeleportToMe()
         end
+    end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if Settings.Other.FieldOfView.Enabled == true and workspace.Camera.FieldOfView ~= Settings.Other.FieldOfView.Value then
+        workspace.Camera.FieldOfView = Settings.Other.FieldOfView.Value
     end
 end)

@@ -906,6 +906,29 @@ p2t5:Toggle {
 }
 
 p2t5:Toggle {
+    Name = "noclip",
+    callback = function(value)
+    if value then
+        nccycle = game:GetService("RunService").Heartbeat:Connect(function()
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide == true then
+                    v.CanCollide = false
+                end
+            end
+        end)
+    else
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide == false then
+                    v.CanCollide = true
+                end
+            end
+            if nccycle then nccycle:Disconnect() end
+    end
+    end
+}
+
+
+p2t5:Toggle {
     Name = "bunny hop",
     flag = "bunny_hop",
     callback = function(value)
@@ -913,9 +936,11 @@ p2t5:Toggle {
     end
 }
 
+
+Settings.Other.FieldOfView.Enabled = true
 fovsliderp2t5 = p2t5:Slider {
     Name = "field of view",
-    flag = "fieldofview",
+    flag = "field_of_view",
     Default = workspace.Camera.FieldOfView,
     Min = 70,
     Max = 120,
@@ -924,21 +949,6 @@ fovsliderp2t5 = p2t5:Slider {
         Settings.Other.FieldOfView.Value = value
     end
 }
-
-p2t5:Toggle {
-    Name = "field of view",
-    flag = "fieldofview_tgl",
-    callback = function(value)
-        Settings.Other.FieldOfView.Enabled = value
-        if value == true then
-            fovsliderp2t5:Show()
-        else
-            fovsliderp2t5:Hide()
-        end
-    end
-}
-
-fovsliderp2t5:Hide()
 
 p2t5:Button {
     Name = "kill attached",

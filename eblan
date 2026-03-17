@@ -374,6 +374,7 @@ p1t2:ColorPicker {
 }
 
 local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/esp"))()
+
 p2t2:Toggle {
     Name = "enabled",
     flag = "esp_enabled",
@@ -398,49 +399,27 @@ p2t2:Toggle {
     end
 }
 
-boxtype = p2t2:dropdown {
-    name = "box type",
-    flag = "esp_boxtype",
-    content = {"2D","Corner"},
-    multichoice = false,
-    callback = function(value)
-        ESP.BoxType = value
-    end
-}
-boxtype:Hide()
-
 p2t2:Toggle {
     Name = "box",
     flag = "esp_box",
     callback = function(value)
         ESP.ShowBox = value
-        if ESP.ShowBox == true then
-            boxtype:Show()
-        else
-            boxtype:Hide()
-        end
     end
 }
 
-nametype = p2t2:Toggle {
+p2t2:Toggle {
     Name = "displayname",
     flag = "esp_displayname",
     callback = function(value)
         ESP.UseDisplayName = value
     end
 }
-nametype:Hide()
 
 p2t2:Toggle {
     Name = "name",
     flag = "esp_name",
     callback = function(value)
         ESP.ShowName = value
-        if ESP.ShowName == true then
-            nametype:Show()
-        else
-            nametype:Hide()
-        end
     end
 }
 
@@ -467,6 +446,46 @@ p2t2:Toggle {
         ESP.ShowDistance = value
     end
 }
+
+
+p2t2:dropdown {
+    name = "box type",
+    flag = "esp_boxtype",
+    content = {"2D","Corner"},
+    multichoice = false,
+    callback = function(value)
+        ESP.BoxType = value
+    end
+}
+
+p2t2:ColorPicker {
+    Name = "box color",
+    flag = "Box_Color",
+    Default = Color3.fromRGB(255, 255, 255),
+    callback = function(value)
+        ESP.BoxColor = value
+        ESP.BoxOutlineColor = value
+    end
+}
+
+p2t2:ColorPicker {
+    Name = "tracer color",
+    flag = "Tracer_Color",
+    Default = Color3.fromRGB(255, 255, 255),
+    callback = function(value)
+        ESP.TracerColor = value
+    end
+}
+
+p2t2:ColorPicker {
+    Name = "name color",
+    flag = "Name_Color",
+    Default = Color3.fromRGB(255, 255, 255),
+    callback = function(value)
+        ESP.NameColor = value
+    end
+}
+
 
 p1t3:Label("speed")
 

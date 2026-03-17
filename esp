@@ -5,7 +5,7 @@ local camera = workspace.CurrentCamera
 local cache = {}
 
 local ESP_SETTINGS = {
-    BoxOutlineColor = Color3.fromRGB(0, 0, 0),
+    BoxOutlineColor = Color3.fromRGB(255, 255, 255),
     BoxColor = Color3.fromRGB(255, 255, 255),
     NameColor = Color3.fromRGB(255, 255, 255),
     HealthOutlineColor = Color3.fromRGB(0, 0, 0),

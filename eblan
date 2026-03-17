@@ -20,6 +20,8 @@ local Settings = {
             Transparency = 1,
             LockPart = "Head",
             FOV = 90,
+            FOVColor = Color3.fromRGB(255, 255, 255),
+            FOVLockedColor = Color3.fromRGB(255, 0, 0),
             Filled = false,
             ShowFOV = false,
             DeathCooldown = 0.5,
@@ -100,6 +102,7 @@ local Settings = {
             Value = workspace.Camera.FieldOfView,
         },
         AKA = false,
+        BunnyHop = false,
         Config = {
             Input = nil
         }
@@ -110,7 +113,7 @@ local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = Settings.Combat.Aimlock.ShowFOV
 FOVCircle.Radius = Settings.Combat.Aimlock.FOV
 FOVCircle.Thickness = 1
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Color = Settings.Combat.Aimlock.FOVColor
 FOVCircle.NumSides = 60
 FOVCircle.Filled = Settings.Combat.Aimlock.Filled
 FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
@@ -242,7 +245,7 @@ p1t1:Toggle {
 thirdperson = p1t1:Slider {
     Name = "smoothness",
     flag = "aimlock_smoothness",
-    Default = 0,
+    Default = 1,
     Min = 0,
     Max = 10,
     valueText = "smooth - [VALUE]",
@@ -349,6 +352,24 @@ p1t2:Slider {
     callback = function(value)
         Settings.Combat.Aimlock.Transparency = tonumber(value) / 10
         FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
+    end
+}
+
+p1t2:ColorPicker {
+    Name = "fov color",
+    flag = "FOV_Color",
+    Default = Color3.fromRGB(255, 255, 255),
+    callback = function(value)
+        Settings.Combat.Aimlock.FOVColor = value
+    end
+}
+
+p1t2:ColorPicker {
+    Name = "fov locked color",
+    flag = "FOV_Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    callback = function(value)
+        Settings.Combat.Aimlock.FOVLockedColor = value
     end
 }
 
@@ -858,10 +879,18 @@ p2t5:Toggle {
 }
 
 p2t5:Toggle {
-    Name = "Auto KA",
+    Name = "auto ka",
     flag = "Auto_KA",
     callback = function(value)
         Settings.Other.AKA = value
+    end
+}
+
+p2t5:Toggle {
+    Name = "bunny hop",
+    flag = "bunny_hop",
+    callback = function(value)
+        Settings.Other.BunnyHop = value
     end
 }
 
@@ -910,6 +939,35 @@ p2t5:Button {
         game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
     end
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1063,18 +1121,18 @@ end
 
 local function ValidateTarget()
     if not Target then return false end
-    if Settings.Combat.Aimlock.HoldCheck and not HasItemInHands() then Target = nil; FOVCircle.Color = Color3.fromRGB(255, 255, 255); return false end
+    if Settings.Combat.Aimlock.HoldCheck and not HasItemInHands() then Target = nil; FOVCircle.Color = Settings.Combat.Aimlock.FOVColor; return false end
     local Character = Target.Character
-    if not Character then Target = nil; FOVCircle.Color = Color3.fromRGB(255, 255, 255); return false end
-    if Settings.Combat.Aimlock.AliveCheck and not IsCharacterAlive(Character) then TargetDied = true; LastDeathTime = tick(); Target = nil; FOVCircle.Color = Color3.fromRGB(255, 255, 255); return false end
+    if not Character then Target = nil; if Target ~= nil then FOVCircle.Color = Settings.Combat.Aimlock.FOVLockedColor end; return false end
+    if Settings.Combat.Aimlock.AliveCheck and not IsCharacterAlive(Character) then TargetDied = true; LastDeathTime = tick(); Target = nil; FOVCircle.Color = Settings.Combat.Aimlock.FOVColor; return false end
     local Part = Character:FindFirstChild(Settings.Combat.Aimlock.LockPart)
     if not Part then Target = nil; return false end
-    if Settings.Combat.Aimlock.WallCheck and not IsTargetVisible(Part.Position, Character) then Target = nil; FOVCircle.Color = Color3.fromRGB(255, 255, 255); return false end
+    if Settings.Combat.Aimlock.WallCheck and not IsTargetVisible(Part.Position, Character) then Target = nil; FOVCircle.Color = Settings.Combat.Aimlock.FOVColor; return false end
     return true
 end
 
 local function MoveMouseToTarget()
-    if not Running or not Target then FOVCircle.Color = Color3.fromRGB(255, 255, 255); return end
+    if not Running or not Target then if Target == nil then FOVCircle.Color = Settings.Combat.Aimlock.FOVColor end; return end
     if not ValidateTarget() then return end
     if Settings.Combat.Aimlock.PersonType == "third person" then
         local Character = Target.Character
@@ -1097,7 +1155,7 @@ local function MoveMouseToTarget()
                         mousemoverel(DeltaX, DeltaY)
                     end)
                 end
-        FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+    if Target ~= nil then FOVCircle.Color = Settings.Combat.Aimlock.FOVLockedColor end
     elseif Settings.Combat.Aimlock.PersonType == "first person" then
         local Part = Target.Character[Settings.Combat.Aimlock.LockPart]
         if Settings.Combat.Aimlock.AimingMethod == "velocity" then
@@ -1105,7 +1163,7 @@ local function MoveMouseToTarget()
         elseif Settings.Combat.Aimlock.AimingMethod == "movedirection" then
             workspace.Camera.CFrame = CFrame.new(workspace.Camera.CFrame.Position, Part.Position + (Target.Character.Humanoid.MoveDirection * Settings.Combat.Aimlock.Prediction))
         end
-    FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+    if Target ~= nil then FOVCircle.Color = Settings.Combat.Aimlock.FOVLockedColor end
     end
 end
 
@@ -1115,12 +1173,14 @@ local function UpdateFOVCircle()
             FOVCircle.Visible = true
             FOVCircle.Position = UserInputService:GetMouseLocation()
             FOVCircle.Radius = Settings.Combat.Aimlock.FOV
+if Target == nil then FOVCircle.Color = Settings.Combat.Aimlock.FOVColor end
             FOVCircle.Filled = Settings.Combat.Aimlock.Filled
             FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
         elseif Settings.Combat.Aimlock.PersonType == "first person" then
             FOVCircle.Visible = true
             FOVCircle.Position = Vector2.new(viewportSize.X/2, viewportSize.Y/2)
             FOVCircle.Radius = Settings.Combat.Aimlock.FOV
+if Target == nil then FOVCircle.Color = Settings.Combat.Aimlock.FOVColor end
             FOVCircle.Filled = Settings.Combat.Aimlock.Filled
             FOVCircle.Transparency = Settings.Combat.Aimlock.Transparency
         end
@@ -1131,7 +1191,7 @@ end
 
 local function ResetTarget()
     Target = nil
-    FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+    FOVCircle.Color = Settings.Combat.Aimlock.FOVColor
 end
 
 UserInputService.InputBegan:Connect(function(Input)
@@ -1839,4 +1899,12 @@ game:GetService("RunService").RenderStepped:Connect(function()
     if Settings.Other.FieldOfView.Enabled == true and workspace.Camera.FieldOfView ~= Settings.Other.FieldOfView.Value then
         workspace.Camera.FieldOfView = Settings.Other.FieldOfView.Value
     end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+   if Settings.Other.BunnyHop == false then return end
+      if game.Players.LocalPlayer.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+         game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+      end
+      game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * (Settings.Player.Speed.Value / 10)
 end)

@@ -12,13 +12,16 @@ local ESP = {
     TeamCheck = false,
     VisibleCheck = false,
     WallCheck = false,
+    ShowName = false,
     ShowHealth = false,
+    UseDisplayName = false,
     VisibleColor = Color3.fromRGB(255, 0, 0),
     InvisibleColor = Color3.fromRGB(128, 128, 128),
     TeammateColor = Color3.fromRGB(0, 255, 0),
     HealthLowColor = Color3.fromRGB(255, 0, 0),
     HealthHighColor = Color3.fromRGB(0, 255, 0),
-    HealthOutlineColor = Color3.fromRGB(0, 0, 0)
+    HealthOutlineColor = Color3.fromRGB(0, 0, 0),
+    NameColor = Color3.fromRGB(255, 255, 255)
 }
 
 local function createDrawing(class, properties)
@@ -31,6 +34,14 @@ end
 
 local function createEsp(player)
     local esp = {
+        name = createDrawing("Text", {
+            Color = ESP.NameColor,
+            Outline = true,
+            OutlineColor = Color3.fromRGB(0, 0, 0),
+            Center = true,
+            Size = 13,
+            Visible = false
+        }),
         healthOutline = createDrawing("Line", {
             Thickness = 2,
             Color = ESP.HealthOutlineColor,
@@ -108,6 +119,62 @@ local function updateHighlight(player)
     highlight.FillColor = getHighlightColor(player)
 end
 
+local function updateName(player)
+    local esp = cache[player]
+    if not esp or not esp.name then return end
+    
+    local character = player.Character
+    if not character then
+        esp.name.Visible = false
+        return
+    end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then
+        esp.name.Visible = false
+        return
+    end
+    
+    if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
+        esp.name.Visible = false
+        return
+    end
+    
+    if ESP.WallCheck and not isPlayerVisible(player) then
+        esp.name.Visible = false
+        return
+    end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    if not rootPart then
+        esp.name.Visible = false
+        return
+    end
+    
+    local hrp2D, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+    if not onScreen then
+        esp.name.Visible = false
+        return
+    end
+    
+    if ESP.ShowName and ESP.Enabled then
+        esp.name.Visible = true
+        esp.name.Color = ESP.NameColor
+        esp.name.OutlineColor = Color3.fromRGB(0, 0, 0)
+        if ESP.UseDisplayName then
+            esp.name.Text = player.DisplayName or player.Name
+        else
+            esp.name.Text = player.Name
+        end
+        
+        local charSize = (camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0)).Y - camera:WorldToViewportPoint(rootPart.Position + Vector3.new(0, 2.6, 0)).Y) / 2
+        local boxPosition = Vector2.new(math.floor(hrp2D.X - charSize * 1.8 / 2), math.floor(hrp2D.Y - charSize * 1.6 / 2))
+        esp.name.Position = Vector2.new(boxPosition.X + (charSize * 1.8 / 2), boxPosition.Y - 16)
+    else
+        esp.name.Visible = false
+    end
+end
+
 local function updateHealth(player)
     local esp = cache[player]
     if not esp or not esp.health or not esp.healthOutline then return end
@@ -159,7 +226,7 @@ local function updateHealth(player)
         
         local healthPercent = humanoid.Health / humanoid.MaxHealth
         
-        -- Черная обводка (толще)
+        -- Черная обводка
         esp.healthOutline.From = Vector2.new(boxPosition.X - 7, boxPosition.Y + boxSize.Y)
         esp.healthOutline.To = Vector2.new(esp.healthOutline.From.X, esp.healthOutline.From.Y - boxSize.Y)
         esp.healthOutline.Visible = true
@@ -186,7 +253,7 @@ local function setupPlayer(player)
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0.5
+        highlight.OutlineTransparency = 1
         highlight.FillColor = ESP.VisibleColor
         highlight.Parent = character
         highlight.Enabled = false
@@ -213,6 +280,9 @@ local function cleanupPlayer(player)
     end
     
     if cache[player] then
+        if cache[player].name then
+            cache[player].name:Remove()
+        end
         if cache[player].health then
             cache[player].health:Remove()
         end
@@ -239,6 +309,7 @@ function ESP:Init()
     connections.RenderStepped = RunService.RenderStepped:Connect(function()
         for player, _ in pairs(highlights) do
             updateHighlight(player)
+            updateName(player)
             updateHealth(player)
         end
     end)

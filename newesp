@@ -74,14 +74,11 @@ local function isPlayerVisible(player, ignoreSelf)
     local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     if not rootPart then return false end
     
-    -- Проверяем на экране
     local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
     if not onScreen then return false end
     
-    -- Создаем список для игнорирования
     local ignoreList = {localPlayer.Character}
     
-    -- Если ignoreSelf = true, игнорируем самого игрока (для VisibleCheck)
     if ignoreSelf then
         table.insert(ignoreList, character)
     end
@@ -89,7 +86,6 @@ local function isPlayerVisible(player, ignoreSelf)
     local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
     local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
     
-    -- Если ничего не попалось на пути - игрок видим
     return hit == nil
 end
 
@@ -101,7 +97,7 @@ local function getHighlightColor(player)
     end
     
     if ESP.VisibleCheck then
-        -- VisibleCheck использует isPlayerVisible с ignoreSelf = true (игнорируем самого игрока)
+        -- Если НЕ вижу - красный, если вижу - VisibleColor
         return isPlayerVisible(player, true) and ESP.VisibleColor or ESP.InvisibleColor
     end
     
@@ -115,14 +111,11 @@ local function shouldShowPlayer(player)
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid or humanoid.Health <= 0 then return false end
     
-    -- TeamCheck = true - не показываем тиммейтов
     if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
         return false
     end
     
-    -- WallCheck = true - не показываем за стенами
     if ESP.WallCheck then
-        -- WallCheck использует isPlayerVisible с ignoreSelf = false (не игнорируем игрока)
         return isPlayerVisible(player, false)
     end
     

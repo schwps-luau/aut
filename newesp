@@ -16,9 +16,9 @@ local ESP = {
     ShowName = true,
     ShowHealth = true,
     UseDisplayName = true,
-    VisibleColor = Color3.fromRGB(255, 0, 0),        -- Красный (видимые)
-    InvisibleColor = Color3.fromRGB(128, 128, 128),  -- Серый (невидимые/за стеной)
-    TeammateColor = Color3.fromRGB(0, 255, 0),       -- Зеленый (своя команда, если TeamCheck = false)
+    VisibleColor = Color3.fromRGB(255, 0, 0),
+    InvisibleColor = Color3.fromRGB(128, 128, 128),
+    TeammateColor = Color3.fromRGB(0, 255, 0),
     OutlineColor = Color3.fromRGB(255, 255, 255),
     HealthLowColor = Color3.fromRGB(255, 0, 0),
     HealthHighColor = Color3.fromRGB(0, 255, 0)
@@ -33,6 +33,7 @@ local function createTag(name, size, offset, isHealth)
     gui.LightInfluence = 0
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.ClipsDescendants = not isHealth
+    gui.Enabled = false  -- По умолчанию выключен, включится когда нужно
     
     if isHealth then
         local bg = Instance.new("Frame")
@@ -86,76 +87,58 @@ local function isPlayerVisible(player)
 end
 
 local function getHighlightColor(player)
-    -- Если это тиммейт и TeamCheck выключен
     if not ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
         return ESP.TeammateColor
     end
     
-    -- Если VisibleCheck включен, определяем цвет по видимости
     if ESP.VisibleCheck then
         return isPlayerVisible(player) and ESP.VisibleColor or ESP.InvisibleColor
     end
     
-    -- По умолчанию цвет видимых
     return ESP.VisibleColor
+end
+
+local function shouldShowPlayer(player)
+    local character = player.Character
+    if not character then return false end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return false end
+    
+    if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
+        return false
+    end
+    
+    if ESP.WallCheck and not isPlayerVisible(player) then
+        return false
+    end
+    
+    return true
 end
 
 local function updateHighlight(player)
     local highlight = highlights[player]
-    if not highlight or not ESP.Enabled then
-        if highlight then highlight.Enabled = false end
-        return
-    end
+    if not highlight then return end
     
-    local character = player.Character
-    if not character then
+    if not ESP.Enabled or not shouldShowPlayer(player) then
         highlight.Enabled = false
         return
     end
     
-    local humanoid = character:FindFirstChild("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then
-        highlight.Enabled = false
-        return
-    end
-    
-    -- TeamCheck: если включен и это тиммейт - отключаем подсветку
-    if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
-        highlight.Enabled = false
-        return
-    else
-        highlight.Enabled = true
-    end
-    
-    -- Устанавливаем цвет в зависимости от условий
+    highlight.Enabled = true
     highlight.FillColor = getHighlightColor(player)
 end
 
 local function updateName(player)
     local nameLabel = nameLabels[player]
-    if not nameLabel or not ESP.ShowName or not ESP.Enabled then
-        if nameLabel then nameLabel.Enabled = false end
+    if not nameLabel then return end
+    
+    if not ESP.Enabled or not ESP.ShowName or not shouldShowPlayer(player) then
+        nameLabel.Enabled = false
         return
     end
     
     local character = player.Character
-    if not character then
-        nameLabel.Enabled = false
-        return
-    end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then
-        nameLabel.Enabled = false
-        return
-    end
-    
-    -- TeamCheck для имени
-    if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
-        nameLabel.Enabled = false
-        return
-    end
-    
     local head = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     if not head then
         nameLabel.Enabled = false
@@ -173,29 +156,14 @@ end
 
 local function updateHealth(player)
     local healthBar = healthBars[player]
-    if not healthBar or not ESP.ShowHealth or not ESP.Enabled then
-        if healthBar then healthBar.Enabled = false end
+    if not healthBar then return end
+    
+    if not ESP.Enabled or not ESP.ShowHealth or not shouldShowPlayer(player) then
+        healthBar.Enabled = false
         return
     end
     
     local character = player.Character
-    if not character then
-        healthBar.Enabled = false
-        return
-    end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then
-        healthBar.Enabled = false
-        return
-    end
-    
-    -- TeamCheck для здоровья
-    if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
-        healthBar.Enabled = false
-        return
-    end
-    
     local head = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     if not head then
         healthBar.Enabled = false
@@ -207,9 +175,12 @@ local function updateHealth(player)
     
     local fill = healthBar:FindFirstChild("Background", true):FindFirstChild("Fill")
     if fill then
-        local healthPercent = math.max(0, math.min(1, humanoid.Health / humanoid.MaxHealth))
-        fill.Size = UDim2.fromScale(healthPercent, 1)
-        fill.BackgroundColor3 = ESP.HealthLowColor:Lerp(ESP.HealthHighColor, healthPercent)
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local healthPercent = math.max(0, math.min(1, humanoid.Health / humanoid.MaxHealth))
+            fill.Size = UDim2.fromScale(healthPercent, 1)
+            fill.BackgroundColor3 = ESP.HealthLowColor:Lerp(ESP.HealthHighColor, healthPercent)
+        end
     end
 end
 
@@ -219,6 +190,7 @@ local function setupPlayer(player)
     local function onCharacterAdded(character)
         task.wait(0.1)
         
+        -- Highlight
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.FillTransparency = 0.5
@@ -226,19 +198,20 @@ local function setupPlayer(player)
         highlight.FillColor = ESP.VisibleColor
         highlight.OutlineColor = ESP.OutlineColor
         highlight.Parent = character
+        highlight.Enabled = false
         highlights[player] = highlight
         
-        local nameGui = createTag("Name", Vector2.new(0, 2), 3, false)
-        nameGui.Parent = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-        nameLabels[player] = nameGui
-        
-        local healthGui = createTag("Health", Vector2.new(2, 0.4), 2, true)
-        healthGui.Parent = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-        healthBars[player] = healthGui
-        
-        updateHighlight(player)
-        updateName(player)
-        updateHealth(player)
+        -- Name tag
+        local head = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+        if head then
+            local nameGui = createTag("Name", Vector2.new(0, 2), 3, false)
+            nameGui.Parent = head
+            nameLabels[player] = nameGui
+            
+            local healthGui = createTag("Health", Vector2.new(2, 0.4), 2, true)
+            healthGui.Parent = head
+            healthBars[player] = healthGui
+        end
     end
     
     if player.Character then
@@ -246,18 +219,6 @@ local function setupPlayer(player)
     end
     
     player.CharacterAdded:Connect(onCharacterAdded)
-    
-    player.CharacterRemoving:Connect(function()
-        if highlights[player] then
-            highlights[player].Enabled = false
-        end
-        if nameLabels[player] then
-            nameLabels[player].Enabled = false
-        end
-        if healthBars[player] then
-            healthBars[player].Enabled = false
-        end
-    end)
 end
 
 local function cleanupPlayer(player)
@@ -291,8 +252,6 @@ function ESP:Init()
     end)
     
     connections.RenderStepped = RunService.RenderStepped:Connect(function()
-        if not ESP.Enabled then return end
-        
         for player, _ in pairs(highlights) do
             updateHighlight(player)
             updateName(player)

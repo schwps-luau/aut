@@ -103,6 +103,7 @@ local Settings = {
         },
         AKA = false,
         BunnyHop = false,
+        WallHop = false,
         Config = {
             Input = nil
         }
@@ -903,6 +904,13 @@ p2t5:Toggle {
     end
 }
 
+p2t5:Toggle {
+    Name = "wall hop",
+    flag = "wall_hop",
+    callback = function(value)
+        Settings.Other.WallHop = value
+    end
+}
 
 Settings.Other.FieldOfView.Enabled = true
 fovsliderp2t5 = p2t5:Slider {
@@ -1903,4 +1911,22 @@ game:GetService("RunService").RenderStepped:Connect(function()
          game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
       end
       game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * (Settings.Player.Speed.Value / 10)
+end)
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if Settings.Other.WallHop == true then
+        local rayParams = RaycastParams.new()
+        rayParams.FilterDescendantsInstances = {game.Players.LocalPlayer.Character}
+        rayParams.FilterType = Enum.RaycastFilterType.Exclude
+        
+        local raycastResult = workspace:Raycast(
+            game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").Position,                          
+            game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame.LookVector * 1.5,         
+            rayParams                          
+        )
+        
+        if raycastResult then
+            game.Players.LocalPlayer.Character:WaitForChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
 end)

@@ -33,7 +33,7 @@ local function createTag(name, size, offset, isHealth)
     gui.LightInfluence = 0
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.ClipsDescendants = not isHealth
-    gui.Enabled = false  -- По умолчанию выключен, включится когда нужно
+    gui.Enabled = false
     
     if isHealth then
         local bg = Instance.new("Frame")
@@ -87,7 +87,9 @@ local function isPlayerVisible(player)
 end
 
 local function getHighlightColor(player)
-    if not ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
+    local isTeammate = not ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team
+    
+    if isTeammate then
         return ESP.TeammateColor
     end
     
@@ -105,10 +107,12 @@ local function shouldShowPlayer(player)
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid or humanoid.Health <= 0 then return false end
     
+    -- TeamCheck = true - не показываем тиммейтов
     if ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team then
         return false
     end
     
+    -- WallCheck = true - не показываем за стенами
     if ESP.WallCheck and not isPlayerVisible(player) then
         return false
     end
@@ -190,7 +194,6 @@ local function setupPlayer(player)
     local function onCharacterAdded(character)
         task.wait(0.1)
         
-        -- Highlight
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.FillTransparency = 0.5
@@ -201,7 +204,6 @@ local function setupPlayer(player)
         highlight.Enabled = false
         highlights[player] = highlight
         
-        -- Name tag
         local head = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
         if head then
             local nameGui = createTag("Name", Vector2.new(0, 2), 3, false)
@@ -219,6 +221,18 @@ local function setupPlayer(player)
     end
     
     player.CharacterAdded:Connect(onCharacterAdded)
+    
+    player.CharacterRemoving:Connect(function()
+        if highlights[player] then
+            highlights[player].Enabled = false
+        end
+        if nameLabels[player] then
+            nameLabels[player].Enabled = false
+        end
+        if healthBars[player] then
+            healthBars[player].Enabled = false
+        end
+    end)
 end
 
 local function cleanupPlayer(player)

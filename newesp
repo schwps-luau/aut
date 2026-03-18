@@ -67,7 +67,7 @@ local function createTag(name, size, offset, isHealth)
     return gui
 end
 
-local function isPlayerVisible(player)
+local function isPlayerVisible(player, ignoreSelf)
     local character = player.Character
     if not character then return false end
     
@@ -81,8 +81,8 @@ local function isPlayerVisible(player)
     -- Создаем список для игнорирования
     local ignoreList = {localPlayer.Character}
     
-    -- Добавляем текущего игрока в игнор для VisibleCheck
-    if ESP.VisibleCheck then
+    -- Если ignoreSelf = true, игнорируем самого игрока (для VisibleCheck)
+    if ignoreSelf then
         table.insert(ignoreList, character)
     end
     
@@ -101,7 +101,8 @@ local function getHighlightColor(player)
     end
     
     if ESP.VisibleCheck then
-        return isPlayerVisible(player) and ESP.VisibleColor or ESP.InvisibleColor
+        -- VisibleCheck использует isPlayerVisible с ignoreSelf = true (игнорируем самого игрока)
+        return isPlayerVisible(player, true) and ESP.VisibleColor or ESP.InvisibleColor
     end
     
     return ESP.VisibleColor
@@ -119,22 +120,10 @@ local function shouldShowPlayer(player)
         return false
     end
     
-    -- WallCheck = true - проверяем стены
+    -- WallCheck = true - не показываем за стенами
     if ESP.WallCheck then
-        -- Для WallCheck не игнорируем самого игрока при проверке
-        local ignoreList = {localPlayer.Character}
-        local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-        
-        if rootPart then
-            local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
-            local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
-            
-            -- Если попали в этого игрока или ничего не попалось - показываем
-            if hit then
-                local hitPlayer = game:GetService("Players"):GetPlayerFromCharacter(hit:FindFirstAncestorOfClass("Model"))
-                return hitPlayer == player or hit == nil
-            end
-        end
+        -- WallCheck использует isPlayerVisible с ignoreSelf = false (не игнорируем игрока)
+        return isPlayerVisible(player, false)
     end
     
     return true

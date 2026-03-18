@@ -20,7 +20,6 @@ local ESP = {
     VisibleColor = Color3.fromRGB(255, 0, 0),
     InvisibleColor = Color3.fromRGB(128, 128, 128),
     TeammateColor = Color3.fromRGB(0, 255, 0),
-    OutlineColor = Color3.fromRGB(0, 0, 0),
     HealthLowColor = Color3.fromRGB(255, 0, 0),
     HealthHighColor = Color3.fromRGB(0, 255, 0),
     NameColor = Color3.fromRGB(255, 255, 255)
@@ -212,6 +211,31 @@ local function updateName(player)
     end
 end
 
+local function updateNameLabel(player)
+    local nameLabel = nameLabels[player]
+    if not nameLabel then return end
+    
+    if not ESP.Enabled or not ESP.ShowName or not shouldShowPlayer(player) then
+        nameLabel.Enabled = false
+        return
+    end
+    
+    local character = player.Character
+    local head = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    if not head then
+        nameLabel.Enabled = false
+        return
+    end
+    
+    nameLabel.Adornee = head
+    nameLabel.Enabled = true
+    
+    local label = nameLabel:FindFirstChild("Label", true)
+    if label then
+        label.Text = ESP.UseDisplayName and (player.DisplayName or player.Name) or player.Name
+    end
+end
+
 local function updateHealth(player)
     local healthBar = healthBars[player]
     if not healthBar then return end
@@ -242,31 +266,6 @@ local function updateHealth(player)
     end
 end
 
-local function updateNameLabel(player)
-    local nameLabel = nameLabels[player]
-    if not nameLabel then return end
-    
-    if not ESP.Enabled or not ESP.ShowName or not shouldShowPlayer(player) then
-        nameLabel.Enabled = false
-        return
-    end
-    
-    local character = player.Character
-    local head = character:FindFirstChild("Head") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-    if not head then
-        nameLabel.Enabled = false
-        return
-    end
-    
-    nameLabel.Adornee = head
-    nameLabel.Enabled = true
-    
-    local label = nameLabel:FindFirstChild("Label", true)
-    if label then
-        label.Text = ESP.UseDisplayName and (player.DisplayName or player.Name) or player.Name
-    end
-end
-
 local function setupPlayer(player)
     if player == localPlayer then return end
     
@@ -278,9 +277,8 @@ local function setupPlayer(player)
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0
+        highlight.OutlineTransparency = 1  -- Полностью убираем обводку
         highlight.FillColor = ESP.VisibleColor
-        highlight.OutlineColor = ESP.OutlineColor
         highlight.Parent = character
         highlight.Enabled = false
         highlights[player] = highlight

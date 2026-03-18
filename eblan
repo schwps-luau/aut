@@ -373,118 +373,73 @@ p1t2:ColorPicker {
     end
 }
 
-local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/esp"))()
 
+local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/newesp"))(); ESP:Init()
 p2t2:Toggle {
     Name = "enabled",
-    flag = "esp_enabled",
     callback = function(value)
-        ESP.Enabled = value
+       ESP.Enabled = value
     end
 }
 
 p2t2:Toggle {
     Name = "team check",
-    flag = "esp_teamcheck",
     callback = function(value)
-        ESP.Teamcheck = value
+       ESP.TeamCheck = value
+    end
+}
+
+p2t2:Toggle {
+    Name = "visible check",
+    callback = function(value)
+       ESP.VisibleCheck = value
     end
 }
 
 p2t2:Toggle {
     Name = "wall check",
-    flag = "esp_wallcheck",
     callback = function(value)
-        ESP.WallCheck = value
+       ESP.WallCheck = value
     end
 }
 
 p2t2:Toggle {
-    Name = "box",
-    flag = "esp_box",
+    Name = "show name",
     callback = function(value)
-        ESP.ShowBox = value
+       ESP.ShowName = value
     end
 }
 
 p2t2:Toggle {
-    Name = "displayname",
-    flag = "esp_displayname",
+    Name = "use display name",
     callback = function(value)
-        ESP.UseDisplayName = value
+       ESP.UseDisplayName = value
     end
 }
 
 p2t2:Toggle {
-    Name = "name",
-    flag = "esp_name",
+    Name = "show health",
     callback = function(value)
-        ESP.ShowName = value
-    end
-}
-
-p2t2:Toggle {
-    Name = "health",
-    flag = "esp_health",
-    callback = function(value)
-        ESP.ShowHealth = value
-    end
-}
-
-p2t2:Toggle {
-    Name = "tracer",
-    flag = "esp_tracer",
-    callback = function(value)
-        ESP.ShowTracer = value
-    end
-}
-
-p2t2:Toggle {
-    Name = "distance",
-    flag = "esp_distance",
-    callback = function(value)
-        ESP.ShowDistance = value
-    end
-}
-
-
-p2t2:dropdown {
-    name = "box type",
-    flag = "esp_boxtype",
-    content = {"2D","Corner"},
-    multichoice = false,
-    callback = function(value)
-        ESP.BoxType = value
+       ESP.ShowHealth = value
     end
 }
 
 p2t2:ColorPicker {
-    Name = "box color",
-    flag = "Box_Color",
+    Name = "visible color",
     Default = Color3.fromRGB(255, 255, 255),
     callback = function(value)
-        ESP.BoxColor = value
-        ESP.BoxOutlineColor = value
+       ESP.VisibleColor = value
     end
 }
 
 p2t2:ColorPicker {
-    Name = "tracer color",
-    flag = "Tracer_Color",
-    Default = Color3.fromRGB(255, 255, 255),
+    Name = "invisible color",
+    Default = Color3.fromRGB(0, 0, 0),
     callback = function(value)
-        ESP.TracerColor = value
+        ESP.InvisibleColor = value
     end
 }
 
-p2t2:ColorPicker {
-    Name = "name color",
-    flag = "Name_Color",
-    Default = Color3.fromRGB(255, 255, 255),
-    callback = function(value)
-        ESP.NameColor = value
-    end
-}
 
 
 p1t3:Label("speed")

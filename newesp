@@ -67,26 +67,29 @@ local function createTag(name, size, offset, isHealth)
     return gui
 end
 
-local function isPlayerVisible(player, ignoreSelf)
+local function isPlayerVisible(player)
     local character = player.Character
     if not character then return false end
     
     local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     if not rootPart then return false end
     
+    -- Проверяем на экране
     local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
     if not onScreen then return false end
     
-    local ignoreList = {localPlayer.Character}
-    
-    if ignoreSelf then
-        table.insert(ignoreList, character)
-    end
-    
+    -- Создаем луч от камеры до игрока
     local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
-    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character})
     
-    return hit == nil
+    -- Если луч никуда не попал - игрок видим
+    if not hit then return true end
+    
+    -- Если луч попал в этого игрока - видим
+    if hit:IsDescendantOf(character) then return true end
+    
+    -- Если попал в другой объект - не видим
+    return false
 end
 
 local function getHighlightColor(player)
@@ -97,8 +100,8 @@ local function getHighlightColor(player)
     end
     
     if ESP.VisibleCheck then
-        -- Если НЕ вижу - красный, если вижу - VisibleColor
-        return isPlayerVisible(player, true) and ESP.VisibleColor or ESP.InvisibleColor
+        -- Если видим - VisibleColor, если не видим - InvisibleColor
+        return isPlayerVisible(player) and ESP.VisibleColor or ESP.InvisibleColor
     end
     
     return ESP.VisibleColor
@@ -116,7 +119,7 @@ local function shouldShowPlayer(player)
     end
     
     if ESP.WallCheck then
-        return isPlayerVisible(player, false)
+        return isPlayerVisible(player)
     end
     
     return true

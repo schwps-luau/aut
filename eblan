@@ -854,6 +854,15 @@ p1t5:Button {
     end
 }
 
+p1t5:Keybind {
+    Default = Enum.KeyCode.RightShift,
+    Name = "keybind",
+    flag = "gui_keybind",
+    callback = function(value)
+        Library:SetKey(value)
+    end
+}
+
 p2t5:Toggle {
     Name = "instant turn",
     flag = "instant_turn",

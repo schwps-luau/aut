@@ -377,6 +377,7 @@ p1t2:ColorPicker {
 local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/newesp"))(); ESP:Init()
 p2t2:Toggle {
     Name = "enabled",
+    Flag = "enabled_esp",
     callback = function(value)
        ESP.Enabled = value
     end
@@ -384,6 +385,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "team check",
+    Flag = "team_check",
     callback = function(value)
        ESP.TeamCheck = value
     end
@@ -391,6 +393,7 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "visible check",
+    Flag = "vis_check",
     callback = function(value)
        ESP.VisibleCheck = value
     end
@@ -398,27 +401,31 @@ p2t2:Toggle {
 
 p2t2:Toggle {
     Name = "wall check",
+    Flag = "wall_check",
     callback = function(value)
        ESP.WallCheck = value
     end
 }
 
 p2t2:Toggle {
-    Name = "show name",
+    Name = "name",
+    Flag = "show_name",
     callback = function(value)
        ESP.ShowName = value
     end
 }
 
 p2t2:Toggle {
-    Name = "use display name",
+    Name = "displayname",
+    Flag = "display_name",
     callback = function(value)
        ESP.UseDisplayName = value
     end
 }
 
 p2t2:Toggle {
-    Name = "show health",
+    Name = "health",
+    Flag = "show_health",
     callback = function(value)
        ESP.ShowHealth = value
     end
@@ -427,6 +434,7 @@ p2t2:Toggle {
 p2t2:ColorPicker {
     Name = "visible color",
     Default = Color3.fromRGB(255, 255, 255),
+    Flag = "vis_color",
     callback = function(value)
        ESP.VisibleColor = value
     end
@@ -435,6 +443,7 @@ p2t2:ColorPicker {
 p2t2:ColorPicker {
     Name = "invisible color",
     Default = Color3.fromRGB(0, 0, 0),
+    Flag = "invis_color",
     callback = function(value)
         ESP.InvisibleColor = value
     end
@@ -473,7 +482,7 @@ p1t3:Toggle {
 p1t3:Slider {
     Name = "speed",
     flag = "speed_value",
-    Default = 0,
+    Default = 1,
     Min = 1,
     Max = 50,
     valueText = "speed - [VALUE]",
@@ -514,7 +523,7 @@ p1t3:dropdown {
 p1t3:Slider {
     Name = "speed",
     flag = "fly_speed",
-    Default = 0,
+    Default = 1,
     Min = 1,
     Max = 50,
     valueText = "speed - [VALUE]",

@@ -74,16 +74,23 @@ local function isPlayerVisible(player)
     local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     if not rootPart then return false end
     
+    -- Проверяем на экране
     local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
     if not onScreen then return false end
     
-    if ESP.WallCheck then
-        local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
-        local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character, character})
-        return hit == nil
+    -- Создаем список для игнорирования
+    local ignoreList = {localPlayer.Character}
+    
+    -- Добавляем текущего игрока в игнор для VisibleCheck
+    if ESP.VisibleCheck then
+        table.insert(ignoreList, character)
     end
     
-    return true
+    local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
+    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+    
+    -- Если ничего не попалось на пути - игрок видим
+    return hit == nil
 end
 
 local function getHighlightColor(player)
@@ -112,9 +119,22 @@ local function shouldShowPlayer(player)
         return false
     end
     
-    -- WallCheck = true - не показываем за стенами
-    if ESP.WallCheck and not isPlayerVisible(player) then
-        return false
+    -- WallCheck = true - проверяем стены
+    if ESP.WallCheck then
+        -- Для WallCheck не игнорируем самого игрока при проверке
+        local ignoreList = {localPlayer.Character}
+        local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+        
+        if rootPart then
+            local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
+            local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+            
+            -- Если попали в этого игрока или ничего не попалось - показываем
+            if hit then
+                local hitPlayer = game:GetService("Players"):GetPlayerFromCharacter(hit:FindFirstAncestorOfClass("Model"))
+                return hitPlayer == player or hit == nil
+            end
+        end
     end
     
     return true

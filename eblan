@@ -1892,7 +1892,7 @@ spawn(function()
 end)
 
 game:GetService("RunService").RenderStepped:Connect(function()
-    if Settings.Other.FieldOfView.Enabled == true and workspace.Camera.FieldOfView ~= Settings.Other.FieldOfView.Value then
+    if Settings.Other.FieldOfView.Enabled == true and workspace.Camera.FieldOfView ~= Settings.Other.FieldOfView.Value and game.Players.LocalPlayer.Character ~= nil then
         workspace.Camera.FieldOfView = Settings.Other.FieldOfView.Value
     end
 end)

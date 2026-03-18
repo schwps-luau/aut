@@ -186,7 +186,7 @@ local function setupPlayer(player)
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0.2
+        highlight.OutlineTransparency = 0.8
         highlight.FillColor = ESP.VisibleColor
         highlight.Parent = character
         highlight.Enabled = false

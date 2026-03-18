@@ -166,8 +166,9 @@ function initLibrary()
      library.color = color
     end
     
-   
-     library.keybind = Enum.KeyCode.RightShift
+    function library:SetKey(key)
+     library.keybind = key
+    end
    
 
     local gui = utility.create("ScreenGui")

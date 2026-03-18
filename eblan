@@ -872,12 +872,15 @@ p2t5:Toggle {
             end
         end)
     else
+        if nccycle then
+        nccycle:Disconnect()
             for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
                 if v:IsA("BasePart") and v.CanCollide == false then
                     v.CanCollide = true
                 end
             end
-            if nccycle then nccycle:Disconnect() end
+        end
+            
     end
     end
 }

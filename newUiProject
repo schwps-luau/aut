@@ -1,14 +1,11 @@
 --[[
     ONIXAR NIGHT DLC UI LIBRARY
-    Полная копия дизайна Night DLC
+    Версия: Large Edition
     Особенности:
-    - Полупрозрачный фон (настраивается)
-    - Жёлтый акцент (настраивается)
-    - Тогглы без кнопок (просто текст)
-    - Узкие окна (270px) и высокие (400px)
-    - Скруглённые углы (6px)
-    - Заголовки по центру
-    - Раскрывающиеся настройки по ПКМ
+    - Крупные элементы (высота 30)
+    - Сильное скругление (8px)
+    - Полупрозрачный фон
+    - Тогглы без кнопок
 ]]
 
 local library = {}
@@ -16,7 +13,6 @@ local gui = nil
 local container = nil
 local windows = {}
 local menuVisible = true
-local coloredElements = {}
 
 -- ============================================================
 -- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -29,15 +25,8 @@ local function create(class, props)
     return obj
 end
 
-local function changeColor(color, offset)
-    local r = math.clamp(color.r * 255 + offset, 0, 255)
-    local g = math.clamp(color.g * 255 + offset, 0, 255)
-    local b = math.clamp(color.b * 255 + offset, 0, 255)
-    return Color3.fromRGB(r, g, b)
-end
-
 -- ============================================================
--- ИНИЦИАЛИЗАЦИЯ БИБЛИОТЕКИ
+-- ИНИЦИАЛИЗАЦИЯ
 -- ============================================================
 function initLibrary()
     gui = create("ScreenGui", {
@@ -50,7 +39,7 @@ function initLibrary()
         syn.protect_gui(gui)
     end
     
-    -- Затемнение фона (полупрозрачное)
+    -- Затемнение фона
     create("Frame", {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
@@ -90,18 +79,17 @@ function initLibrary()
         end
     end)
     
-    -- Цвета по умолчанию (Night DLC)
-    library.accentColor = Color3.fromRGB(255, 170, 0)  -- Жёлтый
-    library.bgTransparency = 0.2  -- Прозрачность фона (0 = непрозрачный, 1 = полностью прозрачный)
+    library.accentColor = Color3.fromRGB(255, 170, 0)
+    library.bgTransparency = 0.2
     
     -- ============================================================
-    -- ФУНКЦИЯ СОЗДАНИЯ ОКНА
+    -- СОЗДАНИЕ ОКНА
     -- ============================================================
     function library:Window(config)
         config = config or {}
         local name = config.name or "Window"
-        local width = config.width or 270        -- Узкие по X
-        local height = config.height or 400      -- Высокие по Y
+        local width = config.width or 280
+        local height = config.height or 450
         local accent = config.accent or library.accentColor
         local transparency = config.transparency or library.bgTransparency
         
@@ -110,12 +98,9 @@ function initLibrary()
         end
         
         local windowCount = #windows + 1
-        
-        -- Позиция каскадом (по центру)
         local baseX = 0.5 - (width / 2000) + (windowCount - 1) * 0.02
         local baseY = 0.5 - (height / 2000) + (windowCount - 1) * 0.015
         
-        -- Основное окно (полупрозрачное)
         local window = create("Frame", {
             Size = UDim2.new(0, width, 0, height),
             Position = UDim2.new(baseX, 0, baseY, 0),
@@ -127,31 +112,30 @@ function initLibrary()
             Parent = container
         })
         
-        -- Скруглённые углы (6px)
-        local corner = create("UICorner", {
-            CornerRadius = UDim.new(0, 6),
+        -- БОЛЬШОЕ СКРУГЛЕНИЕ (8px)
+        create("UICorner", {
+            CornerRadius = UDim.new(0, 8),
             Parent = window
         })
         
-        -- Заголовок (по центру)
+        -- Заголовок по центру
         local titleBar = create("Frame", {
-            Size = UDim2.new(1, 0, 0, 30),
+            Size = UDim2.new(1, 0, 0, 35),
             BackgroundTransparency = 1,
             Parent = window
         })
         
-        local titleLabel = create("TextLabel", {
+        create("TextLabel", {
             Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
             Text = name,
             TextColor3 = library.accentColor,
-            TextXAlignment = Enum.TextXAlignment.Center,  -- ПО ЦЕНТРУ
+            TextXAlignment = Enum.TextXAlignment.Center,
             Font = Enum.Font.SourceSansBold,
-            TextSize = 18,
+            TextSize = 20,
             Parent = titleBar
         })
         
-        -- Drag
         titleBar.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = true
@@ -160,13 +144,13 @@ function initLibrary()
             end
         end)
         
-        -- Контейнер для элементов
+        -- Контейнер
         local content = create("ScrollingFrame", {
-            Size = UDim2.new(1, -10, 1, -35),
-            Position = UDim2.new(0, 5, 0, 30),
+            Size = UDim2.new(1, -10, 1, -40),
+            Position = UDim2.new(0, 5, 0, 35),
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            ScrollBarThickness = 0,  -- Убираем полосу прокрутки (как в Night DLC)
+            ScrollBarThickness = 0,
             CanvasSize = UDim2.new(0, 0, 0, 0),
             AutomaticCanvasSize = Enum.AutomaticSize.Y,
             Parent = window
@@ -174,124 +158,515 @@ function initLibrary()
         
         local listLayout = create("UIListLayout", {
             SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 2),
+            Padding = UDim.new(0, 4),
             Parent = content
         })
         
         table.insert(windows, window)
         
-        local windowApi = {
-            Content = content,
+        local windowApi = { Content = content }
+        
+        -- ============================================================
+        -- ТОГГЛ (БОЛЬШОЙ, ВЫСОТА 30)
+        -- ============================================================
+        function windowApi:Toggle(config)
+            config = config or {}
+            local name = config.name or "Toggle"
+            local callback = config.callback or function() end
+            local default = config.default or false
             
-            -- ============================================================
-            -- ТОГГЛ (БЕЗ КНОПКИ, ПРОСТО ТЕКСТ)
-            -- ============================================================
-            Toggle = function(self, config)
-                config = config or {}
-                local name = config.name or "Toggle"
-                local callback = config.callback or function() end
-                local default = config.default or false
+            local toggled = default
+            
+            local frame = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 30),  -- БЫЛО 24 → СТАЛО 30
+                BackgroundTransparency = 1,
+                Parent = content
+            })
+            
+            -- СКРУГЛЕНИЕ 8px
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 8),
+                Parent = frame
+            })
+            
+            local button = create("TextButton", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = "",
+                Parent = frame
+            })
+            
+            local textLabel = create("TextLabel", {
+                Size = UDim2.new(1, -10, 1, 0),
+                Position = UDim2.new(0, 5, 0, 0),
+                BackgroundTransparency = 1,
+                Text = name,
+                TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180),
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Font = Enum.Font.SourceSans,
+                TextSize = 18,  -- БЫЛО 16 → СТАЛО 18
+                Parent = frame
+            })
+            
+            button.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+                callback(toggled)
+            end)
+            
+            button.MouseEnter:Connect(function()
+                frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                frame.BackgroundTransparency = 0.3
+            end)
+            
+            button.MouseLeave:Connect(function()
+                frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                frame.BackgroundTransparency = 1
+            end)
+            
+            local obj = { frame = frame }
+            function obj:Set(value)
+                if toggled ~= value then
+                    toggled = value
+                    textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+                    callback(toggled)
+                end
+            end
+            return obj
+        end
+        
+        -- ============================================================
+        -- СЛАЙДЕР (УВЕЛИЧЕННЫЙ)
+        -- ============================================================
+        function windowApi:Slider(config)
+            config = config or {}
+            local name = config.name or "Slider"
+            local min = config.min or 0
+            local max = config.max or 100
+            local default = config.default or 0
+            local suffix = config.suffix or ""
+            local callback = config.callback or function() end
+            
+            local value = default
+            local sliding = false
+            
+            local frame = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 50),  -- БЫЛО 40 → СТАЛО 50
+                BackgroundTransparency = 1,
+                Parent = content
+            })
+            
+            create("TextLabel", {
+                Size = UDim2.new(1, -10, 0, 22),
+                Position = UDim2.new(0, 5, 0, 0),
+                BackgroundTransparency = 1,
+                Text = name,
+                TextColor3 = Color3.fromRGB(200, 200, 200),
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Font = Enum.Font.SourceSans,
+                TextSize = 18,
+                Parent = frame
+            })
+            
+            local valueLabel = create("TextLabel", {
+                Size = UDim2.new(1, -10, 0, 22),
+                BackgroundTransparency = 1,
+                Text = tostring(value) .. suffix,
+                TextColor3 = library.accentColor,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 18,
+                Parent = frame
+            })
+            
+            local sliderFrame = create("Frame", {
+                Size = UDim2.new(1, -10, 0, 6),  -- БЫЛО 4 → СТАЛО 6
+                Position = UDim2.new(0, 5, 0, 28),
+                BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+                BorderSizePixel = 0,
+                Parent = frame
+            })
+            
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 3),
+                Parent = sliderFrame
+            })
+            
+            local fill = create("Frame", {
+                Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
+                BackgroundColor3 = library.accentColor,
+                BorderSizePixel = 0,
+                Parent = sliderFrame
+            })
+            
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 3),
+                Parent = fill
+            })
+            
+            local function update(posX)
+                local rel = (posX - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X
+                rel = math.clamp(rel, 0, 1)
+                fill.Size = UDim2.new(rel, 0, 1, 0)
+                value = math.floor((min + (max - min) * rel) * 10) / 10
+                valueLabel.Text = tostring(value) .. suffix
+                callback(value)
+            end
+            
+            sliderFrame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    sliding = true
+                    update(input.Position.X)
+                end
+            end)
+            
+            sliderFrame.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    sliding = false
+                end
+            end)
+            
+            game:GetService("UserInputService").InputChanged:Connect(function(input)
+                if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    update(input.Position.X)
+                end
+            end)
+            
+            local obj = { frame = frame }
+            function obj:Set(val)
+                val = math.clamp(val, min, max)
+                value = math.floor(val * 10) / 10
+                fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                valueLabel.Text = tostring(value) .. suffix
+                callback(value)
+            end
+            return obj
+        end
+        
+        -- ============================================================
+        -- ДРОПДАУН (УВЕЛИЧЕННЫЙ)
+        -- ============================================================
+        function windowApi:Dropdown(config)
+            config = config or {}
+            local name = config.name or "Dropdown"
+            local items = config.items or {}
+            local default = config.default or items[1]
+            local callback = config.callback or function() end
+            
+            local selected = default
+            local opened = false
+            
+            local frame = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 30),  -- БЫЛО 24 → СТАЛО 30
+                BackgroundTransparency = 1,
+                Parent = content
+            })
+            
+            create("TextLabel", {
+                Size = UDim2.new(0.5, -5, 1, 0),
+                Position = UDim2.new(0, 5, 0, 0),
+                BackgroundTransparency = 1,
+                Text = name,
+                TextColor3 = Color3.fromRGB(200, 200, 200),
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Font = Enum.Font.SourceSans,
+                TextSize = 18,
+                Parent = frame
+            })
+            
+            local dropdownBtn = create("TextButton", {
+                Size = UDim2.new(0.5, -5, 0, 26),  -- БЫЛО 20 → СТАЛО 26
+                Position = UDim2.new(0.5, 0, 0.5, -13),
+                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                BorderSizePixel = 0,
+                Text = selected,
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                Font = Enum.Font.SourceSans,
+                TextSize = 16,
+                Parent = frame
+            })
+            
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 8),  -- СКРУГЛЕНИЕ 8px
+                Parent = dropdownBtn
+            })
+            
+            local arrow = create("TextLabel", {
+                Size = UDim2.new(0, 20, 1, 0),
+                Position = UDim2.new(1, -20, 0, 0),
+                BackgroundTransparency = 1,
+                Text = "▼",
+                TextColor3 = Color3.fromRGB(150, 150, 150),
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 14,
+                Parent = dropdownBtn
+            })
+            
+            local dropdownContainer = create("Frame", {
+                Size = UDim2.new(0.5, -5, 0, 0),
+                Position = UDim2.new(0.5, 0, 1, 2),
+                BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+                BorderSizePixel = 0,
+                ClipsDescendants = true,
+                Visible = false,
+                ZIndex = 10,
+                Parent = frame
+            })
+            
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 8),
+                Parent = dropdownContainer
+            })
+            
+            local dropdownList = create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Parent = dropdownContainer
+            })
+            
+            dropdownBtn.MouseButton1Click:Connect(function()
+                opened = not opened
+                dropdownContainer.Visible = opened
+                arrow.Text = opened and "▲" or "▼"
+                if opened then
+                    dropdownContainer.Size = UDim2.new(0.5, -5, 0, #items * 28)  -- ВЫСОТА ЭЛЕМЕНТОВ 28
+                else
+                    dropdownContainer.Size = UDim2.new(0.5, -5, 0, 0)
+                end
+            end)
+            
+            for _, item in ipairs(items) do
+                local itemBtn = create("TextButton", {
+                    Size = UDim2.new(1, 0, 0, 28),  -- ВЫСОТА 28
+                    BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+                    Text = item,
+                    TextColor3 = Color3.fromRGB(200, 200, 200),
+                    Font = Enum.Font.SourceSans,
+                    TextSize = 16,
+                    ZIndex = 11,
+                    Parent = dropdownContainer
+                })
                 
-                local toggled = default
+                itemBtn.MouseButton1Click:Connect(function()
+                    selected = item
+                    dropdownBtn.Text = selected
+                    opened = false
+                    dropdownContainer.Visible = false
+                    arrow.Text = "▼"
+                    dropdownContainer.Size = UDim2.new(0.5, -5, 0, 0)
+                    callback(selected)
+                end)
                 
-                local frame = create("Frame", {
-                    Size = UDim2.new(1, 0, 0, 24),
+                itemBtn.MouseEnter:Connect(function()
+                    itemBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                end)
+                
+                itemBtn.MouseLeave:Connect(function()
+                    itemBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                end)
+            end
+            
+            local obj = { frame = frame }
+            function obj:Set(value)
+                if table.find(items, value) then
+                    selected = value
+                    dropdownBtn.Text = selected
+                    callback(selected)
+                end
+            end
+            return obj
+        end
+        
+        -- ============================================================
+        -- ТОГГЛ С НАСТРОЙКАМИ (УВЕЛИЧЕННЫЙ)
+        -- ============================================================
+        function windowApi:ToggleWithSettings(config)
+            config = config or {}
+            local name = config.name or "Toggle"
+            local callback = config.callback or function() end
+            local default = config.default or false
+            
+            local toggled = default
+            local settingsOpened = false
+            
+            local frame = create("Frame", {
+                Size = UDim2.new(1, 0, 0, 30),  -- ВЫСОТА 30
+                BackgroundTransparency = 1,
+                Parent = content
+            })
+            
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 8),
+                Parent = frame
+            })
+            
+            local button = create("TextButton", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Text = "",
+                Parent = frame
+            })
+            
+            local textLabel = create("TextLabel", {
+                Size = UDim2.new(1, -25, 1, 0),
+                Position = UDim2.new(0, 5, 0, 0),
+                BackgroundTransparency = 1,
+                Text = name,
+                TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180),
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Font = Enum.Font.SourceSans,
+                TextSize = 18,
+                Parent = frame
+            })
+            
+            local arrow = create("TextLabel", {
+                Size = UDim2.new(0, 20, 1, 0),
+                Position = UDim2.new(1, -20, 0, 0),
+                BackgroundTransparency = 1,
+                Text = "▶",
+                TextColor3 = Color3.fromRGB(150, 150, 150),
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 14,
+                Parent = frame
+            })
+            
+            local settingsContainer = create("Frame", {
+                Size = UDim2.new(1, -10, 0, 0),
+                Position = UDim2.new(0, 5, 1, 2),
+                BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+                BackgroundTransparency = 0.1,
+                BorderSizePixel = 0,
+                ClipsDescendants = true,
+                Visible = false,
+                Parent = frame
+            })
+            
+            create("UICorner", {
+                CornerRadius = UDim.new(0, 8),
+                Parent = settingsContainer
+            })
+            
+            local settingsList = create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 4),
+                Parent = settingsContainer
+            })
+            
+            local function updateContainerSize()
+                local height = settingsList.AbsoluteContentSize.Y
+                settingsContainer.Size = UDim2.new(1, -10, 0, height + 8)
+            end
+            settingsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateContainerSize)
+            
+            button.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+                callback(toggled)
+            end)
+            
+            button.MouseButton2Click:Connect(function()
+                settingsOpened = not settingsOpened
+                settingsContainer.Visible = settingsOpened
+                arrow.Text = settingsOpened and "▼" or "▶"
+                if settingsOpened then
+                    updateContainerSize()
+                end
+            end)
+            
+            button.MouseEnter:Connect(function()
+                frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                frame.BackgroundTransparency = 0.3
+            end)
+            
+            button.MouseLeave:Connect(function()
+                frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                frame.BackgroundTransparency = 1
+            end)
+            
+            local settingsApi = {}
+            
+            function settingsApi:Toggle(cfg)
+                cfg = cfg or {}
+                local subName = cfg.name or "Sub Toggle"
+                local subCallback = cfg.callback or function() end
+                local subDefault = cfg.default or false
+                
+                local subToggled = subDefault
+                
+                local subFrame = create("Frame", {
+                    Size = UDim2.new(1, -10, 0, 28),  -- ВЫСОТА 28
+                    Position = UDim2.new(0, 5, 0, 2),
                     BackgroundTransparency = 1,
-                    Parent = content
+                    Parent = settingsContainer
                 })
                 
-                -- Скруглённые углы для фрейма
-                local corner = create("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = frame
-                })
-                
-                -- Кнопка на весь фрейм
-                local button = create("TextButton", {
+                local subButton = create("TextButton", {
                     Size = UDim2.new(1, 0, 1, 0),
                     BackgroundTransparency = 1,
                     Text = "",
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
-                -- Текст тогла (меняет цвет при включении)
-                local textLabel = create("TextLabel", {
-                    Size = UDim2.new(1, -10, 1, 0),
+                local subText = create("TextLabel", {
+                    Size = UDim2.new(1, -5, 1, 0),
                     Position = UDim2.new(0, 5, 0, 0),
                     BackgroundTransparency = 1,
-                    Text = name,
-                    TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180),
+                    Text = subName,
+                    TextColor3 = subToggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     Font = Enum.Font.SourceSans,
                     TextSize = 16,
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
-                button.MouseButton1Click:Connect(function()
-                    toggled = not toggled
-                    textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-                    callback(toggled)
+                subButton.MouseButton1Click:Connect(function()
+                    subToggled = not subToggled
+                    subText.TextColor3 = subToggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
+                    subCallback(subToggled)
                 end)
                 
-                -- Подсветка при наведении
-                button.MouseEnter:Connect(function()
-                    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                    frame.BackgroundTransparency = 0.3
-                end)
-                
-                button.MouseLeave:Connect(function()
-                    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                    frame.BackgroundTransparency = 1
-                end)
-                
-                local obj = { frame = frame }
-                function obj:Set(value)
-                    if toggled ~= value then
-                        toggled = value
-                        textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-                        callback(toggled)
+                local subObj = { frame = subFrame }
+                function subObj:Set(val)
+                    if subToggled ~= val then
+                        subToggled = val
+                        subText.TextColor3 = subToggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
+                        subCallback(subToggled)
                     end
                 end
-                
-                return obj
-            end,
+                return subObj
+            end
             
-            -- ============================================================
-            -- СЛАЙДЕР
-            -- ============================================================
-            Slider = function(self, config)
-                config = config or {}
-                local name = config.name or "Slider"
-                local min = config.min or 0
-                local max = config.max or 100
-                local default = config.default or 0
-                local suffix = config.suffix or ""
-                local callback = config.callback or function() end
+            function settingsApi:Slider(cfg)
+                cfg = cfg or {}
+                local subName = cfg.name or "Sub Slider"
+                local min = cfg.min or 0
+                local max = cfg.max or 100
+                local default = cfg.default or 0
+                local suffix = cfg.suffix or ""
+                local callback = cfg.callback or function() end
                 
                 local value = default
                 local sliding = false
                 
-                local frame = create("Frame", {
-                    Size = UDim2.new(1, 0, 0, 40),
+                local subFrame = create("Frame", {
+                    Size = UDim2.new(1, -10, 0, 45),  -- ВЫСОТА 45
+                    Position = UDim2.new(0, 5, 0, 2),
                     BackgroundTransparency = 1,
-                    Parent = content
+                    Parent = settingsContainer
                 })
                 
-                -- Название
                 create("TextLabel", {
                     Size = UDim2.new(1, -10, 0, 20),
                     Position = UDim2.new(0, 5, 0, 0),
                     BackgroundTransparency = 1,
-                    Text = name,
+                    Text = subName,
                     TextColor3 = Color3.fromRGB(200, 200, 200),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     Font = Enum.Font.SourceSans,
                     TextSize = 16,
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
-                -- Значение
-                local valueLabel = create("TextLabel", {
+                local subValue = create("TextLabel", {
                     Size = UDim2.new(1, -10, 0, 20),
                     BackgroundTransparency = 1,
                     Text = tostring(value) .. suffix,
@@ -299,54 +674,51 @@ function initLibrary()
                     TextXAlignment = Enum.TextXAlignment.Right,
                     Font = Enum.Font.SourceSansBold,
                     TextSize = 16,
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
-                -- Слайдер
-                local sliderFrame = create("Frame", {
-                    Size = UDim2.new(1, -10, 0, 4),
+                local subSlider = create("Frame", {
+                    Size = UDim2.new(1, -10, 0, 5),
                     Position = UDim2.new(0, 5, 0, 25),
                     BackgroundColor3 = Color3.fromRGB(60, 60, 60),
                     BorderSizePixel = 0,
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
-                -- Скругление слайдера
                 create("UICorner", {
-                    CornerRadius = UDim.new(0, 2),
-                    Parent = sliderFrame
+                    CornerRadius = UDim.new(0, 3),
+                    Parent = subSlider
                 })
                 
-                -- Заполнение
-                local fill = create("Frame", {
+                local subFill = create("Frame", {
                     Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
                     BackgroundColor3 = library.accentColor,
                     BorderSizePixel = 0,
-                    Parent = sliderFrame
+                    Parent = subSlider
                 })
                 
                 create("UICorner", {
-                    CornerRadius = UDim.new(0, 2),
-                    Parent = fill
+                    CornerRadius = UDim.new(0, 3),
+                    Parent = subFill
                 })
                 
                 local function update(posX)
-                    local rel = (posX - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X
+                    local rel = (posX - subSlider.AbsolutePosition.X) / subSlider.AbsoluteSize.X
                     rel = math.clamp(rel, 0, 1)
-                    fill.Size = UDim2.new(rel, 0, 1, 0)
+                    subFill.Size = UDim2.new(rel, 0, 1, 0)
                     value = math.floor((min + (max - min) * rel) * 10) / 10
-                    valueLabel.Text = tostring(value) .. suffix
+                    subValue.Text = tostring(value) .. suffix
                     callback(value)
                 end
                 
-                sliderFrame.InputBegan:Connect(function(input)
+                subSlider.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         sliding = true
                         update(input.Position.X)
                     end
                 end)
                 
-                sliderFrame.InputEnded:Connect(function(input)
+                subSlider.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         sliding = false
                     end
@@ -358,70 +730,64 @@ function initLibrary()
                     end
                 end)
                 
-                local obj = { frame = frame }
-                function obj:Set(val)
+                local subObj = { frame = subFrame }
+                function subObj:Set(val)
                     val = math.clamp(val, min, max)
                     value = math.floor(val * 10) / 10
-                    fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-                    valueLabel.Text = tostring(value) .. suffix
+                    subFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                    subValue.Text = tostring(value) .. suffix
                     callback(value)
                 end
-                
-                return obj
-            end,
+                return subObj
+            end
             
-            -- ============================================================
-            -- ДРОПДАУН
-            -- ============================================================
-            Dropdown = function(self, config)
-                config = config or {}
-                local name = config.name or "Dropdown"
-                local items = config.items or {}
-                local default = config.default or items[1]
-                local callback = config.callback or function() end
+            function settingsApi:Dropdown(cfg)
+                cfg = cfg or {}
+                local subName = cfg.name or "Sub Dropdown"
+                local items = cfg.items or {}
+                local default = cfg.default or items[1]
+                local callback = cfg.callback or function() end
                 
                 local selected = default
                 local opened = false
                 
-                local frame = create("Frame", {
-                    Size = UDim2.new(1, 0, 0, 24),
+                local subFrame = create("Frame", {
+                    Size = UDim2.new(1, -10, 0, 30),
+                    Position = UDim2.new(0, 5, 0, 2),
                     BackgroundTransparency = 1,
-                    Parent = content
+                    Parent = settingsContainer
                 })
                 
-                -- Название
                 create("TextLabel", {
                     Size = UDim2.new(0.5, -5, 1, 0),
                     Position = UDim2.new(0, 5, 0, 0),
                     BackgroundTransparency = 1,
-                    Text = name,
+                    Text = subName,
                     TextColor3 = Color3.fromRGB(200, 200, 200),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     Font = Enum.Font.SourceSans,
                     TextSize = 16,
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
-                -- Кнопка дропдауна
-                local dropdownBtn = create("TextButton", {
-                    Size = UDim2.new(0.5, -5, 0, 20),
-                    Position = UDim2.new(0.5, 0, 0.5, -10),
+                local subDropdown = create("TextButton", {
+                    Size = UDim2.new(0.5, -5, 0, 24),
+                    Position = UDim2.new(0.5, 0, 0.5, -12),
                     BackgroundColor3 = Color3.fromRGB(30, 30, 30),
                     BorderSizePixel = 0,
                     Text = selected,
                     TextColor3 = Color3.fromRGB(255, 255, 255),
                     Font = Enum.Font.SourceSans,
                     TextSize = 14,
-                    Parent = frame
+                    Parent = subFrame
                 })
                 
                 create("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = dropdownBtn
+                    CornerRadius = UDim.new(0, 8),
+                    Parent = subDropdown
                 })
                 
-                -- Стрелка
-                local arrow = create("TextLabel", {
+                local subArrow = create("TextLabel", {
                     Size = UDim2.new(0, 20, 1, 0),
                     Position = UDim2.new(1, -20, 0, 0),
                     BackgroundTransparency = 1,
@@ -429,61 +795,60 @@ function initLibrary()
                     TextColor3 = Color3.fromRGB(150, 150, 150),
                     Font = Enum.Font.SourceSansBold,
                     TextSize = 12,
-                    Parent = dropdownBtn
+                    Parent = subDropdown
                 })
                 
-                -- Контейнер для элементов
-                local dropdownContainer = create("Frame", {
+                local subContainer = create("Frame", {
                     Size = UDim2.new(0.5, -5, 0, 0),
                     Position = UDim2.new(0.5, 0, 1, 2),
                     BackgroundColor3 = Color3.fromRGB(20, 20, 20),
                     BorderSizePixel = 0,
                     ClipsDescendants = true,
                     Visible = false,
-                    ZIndex = 10,
-                    Parent = frame
+                    ZIndex = 11,
+                    Parent = subFrame
                 })
                 
                 create("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = dropdownContainer
+                    CornerRadius = UDim.new(0, 8),
+                    Parent = subContainer
                 })
                 
-                local dropdownList = create("UIListLayout", {
+                local subList = create("UIListLayout", {
                     SortOrder = Enum.SortOrder.LayoutOrder,
-                    Parent = dropdownContainer
+                    Parent = subContainer
                 })
                 
-                dropdownBtn.MouseButton1Click:Connect(function()
+                subDropdown.MouseButton1Click:Connect(function()
                     opened = not opened
-                    dropdownContainer.Visible = opened
-                    arrow.Text = opened and "▲" or "▼"
+                    subContainer.Visible = opened
+                    subArrow.Text = opened and "▲" or "▼"
                     if opened then
-                        dropdownContainer.Size = UDim2.new(0.5, -5, 0, #items * 24)
+                        subContainer.Size = UDim2.new(0.5, -5, 0, #items * 26)
                     else
-                        dropdownContainer.Size = UDim2.new(0.5, -5, 0, 0)
+                        subContainer.Size = UDim2.new(0.5, -5, 0, 0)
                     end
                 end)
                 
                 for _, item in ipairs(items) do
                     local itemBtn = create("TextButton", {
-                        Size = UDim2.new(1, 0, 0, 24),
+                        Size = UDim2.new(1, 0, 0, 26),
                         BackgroundColor3 = Color3.fromRGB(20, 20, 20),
                         Text = item,
                         TextColor3 = Color3.fromRGB(200, 200, 200),
                         Font = Enum.Font.SourceSans,
                         TextSize = 14,
-                        ZIndex = 11,
-                        Parent = dropdownContainer
+                        ZIndex = 12,
+                        Parent = subContainer
                     })
                     
                     itemBtn.MouseButton1Click:Connect(function()
                         selected = item
-                        dropdownBtn.Text = selected
+                        subDropdown.Text = selected
                         opened = false
-                        dropdownContainer.Visible = false
-                        arrow.Text = "▼"
-                        dropdownContainer.Size = UDim2.new(0.5, -5, 0, 0)
+                        subContainer.Visible = false
+                        subArrow.Text = "▼"
+                        subContainer.Size = UDim2.new(0.5, -5, 0, 0)
                         callback(selected)
                     end)
                     
@@ -496,444 +861,27 @@ function initLibrary()
                     end)
                 end
                 
-                local obj = { frame = frame }
-                function obj:Set(value)
+                local subObj = { frame = subFrame }
+                function subObj:Set(value)
                     if table.find(items, value) then
                         selected = value
-                        dropdownBtn.Text = selected
+                        subDropdown.Text = selected
                         callback(selected)
                     end
                 end
-                
-                return obj
-            end,
+                return subObj
+            end
             
-            -- ============================================================
-            -- ТОГГЛ С РАСКРЫВАЮЩИМИСЯ НАСТРОЙКАМИ ПО ПКМ
-            -- ============================================================
-            ToggleWithSettings = function(self, config)
-                config = config or {}
-                local name = config.name or "Toggle"
-                local callback = config.callback or function() end
-                local default = config.default or false
-                
-                local toggled = default
-                local settingsOpened = false
-                
-                local frame = create("Frame", {
-                    Size = UDim2.new(1, 0, 0, 24),
-                    BackgroundTransparency = 1,
-                    Parent = content
-                })
-                
-                create("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = frame
-                })
-                
-                -- Кнопка на весь фрейм (обрабатывает клики)
-                local button = create("TextButton", {
-                    Size = UDim2.new(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    Text = "",
-                    Parent = frame
-                })
-                
-                -- Текст тогла
-                local textLabel = create("TextLabel", {
-                    Size = UDim2.new(1, -25, 1, 0),
-                    Position = UDim2.new(0, 5, 0, 0),
-                    BackgroundTransparency = 1,
-                    Text = name,
-                    TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180),
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Font = Enum.Font.SourceSans,
-                    TextSize = 16,
-                    Parent = frame
-                })
-                
-                -- Стрелка (индикатор настроек)
-                local arrow = create("TextLabel", {
-                    Size = UDim2.new(0, 20, 1, 0),
-                    Position = UDim2.new(1, -20, 0, 0),
-                    BackgroundTransparency = 1,
-                    Text = "▶",
-                    TextColor3 = Color3.fromRGB(150, 150, 150),
-                    Font = Enum.Font.SourceSansBold,
-                    TextSize = 12,
-                    Parent = frame
-                })
-                
-                -- Контейнер для настроек
-                local settingsContainer = create("Frame", {
-                    Size = UDim2.new(1, -10, 0, 0),
-                    Position = UDim2.new(0, 5, 1, 2),
-                    BackgroundColor3 = Color3.fromRGB(15, 15, 15),
-                    BackgroundTransparency = 0.1,
-                    BorderSizePixel = 0,
-                    ClipsDescendants = true,
-                    Visible = false,
-                    Parent = frame
-                })
-                
-                create("UICorner", {
-                    CornerRadius = UDim.new(0, 4),
-                    Parent = settingsContainer
-                })
-                
-                local settingsList = create("UIListLayout", {
-                    SortOrder = Enum.SortOrder.LayoutOrder,
-                    Padding = UDim.new(0, 2),
-                    Parent = settingsContainer
-                })
-                
-                -- Функция обновления размера
-                local function updateContainerSize()
-                    local height = settingsList.AbsoluteContentSize.Y
-                    settingsContainer.Size = UDim2.new(1, -10, 0, height + 4)
-                end
-                
-                settingsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateContainerSize)
-                
-                -- ЛКМ: переключение тогла
-                button.MouseButton1Click:Connect(function()
-                    toggled = not toggled
+            local obj = { frame = frame, settings = settingsApi }
+            function obj:Set(value)
+                if toggled ~= value then
+                    toggled = value
                     textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                     callback(toggled)
-                end)
-                
-                -- ПКМ: открытие настроек
-                button.MouseButton2Click:Connect(function()
-                    settingsOpened = not settingsOpened
-                    settingsContainer.Visible = settingsOpened
-                    arrow.Text = settingsOpened and "▼" or "▶"
-                    
-                    if settingsOpened then
-                        updateContainerSize()
-                    end
-                end)
-                
-                -- Подсветка при наведении
-                button.MouseEnter:Connect(function()
-                    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                    frame.BackgroundTransparency = 0.3
-                end)
-                
-                button.MouseLeave:Connect(function()
-                    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                    frame.BackgroundTransparency = 1
-                end)
-                
-                -- API для добавления настроек
-                local settingsApi = {}
-                
-                function settingsApi:Toggle(cfg)
-                    cfg = cfg or {}
-                    local subName = cfg.name or "Sub Toggle"
-                    local subCallback = cfg.callback or function() end
-                    local subDefault = cfg.default or false
-                    
-                    local subToggled = subDefault
-                    
-                    local subFrame = create("Frame", {
-                        Size = UDim2.new(1, -10, 0, 22),
-                        Position = UDim2.new(0, 5, 0, 2),
-                        BackgroundTransparency = 1,
-                        Parent = settingsContainer
-                    })
-                    
-                    local subButton = create("TextButton", {
-                        Size = UDim2.new(1, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Text = "",
-                        Parent = subFrame
-                    })
-                    
-                    local subText = create("TextLabel", {
-                        Size = UDim2.new(1, -10, 1, 0),
-                        Position = UDim2.new(0, 5, 0, 0),
-                        BackgroundTransparency = 1,
-                        Text = subName,
-                        TextColor3 = subToggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160),
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Font = Enum.Font.SourceSans,
-                        TextSize = 14,
-                        Parent = subFrame
-                    })
-                    
-                    subButton.MouseButton1Click:Connect(function()
-                        subToggled = not subToggled
-                        subText.TextColor3 = subToggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
-                        subCallback(subToggled)
-                    end)
-                    
-                    local subObj = { frame = subFrame }
-                    function subObj:Set(val)
-                        if subToggled ~= val then
-                            subToggled = val
-                            subText.TextColor3 = subToggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
-                            subCallback(subToggled)
-                        end
-                    end
-                    
-                    return subObj
                 end
-                
-                function settingsApi:Slider(cfg)
-                    cfg = cfg or {}
-                    local subName = cfg.name or "Sub Slider"
-                    local min = cfg.min or 0
-                    local max = cfg.max or 100
-                    local default = cfg.default or 0
-                    local suffix = cfg.suffix or ""
-                    local callback = cfg.callback or function() end
-                    
-                    local value = default
-                    local sliding = false
-                    
-                    local subFrame = create("Frame", {
-                        Size = UDim2.new(1, -10, 0, 35),
-                        Position = UDim2.new(0, 5, 0, 2),
-                        BackgroundTransparency = 1,
-                        Parent = settingsContainer
-                    })
-                    
-                    create("TextLabel", {
-                        Size = UDim2.new(1, -10, 0, 18),
-                        Position = UDim2.new(0, 5, 0, 0),
-                        BackgroundTransparency = 1,
-                        Text = subName,
-                        TextColor3 = Color3.fromRGB(200, 200, 200),
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Font = Enum.Font.SourceSans,
-                        TextSize = 14,
-                        Parent = subFrame
-                    })
-                    
-                    local subValue = create("TextLabel", {
-                        Size = UDim2.new(1, -10, 0, 18),
-                        BackgroundTransparency = 1,
-                        Text = tostring(value) .. suffix,
-                        TextColor3 = library.accentColor,
-                        TextXAlignment = Enum.TextXAlignment.Right,
-                        Font = Enum.Font.SourceSansBold,
-                        TextSize = 14,
-                        Parent = subFrame
-                    })
-                    
-                    local subSlider = create("Frame", {
-                        Size = UDim2.new(1, -10, 0, 4),
-                        Position = UDim2.new(0, 5, 0, 22),
-                        BackgroundColor3 = Color3.fromRGB(60, 60, 60),
-                        BorderSizePixel = 0,
-                        Parent = subFrame
-                    })
-                    
-                    create("UICorner", {
-                        CornerRadius = UDim.new(0, 2),
-                        Parent = subSlider
-                    })
-                    
-                    local subFill = create("Frame", {
-                        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
-                        BackgroundColor3 = library.accentColor,
-                        BorderSizePixel = 0,
-                        Parent = subSlider
-                    })
-                    
-                    create("UICorner", {
-                        CornerRadius = UDim.new(0, 2),
-                        Parent = subFill
-                    })
-                    
-                    local function update(posX)
-                        local rel = (posX - subSlider.AbsolutePosition.X) / subSlider.AbsoluteSize.X
-                        rel = math.clamp(rel, 0, 1)
-                        subFill.Size = UDim2.new(rel, 0, 1, 0)
-                        value = math.floor((min + (max - min) * rel) * 10) / 10
-                        subValue.Text = tostring(value) .. suffix
-                        callback(value)
-                    end
-                    
-                    subSlider.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            sliding = true
-                            update(input.Position.X)
-                        end
-                    end)
-                    
-                    subSlider.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            sliding = false
-                        end
-                    end)
-                    
-                    game:GetService("UserInputService").InputChanged:Connect(function(input)
-                        if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
-                            update(input.Position.X)
-                        end
-                    end)
-                    
-                    local subObj = { frame = subFrame }
-                    function subObj:Set(val)
-                        val = math.clamp(val, min, max)
-                        value = math.floor(val * 10) / 10
-                        subFill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-                        subValue.Text = tostring(value) .. suffix
-                        callback(value)
-                    end
-                    
-                    return subObj
-                end
-                
-                function settingsApi:Dropdown(cfg)
-                    cfg = cfg or {}
-                    local subName = cfg.name or "Sub Dropdown"
-                    local items = cfg.items or {}
-                    local default = cfg.default or items[1]
-                    local callback = cfg.callback or function() end
-                    
-                    local selected = default
-                    local opened = false
-                    
-                    local subFrame = create("Frame", {
-                        Size = UDim2.new(1, -10, 0, 24),
-                        Position = UDim2.new(0, 5, 0, 2),
-                        BackgroundTransparency = 1,
-                        Parent = settingsContainer
-                    })
-                    
-                    create("TextLabel", {
-                        Size = UDim2.new(0.5, -5, 1, 0),
-                        Position = UDim2.new(0, 5, 0, 0),
-                        BackgroundTransparency = 1,
-                        Text = subName,
-                        TextColor3 = Color3.fromRGB(200, 200, 200),
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Font = Enum.Font.SourceSans,
-                        TextSize = 14,
-                        Parent = subFrame
-                    })
-                    
-                    local subDropdown = create("TextButton", {
-                        Size = UDim2.new(0.5, -5, 0, 20),
-                        Position = UDim2.new(0.5, 0, 0.5, -10),
-                        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-                        BorderSizePixel = 0,
-                        Text = selected,
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
-                        Font = Enum.Font.SourceSans,
-                        TextSize = 12,
-                        Parent = subFrame
-                    })
-                    
-                    create("UICorner", {
-                        CornerRadius = UDim.new(0, 4),
-                        Parent = subDropdown
-                    })
-                    
-                    local subArrow = create("TextLabel", {
-                        Size = UDim2.new(0, 20, 1, 0),
-                        Position = UDim2.new(1, -20, 0, 0),
-                        BackgroundTransparency = 1,
-                        Text = "▼",
-                        TextColor3 = Color3.fromRGB(150, 150, 150),
-                        Font = Enum.Font.SourceSansBold,
-                        TextSize = 10,
-                        Parent = subDropdown
-                    })
-                    
-                    local subContainer = create("Frame", {
-                        Size = UDim2.new(0.5, -5, 0, 0),
-                        Position = UDim2.new(0.5, 0, 1, 2),
-                        BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-                        BorderSizePixel = 0,
-                        ClipsDescendants = true,
-                        Visible = false,
-                        ZIndex = 11,
-                        Parent = subFrame
-                    })
-                    
-                    create("UICorner", {
-                        CornerRadius = UDim.new(0, 4),
-                        Parent = subContainer
-                    })
-                    
-                    local subList = create("UIListLayout", {
-                        SortOrder = Enum.SortOrder.LayoutOrder,
-                        Parent = subContainer
-                    })
-                    
-                    subDropdown.MouseButton1Click:Connect(function()
-                        opened = not opened
-                        subContainer.Visible = opened
-                        subArrow.Text = opened and "▲" or "▼"
-                        if opened then
-                            subContainer.Size = UDim2.new(0.5, -5, 0, #items * 22)
-                        else
-                            subContainer.Size = UDim2.new(0.5, -5, 0, 0)
-                        end
-                    end)
-                    
-                    for _, item in ipairs(items) do
-                        local itemBtn = create("TextButton", {
-                            Size = UDim2.new(1, 0, 0, 22),
-                            BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-                            Text = item,
-                            TextColor3 = Color3.fromRGB(200, 200, 200),
-                            Font = Enum.Font.SourceSans,
-                            TextSize = 12,
-                            ZIndex = 12,
-                            Parent = subContainer
-                        })
-                        
-                        itemBtn.MouseButton1Click:Connect(function()
-                            selected = item
-                            subDropdown.Text = selected
-                            opened = false
-                            subContainer.Visible = false
-                            subArrow.Text = "▼"
-                            subContainer.Size = UDim2.new(0.5, -5, 0, 0)
-                            callback(selected)
-                        end)
-                        
-                        itemBtn.MouseEnter:Connect(function()
-                            itemBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                        end)
-                        
-                        itemBtn.MouseLeave:Connect(function()
-                            itemBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                        end)
-                    end
-                    
-                    local subObj = { frame = subFrame }
-                    function subObj:Set(value)
-                        if table.find(items, value) then
-                            selected = value
-                            subDropdown.Text = selected
-                            callback(selected)
-                        end
-                    end
-                    
-                    return subObj
-                end
-                
-                local obj = {
-                    frame = frame,
-                    settings = settingsApi
-                }
-                
-                function obj:Set(value)
-                    if toggled ~= value then
-                        toggled = value
-                        textLabel.TextColor3 = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
-                        callback(toggled)
-                    end
-                end
-                
-                return obj
             end
-        }
+            return obj
+        end
         
         return windowApi
     end
@@ -942,28 +890,11 @@ function initLibrary()
 end
 
 -- ============================================================
--- ПРИМЕР ИСПОЛЬЗОВАНИЯ
+-- ПРИМЕР
 -- ============================================================
 -- local Library = initLibrary()
--- 
--- local Combat = Library:Window({
---     name = "Combat",
---     width = 260,
---     height = 420,
---     accent = Color3.fromRGB(255, 170, 0),  -- Жёлтый
---     transparency = 0.15                     -- Полупрозрачный
--- })
--- 
--- local ka = Combat:ToggleWithSettings({
---     name = "AttackAura",
---     callback = function(v) print("KA:", v) end
--- })
+-- local Combat = Library:Window({name = "Combat", width = 260, height = 450})
+-- Combat:Toggle({name = "KillAura", callback = function(v) print("KA:", v) end})
+-- local ka = Combat:ToggleWithSettings({name = "AttackAura", callback = function(v) print("KA:", v) end})
 -- ka.settings:Toggle({name = "Through Walls", callback = function(v) print("Walls:", v) end})
 -- ka.settings:Slider({name = "Range", min = 3, max = 6, default = 4.2, suffix = "b", callback = function(v) print("Range:", v) end})
--- ka.settings:Dropdown({name = "Priority", items = {"Health", "Distance", "Angle"}, default = "Distance", callback = function(v) print("Priority:", v) end})
--- 
--- local Movement = Library:Window({name = "Movement", width = 260, height = 420})
--- Movement:Toggle({name = "Flight", callback = function(v) print("Flight:", v) end})
--- Movement:Toggle({name = "Sprint", callback = function(v) print("Sprint:", v) end})
--- Movement:Slider({name = "Speed", min = 1, max = 5, default = 2.5, suffix = "x", callback = function(v) print("Speed:", v) end})
--- Movement:Dropdown({name = "Mode", items = {"Vanilla", "Glide", "Boost"}, default = "Vanilla", callback = function(v) print("Mode:", v) end})

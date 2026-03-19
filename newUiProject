@@ -465,7 +465,7 @@ function Library:CreateWindow(config)
     
     return WindowAPI
 end
-
+--[[
 -- ============================================================
 -- ПРИМЕР ИСПОЛЬЗОВАНИЯ
 -- ============================================================
@@ -484,5 +484,5 @@ local visuals = win:Tab("Visuals")
 visuals:Toggle({text = "ESP", callback = function(v) print("ESP:", v) end})
 visuals:Toggle({text = "Tracers", callback = function(v) print("Tracers:", v) end})
 visuals:Slider({text = "FOV", min = 0, max = 180, default = 90, suffix = "°", callback = function(v) print("FOV:", v) end})
-
+]]
 return Library

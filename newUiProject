@@ -555,10 +555,6 @@ function initLibrary()
             gui.Enabled = false
         end
 
-        function windowTypes:SetPosition(x, y)
-            topbar.Position = UDim2.new(0, x, 0, y)
-        end
-
         function windowTypes:Tab(name)
             windowTypes.count = windowTypes.count + 1
             name = name or "Tab"
@@ -587,22 +583,25 @@ function initLibrary()
                 Parent = tabs
             })
             
-            -- КОНТЕЙНЕР ДЛЯ ВСЕХ КОЛОНОК (для правильного позиционирования)
-            local columnsContainer = utility.create("Frame", {
+            -- Создаем контейнер для сетки 2x2
+            local gridContainer = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 1, 0),
                 BackgroundTransparency = 1,
                 Parent = tab
             })
             
-            -- КОЛОНКА 1 (верхняя левая)
+            -- Колонка 1 (верхняя левая)
             local column1 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = columnsContainer
+                Parent = gridContainer
             })
 
             local column1List = utility.create("UIListLayout", {
@@ -615,15 +614,18 @@ function initLibrary()
                 column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
             end)
 
-            -- КОЛОНКА 2 (верхняя правая)
+            -- Колонка 2 (верхняя правая)
             local column2 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = columnsContainer
+                Parent = gridContainer
             })
 
             local column2List = utility.create("UIListLayout", {
@@ -635,16 +637,19 @@ function initLibrary()
             column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
             end)
-            
-            -- КОЛОНКА 3 (нижняя левая)
+
+            -- Колонка 3 (нижняя левая, под первой)
             local column3 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = columnsContainer
+                Parent = gridContainer
             })
 
             local column3List = utility.create("UIListLayout", {
@@ -656,16 +661,19 @@ function initLibrary()
             column3List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
             end)
-            
-            -- КОЛОНКА 4 (нижняя правая)
+
+            -- Колонка 4 (нижняя правая, под второй)
             local column4 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = columnsContainer
+                Parent = gridContainer
             })
 
             local column4List = utility.create("UIListLayout", {
@@ -777,31 +785,6 @@ function initLibrary()
                 end)
 
                 local sectionTypes = utility.table()
-                
-                function sectionTypes:GetName()
-                    return name
-                end
-                
-                function sectionTypes:Rename(newName)
-                    name = newName
-                end
-                
-                function sectionTypes:SetVisible(bool)
-                    sectionHolder.Visible = bool
-                end
-                
-                function sectionTypes:Clear()
-                    for _, child in ipairs(sectionContent:GetChildren()) do
-                        if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then
-                            child:Destroy()
-                        end
-                    end
-                end
-                
-                function sectionTypes:Remove()
-                    sectionHolder:Destroy()
-                end
-                
                 function sectionTypes:Label(text)
                     local label = utility.create("TextLabel", {
                         ZIndex = 3,
@@ -1234,7 +1217,6 @@ function initLibrary()
 
                     return boxTypes
                 end
-                
                 function sectionTypes:Slider(opts)
                     local options = utility.table(opts)
                     local min = options.min or 0
@@ -2173,7 +2155,6 @@ function initLibrary()
 
                     return dropdownTypes
                 end
-                
                 function sectionTypes:Keybind(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Keybind"
@@ -2997,7 +2978,7 @@ function initLibrary()
                         else
                             rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         end
-                    end)
+                    end
                         
                     hex.FocusLost:Connect(function()
                         if hex.Text:find("#") and hex.Text:len() == 7 then
@@ -3431,7 +3412,7 @@ function initLibrary()
                         else
                             rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         end
-                    end)
+                    end
                         
                     hex.FocusLost:Connect(function()
                         if hex.Text:find("#") and hex.Text:len() == 7 then

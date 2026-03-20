@@ -1,4 +1,4 @@
---[[секции1
+--[[секции2
 Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
@@ -684,7 +684,7 @@ function initLibrary()
                 updateColumnSizes()
             end)
             
-            -- Функция обновления размеров колонок
+                      -- Функция обновления размеров колонок
             local function updateColumnSizes()
                 -- Получаем количество секций в каждой колонке
                 local col1Count = #column1:GetChildren()
@@ -692,26 +692,16 @@ function initLibrary()
                 local col3Count = #column3:GetChildren()
                 local col4Count = #column4:GetChildren()
                 
-                -- Получаем высоту контента каждой колонки
-                local col1ContentHeight = column1List.AbsoluteContentSize.Y
-                local col2ContentHeight = column2List.AbsoluteContentSize.Y
-                local col3ContentHeight = column3List.AbsoluteContentSize.Y
-                local col4ContentHeight = column4List.AbsoluteContentSize.Y
-                
                 -- Проверяем, есть ли секции в колонках 3 и 4
-                local hasColumn3 = col3Count > 0
-                local hasColumn4 = col4Count > 0
-                local hasBottomColumns = hasColumn3 or hasColumn4
+                local hasBottomColumns = col3Count > 0 or col4Count > 0
                 
-                -- Получаем высоту видимой области (окна)
-                local viewHeight = main.AbsoluteSize.Y - 58 -- вычитаем высоту tabToggles и отступы
-                if viewHeight < 100 then viewHeight = 350 end
+                -- Получаем реальную высоту окна
+                local windowHeight = main.AbsoluteSize.Y
+                if windowHeight < 100 then windowHeight = sizeY end
                 
                 if hasBottomColumns then
                     -- Если есть нижние колонки, делим высоту пополам
-                    local halfHeight = (viewHeight - 6) / 2 -- 6px отступ между рядами
-                    
-                    -- Все колонки получают одинаковую высоту (половину окна)
+                    local halfHeight = (windowHeight - 6) / 2
                     local columnHeight = math.max(50, halfHeight)
                     
                     column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
@@ -719,23 +709,20 @@ function initLibrary()
                     column3.Size = UDim2.new(0.5, -2, 0, columnHeight)
                     column4.Size = UDim2.new(0.5, -2, 0, columnHeight)
                     
-                    -- Позиционируем колонки
                     column1.Position = UDim2.new(0, 0, 0, 0)
                     column2.Position = UDim2.new(0.5, 2, 0, 0)
                     column3.Position = UDim2.new(0, 0, 0, columnHeight + 6)
                     column4.Position = UDim2.new(0.5, 2, 0, columnHeight + 6)
                     
-                    -- Показываем колонки 3 и 4
                     column3.Visible = true
                     column4.Visible = true
                     
-                    -- Общая высота контейнера
                     local totalHeight = columnHeight * 2 + 6
                     columnsContainer.Size = UDim2.new(1, 0, 0, totalHeight)
                     tab.Size = UDim2.new(1, 0, 0, totalHeight)
                 else
                     -- Если нет нижних колонок, занимаем всю высоту
-                    local columnHeight = math.max(50, viewHeight)
+                    local columnHeight = math.max(50, windowHeight)
                     
                     column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
                     column2.Size = UDim2.new(0.5, -2, 0, columnHeight)
@@ -745,7 +732,6 @@ function initLibrary()
                     column1.Position = UDim2.new(0, 0, 0, 0)
                     column2.Position = UDim2.new(0.5, 2, 0, 0)
                     
-                    -- Скрываем колонки 3 и 4
                     column3.Visible = false
                     column4.Visible = false
                     
@@ -753,16 +739,14 @@ function initLibrary()
                     tab.Size = UDim2.new(1, 0, 0, columnHeight)
                 end
                 
-                -- Обновляем CanvasSize для скроллинга (чтобы можно было скроллить внутри колонок)
-                column1.CanvasSize = UDim2.new(0, 0, 0, math.max(col1ContentHeight, column1.AbsoluteSize.Y))
-                column2.CanvasSize = UDim2.new(0, 0, 0, math.max(col2ContentHeight, column2.AbsoluteSize.Y))
-                column3.CanvasSize = UDim2.new(0, 0, 0, math.max(col3ContentHeight, column3.AbsoluteSize.Y))
-                column4.CanvasSize = UDim2.new(0, 0, 0, math.max(col4ContentHeight, column4.AbsoluteSize.Y))
+                -- Обновляем CanvasSize для скроллинга
+                column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
+                column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
+                column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
+                column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
                 
-                -- Обновляем главный CanvasSize
                 updateMainCanvasSize()
             end
-            
 
             local function openTab()
                 for _, obj in next, tabTogglesHolder:GetChildren() do

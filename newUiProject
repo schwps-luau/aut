@@ -158,9 +158,7 @@ function initLibrary()
         toggled = true,
         color = Color3.fromRGB(255, 0, 0),
         keybind = Enum.KeyCode.RightShift, 
-        dragSpeed = 0.25,
-        watermarkFrame = nil,
-        watermarkUpdateConnection = nil
+        dragSpeed = 0.25
     }    
 
 
@@ -176,17 +174,6 @@ function initLibrary()
                     ColorSequenceKeypoint.new(0, library.color), 
                     ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                 }
-            end
-        end
-        if library.watermarkFrame then
-            local border = library.watermarkFrame:FindFirstChild("Border")
-            if border then
-                border.BackgroundColor3 = library.color
-            end
-            for _, child in ipairs(library.watermarkFrame:GetDescendants()) do
-                if child:IsA("TextLabel") and child.Name == "Value" then
-                    child.TextColor3 = library.color
-                end
             end
         end
     end
@@ -345,76 +332,6 @@ function initLibrary()
 
 
         writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
-    end
-
-    -- WATERMARK в стиле вашей библиотеки
-    function library:CreateWatermark(text, position)
-        if library.watermarkFrame then
-            library.watermarkFrame:Destroy()
-        end
-        
-        position = position or "top-left"
-        
-        local posX = 0
-        local posY = 0
-        local anchorX = 0
-        local anchorY = 0
-        
-        if position == "top-left" then
-            posX, posY = 10, 10
-            anchorX, anchorY = 0, 0
-        elseif position == "top-right" then
-            posX, posY = -10, 10
-            anchorX, anchorY = 1, 0
-        elseif position == "bottom-left" then
-            posX, posY = 10, -10
-            anchorX, anchorY = 0, 1
-        elseif position == "bottom-right" then
-            posX, posY = -10, -10
-            anchorX, anchorY = 1, 1
-        end
-        
-        library.watermarkFrame = utility.create("Frame", {
-            Name = "Watermark",
-            Size = UDim2.new(0, 200, 0, 30),
-            Position = UDim2.new(anchorX, posX, anchorY, posY),
-            BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-            BorderSizePixel = 0,
-            BackgroundTransparency = 0.2,
-            Parent = gui
-        })
-        
-        local border = utility.create("Frame", {
-            Name = "Border",
-            Size = UDim2.new(1, 0, 0, 2),
-            Position = UDim2.new(0, 0, 0, 0),
-            BackgroundColor3 = library.color,
-            BorderSizePixel = 0,
-            Parent = library.watermarkFrame
-        })
-        
-        local title = utility.create("TextLabel", {
-            Name = "Title",
-            Size = UDim2.new(1, -10, 1, 0),
-            Position = UDim2.new(0, 5, 0, 0),
-            BackgroundTransparency = 1,
-            Text = text or "Yun UI",
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextSize = 12,
-            Font = Enum.Font.GothamSemibold,
-            TextXAlignment = Enum.TextXAlignment.Center,
-            TextYAlignment = Enum.TextYAlignment.Center,
-            Parent = library.watermarkFrame
-        })
-        
-        return library.watermarkFrame
-    end
-    
-    function library:RemoveWatermark()
-        if library.watermarkFrame then
-            library.watermarkFrame:Destroy()
-            library.watermarkFrame = nil
-        end
     end
 
     function library:Load(opts)
@@ -621,14 +538,26 @@ function initLibrary()
             BackgroundColor3 = selectedTheme.secondary,
             Parent = topbar
         })
+        
+        -- ОСНОВНОЙ СКРОЛЛИНГ (скроллинг всего контента)
+        local mainScrollingFrame = utility.create("ScrollingFrame", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Active = true,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 8,
+            ScrollBarImageColor3 = library.color,
+            ScrollBarImageTransparency = 0.5,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            Parent = main
+        })
 
         local tabs = utility.create("Frame", {
             ZIndex = 2,
-            Size = UDim2.new(1, -8, 1, -64),
+            Size = UDim2.new(1, -8, 0, 0),
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 4, 0, 58),
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-            Parent = main
+            Parent = mainScrollingFrame
         })
         
         local tabToggles = utility.create("Frame", {
@@ -655,14 +584,23 @@ function initLibrary()
 
         local windowTypes = utility.table({count = 0})
         
-        function windowTypes:SetSize(width, height)
-            topbar.Size = UDim2.new(0, width, 0, height)
-            main.Size = UDim2.new(1, 0, 0, height)
-            topbar.Position = utility.get_center(width, height)
+        -- Функция обновления CanvasSize основного скролла
+        local function updateMainCanvasSize()
+            local contentHeight = tabs.AbsoluteSize.Y
+            local viewHeight = mainScrollingFrame.AbsoluteSize.Y
+            mainScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight, viewHeight))
+            
+            -- Ограничение скролла (нельзя прокрутить выше 0 и ниже максимума)
+            if mainScrollingFrame.CanvasPosition.Y < 0 then
+                mainScrollingFrame.CanvasPosition = Vector2.new(0, 0)
+            elseif mainScrollingFrame.CanvasPosition.Y > contentHeight - viewHeight then
+                mainScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, contentHeight - viewHeight))
+            end
         end
         
-        function windowTypes:SetPosition(x, y)
-            topbar.Position = UDim2.new(0, x, 0, y)
+        -- Сброс скролла при переключении таба
+        local function resetScroll()
+            mainScrollingFrame.CanvasPosition = Vector2.new(0, 0)
         end
 
         function windowTypes:Show()
@@ -671,6 +609,10 @@ function initLibrary()
 
         function windowTypes:Hide()
             gui.Enabled = false
+        end
+        
+        function windowTypes:SetPosition(x, y)
+            topbar.Position = UDim2.new(0, x, 0, y)
         end
 
         function windowTypes:Tab(name)
@@ -694,7 +636,7 @@ function initLibrary()
             tabToggle.Size = UDim2.new(0, tabToggle.TextBounds.X + 12, 1, 0)
 
             local tab = utility.create("Frame", {
-                Size = UDim2.new(1, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 Visible = toggled,
@@ -703,14 +645,14 @@ function initLibrary()
             
             -- Контейнер для динамических колонок
             local columnsContainer = utility.create("Frame", {
-                Size = UDim2.new(1, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Parent = tab
             })
             
             -- Левая группа (колонки 1 и 3)
             local leftGroup = utility.create("Frame", {
-                Size = UDim2.new(0.5, -2, 1, 0),
+                Size = UDim2.new(0.5, -2, 0, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Parent = columnsContainer
@@ -718,19 +660,16 @@ function initLibrary()
             
             -- Правая группа (колонки 2 и 4)
             local rightGroup = utility.create("Frame", {
-                Size = UDim2.new(0.5, -2, 1, 0),
+                Size = UDim2.new(0.5, -2, 0, 0),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Parent = columnsContainer
             })
             
             -- КОЛОНКА 1 (верхняя левая)
-            local column1 = utility.create("ScrollingFrame", {
+            local column1 = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
-                Active = true,
-                BorderSizePixel = 0,
-                ScrollBarThickness = 0,
                 Parent = leftGroup
             })
 
@@ -741,13 +680,10 @@ function initLibrary()
             })
             
             -- КОЛОНКА 3 (нижняя левая)
-            local column3 = utility.create("ScrollingFrame", {
+            local column3 = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
-                Active = true,
-                BorderSizePixel = 0,
-                ScrollBarThickness = 0,
                 Parent = leftGroup
             })
 
@@ -758,12 +694,9 @@ function initLibrary()
             })
             
             -- КОЛОНКА 2 (верхняя правая)
-            local column2 = utility.create("ScrollingFrame", {
+            local column2 = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
-                Active = true,
-                BorderSizePixel = 0,
-                ScrollBarThickness = 0,
                 Parent = rightGroup
             })
 
@@ -774,13 +707,10 @@ function initLibrary()
             })
             
             -- КОЛОНКА 4 (нижняя правая)
-            local column4 = utility.create("ScrollingFrame", {
+            local column4 = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
-                Active = true,
-                BorderSizePixel = 0,
-                ScrollBarThickness = 0,
                 Parent = rightGroup
             })
 
@@ -799,14 +729,14 @@ function initLibrary()
                 
                 local leftTotal = col1Height + col3Height + 6
                 local rightTotal = col2Height + col4Height + 6
-                local containerHeight = columnsContainer.AbsoluteSize.Y
+                local maxHeight = math.max(leftTotal, rightTotal)
                 
-                if leftTotal > 0 and containerHeight > 0 then
-                    if leftTotal >= containerHeight then
+                if leftTotal > 0 then
+                    if leftTotal >= maxHeight then
                         local ratio1 = col1Height / leftTotal
                         local ratio3 = col3Height / leftTotal
-                        column1.Size = UDim2.new(1, 0, 0, math.max(50, (containerHeight - 6) * ratio1))
-                        column3.Size = UDim2.new(1, 0, 0, math.max(50, (containerHeight - 6) * ratio3))
+                        column1.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio1))
+                        column3.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio3))
                         column3.Position = UDim2.new(0, 0, 0, column1.Size.Y.Offset + 6)
                     else
                         column1.Size = UDim2.new(1, 0, 0, math.max(50, col1Height))
@@ -815,12 +745,12 @@ function initLibrary()
                     end
                 end
                 
-                if rightTotal > 0 and containerHeight > 0 then
-                    if rightTotal >= containerHeight then
+                if rightTotal > 0 then
+                    if rightTotal >= maxHeight then
                         local ratio2 = col2Height / rightTotal
                         local ratio4 = col4Height / rightTotal
-                        column2.Size = UDim2.new(1, 0, 0, math.max(50, (containerHeight - 6) * ratio2))
-                        column4.Size = UDim2.new(1, 0, 0, math.max(50, (containerHeight - 6) * ratio4))
+                        column2.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio2))
+                        column4.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio4))
                         column4.Position = UDim2.new(0, 0, 0, column2.Size.Y.Offset + 6)
                     else
                         column2.Size = UDim2.new(1, 0, 0, math.max(50, col2Height))
@@ -829,10 +759,13 @@ function initLibrary()
                     end
                 end
                 
-                column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
-                column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
-                column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
-                column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
+                local totalHeight = math.max(leftTotal, rightTotal)
+                leftGroup.Size = UDim2.new(0.5, -2, 0, totalHeight)
+                rightGroup.Size = UDim2.new(0.5, -2, 0, totalHeight)
+                columnsContainer.Size = UDim2.new(1, 0, 0, totalHeight)
+                tab.Size = UDim2.new(1, 0, 0, totalHeight)
+                
+                updateMainCanvasSize()
             end
             
             -- Подключаем обновление
@@ -870,6 +803,7 @@ function initLibrary()
                 end
 
                 tab.Visible = true
+                resetScroll()
                 wait(0.1)
                 updateColumnHeights()
             end

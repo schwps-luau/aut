@@ -1,4 +1,4 @@
---[[секции3
+--[[
 Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
@@ -7,135 +7,96 @@ function initLibrary()
     local folderName = "config holder"
     local gameConfigFolder = "cfgs"
 
-
     if not isfolder(gameConfigFolder) then
         makefolder(gameConfigFolder)
     end
-
 
     local inputService = game:GetService("UserInputService")
     local tweenService = game:GetService("TweenService")
     local runService = game:GetService("RunService")
     local coreGui = game:GetService("CoreGui")
 
-
     local utility = {}
-
 
     function utility.create(class, properties)
         properties = properties or {}
-
-
         local obj = Instance.new(class)
-
-
-        local forcedProperties = {
-            AutoButtonColor = false
-        }
-
-
+        local forcedProperties = { AutoButtonColor = false }
         for prop, v in next, properties do
             obj[prop] = v
         end
-
-
         for prop, v in next, forcedProperties do
             pcall(function()
                 obj[prop] = v
             end)
         end
-        
         return obj
     end
-
 
     function utility.change_color(color, amount)
         local r = math.clamp(math.floor(color.r * 255) + amount, 0, 255)
         local g = math.clamp(math.floor(color.g * 255) + amount, 0, 255)
         local b = math.clamp(math.floor(color.b * 255) + amount, 0, 255)
-
-
         return Color3.fromRGB(r, g, b)
     end
-
 
     function utility.get_rgb(color)
         local r = math.floor(color.r * 255)
         local g = math.floor(color.g * 255)
         local b = math.floor(color.b * 255)
-
-
         return r, g, b
     end
-
 
     function utility.tween(obj, info, properties, callback)
         local anim = tweenService:Create(obj, TweenInfo.new(unpack(info)), properties)
         anim:Play()
-
-
         if callback then
             anim.Completed:Connect(callback)
         end
     end
 
-
     function utility.drag(obj, dragSpeed)
         local start, objPosition, dragging
-
-
         obj.InputBegan:Connect(function(input)
-            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                 dragging = true
                 start = input.Position
                 objPosition = obj.Position
             end
         end)
-
-
         obj.InputEnded:Connect(function(input)
-            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                 dragging = false
             end
         end)
-
-
         inputService.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
-              if dragging == true then
-                utility.tween(obj, {dragSpeed}, {Position = UDim2.new(objPosition.X.Scale, objPosition.X.Offset + (input.Position - start).X, objPosition.Y.Scale, objPosition.Y.Offset + (input.Position - start).Y)})
-              end
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging == true then
+                    utility.tween(obj, {dragSpeed}, {Position = UDim2.new(objPosition.X.Scale, objPosition.X.Offset + (input.Position - start).X, objPosition.Y.Scale, objPosition.Y.Offset + (input.Position - start).Y)})
+                end
             end
         end)
     end
-
 
     function utility.get_center(sizeX, sizeY)
         return UDim2.new(0.5, -(sizeX / 2), 0.5, -(sizeY / 2))
     end
 
-
     function utility.hex_to_rgb(hex)
-        return Color3.fromRGB(tonumber("0x" .. hex:sub(2, 3)), tonumber("0x" .. hex:sub(4, 5)), tonumber("0x"..hex:sub(6, 7)))
+        return Color3.fromRGB(tonumber("0x" .. hex:sub(2, 3)), tonumber("0x" .. hex:sub(4, 5)), tonumber("0x" .. hex:sub(6, 7)))
     end
-
 
     function utility.rgb_to_hex(color)
         return string.format("#%02X%02X%02X", math.clamp(color.R * 255, 0, 255), math.clamp(color.G * 255, 0, 255), math.clamp(color.B * 255, 0, 255))
     end
 
-
     function utility.table(tbl)
         local oldtbl = tbl or {}
         local newtbl = {}
         local formattedtbl = {}
-
-
         for option, v in next, oldtbl do
             newtbl[option:lower()] = v
         end
-
-
         setmetatable(formattedtbl, {
             __newindex = function(t, k, v)
                 rawset(newtbl, k:lower(), v)
@@ -144,35 +105,36 @@ function initLibrary()
                 return newtbl[k:lower()]
             end
         })
-
-
         return formattedtbl
     end
 
-
     local library = utility.table{
-        flags = {}, 
+        flags = {},
         toggled = true,
         color = Color3.fromRGB(255, 0, 0),
-        keybind = Enum.KeyCode.RightShift, 
+        keybind = Enum.KeyCode.RightShift,
         dragSpeed = 0.25
-    }    
-
+    }
 
     local coloredGradients = {}
 
-
     function library:SetColor(color)
-     library.color = color
+        library.color = color
+        for _, gradient in ipairs(coloredGradients) do
+            if gradient and gradient.Parent then
+                gradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, library.color),
+                    ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                }
+            end
+        end
     end
-    
+
     function library:SetKey(key)
-     library.keybind = key
+        library.keybind = key
     end
-   
 
     local gui = utility.create("ScreenGui")
-
 
     inputService.InputBegan:Connect(function(input)
         if input.KeyCode == library.keybind then
@@ -180,132 +142,99 @@ function initLibrary()
             gui.Enabled = library.toggled
         end
     end)
-   
+
     if syn and syn.protect_gui then
         syn.protect_gui(gui)
     end
 
-
     gui.Parent = coreGui
 
-
     local flags = {toggles = {}, boxes = {}, sliders = {}, dropdowns = {}, multidropdowns = {}, keybinds = {}, colorpickers = {}}
-
 
     function library:LoadConfig(file)
         local str = readfile(gameConfigFolder .. "/" .. file .. ".cfg")
         local tbl = loadstring(str)()
-        
         for flag, value in next, tbl.toggles do
-            flags.toggles[flag](value)
+            if flags.toggles[flag] then
+                flags.toggles[flag](value)
+            end
         end
-
-
         for flag, value in next, tbl.boxes do
-            flags.boxes[flag](value)
+            if flags.boxes[flag] then
+                flags.boxes[flag](value)
+            end
         end
-
-
         for flag, value in next, tbl.sliders do
-            flags.sliders[flag](value)
+            if flags.sliders[flag] then
+                flags.sliders[flag](value)
+            end
         end
-
-
         for flag, value in next, tbl.dropdowns do
-            flags.dropdowns[flag](value)
+            if flags.dropdowns[flag] then
+                flags.dropdowns[flag](value)
+            end
         end
-
-
         for flag, value in next, tbl.multidropdowns do
-            flags.multidropdowns[flag](value)
+            if flags.multidropdowns[flag] then
+                flags.multidropdowns[flag](value)
+            end
         end
-
-
         for flag, value in next, tbl.keybinds do
-            flags.keybinds[flag](value)
+            if flags.keybinds[flag] then
+                flags.keybinds[flag](value)
+            end
         end
-
-
         for flag, value in next, tbl.colorpickers do
-            flags.colorpickers[flag](value)
+            if flags.colorpickers[flag] then
+                flags.colorpickers[flag](value)
+            end
         end
     end
-
 
     function library:SaveConfig(name)
         local configstr = "{toggles={"
         local count = 0
-
-
         for flag, _ in next, flags.toggles do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},boxes={"
-
-
         count = 0
         for flag, _ in next, flags.boxes do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},sliders={"
-
-
         count = 0
         for flag, _ in next, flags.sliders do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},dropdowns={"
-
-
         count = 0
         for flag, _ in next, flags.dropdowns do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},multidropdowns={"
-
-
         count = 0
         for flag, _ in next, flags.multidropdowns do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']={'" .. table.concat(library.flags[flag], "','") .. "'},"
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},keybinds={"
-
-
         count = 0
         for flag, _ in next, flags.keybinds do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},colorpickers={"
-
-
         count = 0
         for flag, _ in next, flags.colorpickers do
             count = count + 1
             configstr = configstr .. "['" .. flag .. "']=Color3.new(" .. tostring(library.flags[flag]) .. "),"
         end
-
-
         configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "}}"
-
-
         writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
     end
 
@@ -319,16 +248,16 @@ function initLibrary()
         local theme = options.theme or "dark"
 
         local themeColors = {
-            dark = Color3.fromRGB(128, 128, 128),      
-            light = Color3.fromRGB(240, 240, 240),     
-            blue = Color3.fromRGB(30, 50, 90),          
-            ["light blue"] = Color3.fromRGB(200, 220, 240), 
-            red = Color3.fromRGB(90, 30, 30),          
+            dark = Color3.fromRGB(128, 128, 128),
+            light = Color3.fromRGB(240, 240, 240),
+            blue = Color3.fromRGB(30, 50, 90),
+            ["light blue"] = Color3.fromRGB(200, 220, 240),
+            red = Color3.fromRGB(90, 30, 30),
             ["light red"] = Color3.fromRGB(250, 220, 220),
-            purple = Color3.fromRGB(60, 30, 90),       
-            ["light purple"] = Color3.fromRGB(230, 210, 250), 
-            green = Color3.fromRGB(30, 70, 30),         
-            ["light green"] = Color3.fromRGB(210, 240, 210) 
+            purple = Color3.fromRGB(60, 30, 90),
+            ["light purple"] = Color3.fromRGB(230, 210, 250),
+            green = Color3.fromRGB(30, 70, 30),
+            ["light green"] = Color3.fromRGB(210, 240, 210)
         }
 
         if color == Color3.fromRGB(128, 128, 128) and theme:lower() ~= "dark" then
@@ -477,7 +406,7 @@ function initLibrary()
                 picker = Color3.fromRGB(225, 250, 225)
             }
         }
-        
+
         local selectedTheme = themes[theme:lower()] or themes.dark
         library.color = color
 
@@ -506,7 +435,7 @@ function initLibrary()
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = topbar
         })
-        
+
         local main = utility.create("Frame", {
             Size = UDim2.new(1, 0, 0, sizeY),
             BorderColor3 = selectedTheme.border,
@@ -514,15 +443,26 @@ function initLibrary()
             Parent = topbar
         })
 
-        local tabs = utility.create("Frame", {
-            ZIndex = 2,
-            Size = UDim2.new(1, -8, 1, -64),
+        local mainScrollingFrame = utility.create("ScrollingFrame", {
+            Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
-            Position = UDim2.new(0, 4, 0, 58),
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            Active = true,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 6,
+            ScrollBarImageColor3 = library.color,
+            ScrollBarImageTransparency = 0.5,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
             Parent = main
         })
-        
+
+        local tabs = utility.create("Frame", {
+            ZIndex = 2,
+            Size = UDim2.new(1, -8, 0, 0),
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 4, 0, 58),
+            Parent = mainScrollingFrame
+        })
+
         local tabToggles = utility.create("Frame", {
             ZIndex = 2,
             Size = UDim2.new(1, 0, 0, 26),
@@ -576,180 +516,150 @@ function initLibrary()
                 Font = toggled and Enum.Font.GothamSemibold or Enum.Font.Gotham,
                 Parent = tabTogglesHolder
             })
-            
+
             tabToggle.Size = UDim2.new(0, tabToggle.TextBounds.X + 12, 1, 0)
 
             local tab = utility.create("Frame", {
-                Size = UDim2.new(1, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 Visible = toggled,
                 Parent = tabs
             })
-            
-            -- Контейнер для колонок
+
+            -- КОНТЕЙНЕР ДЛЯ КОЛОНОК
             local columnsContainer = utility.create("Frame", {
-                Size = UDim2.new(1, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Parent = tab
             })
-            
-                    -- КОЛОНКА 1 (верхняя левая)
+
+            -- ВЕРХНЯЯ СТРОКА
+            local topRow = utility.create("Frame", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Parent = columnsContainer
+            })
+
+            -- НИЖНЯЯ СТРОКА (изначально скрыта)
+            local bottomRow = utility.create("Frame", {
+                Size = UDim2.new(1, 0, 0, 0),
+                Position = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 1,
+                Visible = false,
+                Parent = columnsContainer
+            })
+
+            -- КОЛОНКА 1 (левая верхняя)
             local column1 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0, 0),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = columnsContainer
+                Parent = topRow
             })
-
             local column1List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column1
             })
-
             column1List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
-                updateColumnSizes()
+                updateRowLayout()
             end)
 
-            -- КОЛОНКА 2 (верхняя правая)
+            -- КОЛОНКА 2 (правая верхняя)
             local column2 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0, 0),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = columnsContainer
+                Parent = topRow
             })
-
             local column2List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column2
             })
-
             column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
-                updateColumnSizes()
+                updateRowLayout()
             end)
-            
-            -- КОЛОНКА 3 (нижняя левая) - скрыта по умолчанию
+
+            -- КОЛОНКА 3 (левая нижняя)
             local column3 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0, 0),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Visible = false,
-                Parent = columnsContainer
+                Parent = bottomRow
             })
-
             local column3List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column3
             })
-
             column3List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
-                updateColumnSizes()
+                updateRowLayout()
             end)
-            
-            -- КОЛОНКА 4 (нижняя правая) - скрыта по умолчанию
+
+            -- КОЛОНКА 4 (правая нижняя)
             local column4 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0, 0),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Visible = false,
-                Parent = columnsContainer
+                Parent = bottomRow
             })
-
             local column4List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column4
             })
-
             column4List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
-                updateColumnSizes()
+                updateRowLayout()
             end)
-            
-                -- Функция обновления размеров колонок
-            local function updateColumnSizes()
-                -- Получаем количество секций в каждой колонке
-                local col1Count = #column1:GetChildren()
-                local col2Count = #column2:GetChildren()
-                local col3Count = #column3:GetChildren()
-                local col4Count = #column4:GetChildren()
-                
-                -- Проверяем, есть ли секции в колонках 3 и 4
-                local hasBottomColumns = col3Count > 0 or col4Count > 0
-                
-                -- Получаем высоту окна (topbar - это само окно)
-                local windowHeight = topbar.AbsoluteSize.Y
-                if windowHeight < 100 then windowHeight = sizeY + 26 end
-                
-                -- Высота для колонок = высота окна минус высота tabToggles и отступы
-                local availableHeight = windowHeight - 26 - 26 - 8 -- topbar (26) + tabToggles (26) + отступы
-                if availableHeight < 50 then availableHeight = 300 end
-                
-                if hasBottomColumns then
-                    -- Если есть нижние колонки, делим высоту пополам
-                    local halfHeight = (availableHeight - 6) / 2
-                    local columnHeight = math.max(50, halfHeight)
-                    
-                    column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
-                    column2.Size = UDim2.new(0.5, -2, 0, columnHeight)
-                    column3.Size = UDim2.new(0.5, -2, 0, columnHeight)
-                    column4.Size = UDim2.new(0.5, -2, 0, columnHeight)
-                    
-                    column1.Position = UDim2.new(0, 0, 0, 0)
-                    column2.Position = UDim2.new(0.5, 2, 0, 0)
-                    column3.Position = UDim2.new(0, 0, 0, columnHeight + 6)
-                    column4.Position = UDim2.new(0.5, 2, 0, columnHeight + 6)
-                    
-                    column3.Visible = true
-                    column4.Visible = true
-                    
-                    local totalHeight = columnHeight * 2 + 6
-                    columnsContainer.Size = UDim2.new(1, 0, 0, totalHeight)
-                    tab.Size = UDim2.new(1, 0, 0, totalHeight)
+
+            -- Функция обновления размеров строк
+            local function updateRowLayout()
+                local hasBottom = (#column3:GetChildren() > 0) or (#column4:GetChildren() > 0)
+                if hasBottom then
+                    topRow.Size = UDim2.new(1, 0, 0.5, -3)
+                    bottomRow.Size = UDim2.new(1, 0, 0.5, -3)
+                    bottomRow.Position = UDim2.new(0, 0, 0.5, 3)
+                    bottomRow.Visible = true
                 else
-                    -- Если нет нижних колонок, занимаем всю высоту
-                    local columnHeight = math.max(50, availableHeight)
-                    
-                    column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
-                    column2.Size = UDim2.new(0.5, -2, 0, columnHeight)
-                    column3.Size = UDim2.new(0.5, -2, 0, 0)
-                    column4.Size = UDim2.new(0.5, -2, 0, 0)
-                    
-                    column1.Position = UDim2.new(0, 0, 0, 0)
-                    column2.Position = UDim2.new(0.5, 2, 0, 0)
-                    
-                    column3.Visible = false
-                    column4.Visible = false
-                    
-                    columnsContainer.Size = UDim2.new(1, 0, 0, columnHeight)
-                    tab.Size = UDim2.new(1, 0, 0, columnHeight)
+                    topRow.Size = UDim2.new(1, 0, 1, 0)
+                    bottomRow.Size = UDim2.new(1, 0, 0, 0)
+                    bottomRow.Visible = false
                 end
-                
-                -- Обновляем CanvasSize для скроллинга
-                column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
-                column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
-                column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
-                column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
-                
+
+                local totalHeight = topRow.AbsoluteSize.Y + (hasBottom and bottomRow.AbsoluteSize.Y or 0)
+                columnsContainer.Size = UDim2.new(1, 0, 0, totalHeight)
+                tab.Size = UDim2.new(1, 0, 0, totalHeight)
                 updateMainCanvasSize()
+            end
+
+            -- Функция обновления главного CanvasSize
+            local function updateMainCanvasSize()
+                local contentHeight = tabs.AbsoluteSize.Y
+                local viewHeight = mainScrollingFrame.AbsoluteSize.Y
+                mainScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight, viewHeight))
+                if mainScrollingFrame.CanvasPosition.Y < 0 then
+                    mainScrollingFrame.CanvasPosition = Vector2.new(0, 0)
+                elseif mainScrollingFrame.CanvasPosition.Y > contentHeight - viewHeight then
+                    mainScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, contentHeight - viewHeight))
+                end
             end
 
             local function openTab()
@@ -758,35 +668,42 @@ function initLibrary()
                         obj.Font = Enum.Font.Gotham
                     end
                 end
-
                 tabToggle.Font = Enum.Font.GothamSemibold
-
                 for _, obj in next, tabs:GetChildren() do
                     obj.Visible = false
                 end
-
                 tab.Visible = true
                 wait(0.1)
-                updateColumnSizes()
+                updateRowLayout()
             end
 
             tabToggle.MouseButton1Click:Connect(openTab)
+
+            -- Отслеживаем изменение размера окна
+            local lastSize = topbar.AbsoluteSize
+            runService.RenderStepped:Connect(function()
+                if topbar.AbsoluteSize ~= lastSize then
+                    lastSize = topbar.AbsoluteSize
+                    updateRowLayout()
+                end
+            end)
 
             local tabTypes = utility.table()
 
             function tabTypes:Open()
                 openTab()
             end
-            
+
             function tabTypes:UpdateLayout()
-                updateColumnSizes()
+                updateRowLayout()
             end
-        
+
+            -- СЕКЦИИ
             function tabTypes:Section(opts)
                 local options = utility.table(opts)
                 local name = options.name or "Section"
                 local column = options.column or 1
-                
+
                 local columnFrame
                 if column == 1 then
                     columnFrame = column1
@@ -799,14 +716,14 @@ function initLibrary()
                 else
                     columnFrame = column1
                 end
-                
+
                 local sectionHolder = utility.create("Frame", {
                     Size = UDim2.new(1, 0, 0, 26),
                     BackgroundTransparency = 1,
                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                     Parent = columnFrame
                 })
-                
+
                 local section = utility.create("Frame", {
                     ZIndex = 2,
                     Size = UDim2.new(1, -2, 1, -2),
@@ -815,7 +732,7 @@ function initLibrary()
                     BackgroundColor3 = selectedTheme.quaternary,
                     Parent = sectionHolder
                 })
-                
+
                 local sectionTopbar = utility.create("Frame", {
                     ZIndex = 3,
                     Size = UDim2.new(1, 0, 0, 24),
@@ -845,7 +762,7 @@ function initLibrary()
                     BackgroundTransparency = 1,
                     Parent = section
                 })
-                
+
                 local sectionContentList = utility.create("UIListLayout", {
                     SortOrder = Enum.SortOrder.LayoutOrder,
                     Padding = UDim.new(0, 6),
@@ -854,35 +771,38 @@ function initLibrary()
 
                 sectionContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     sectionHolder.Size = UDim2.new(1, 0, 0, sectionContentList.AbsoluteContentSize.Y + 38)
-                    updateColumnSizes()
+                    updateRowLayout()
                 end)
 
                 local sectionTypes = utility.table()
-                
+
                 function sectionTypes:GetName()
                     return name
                 end
-                
+
                 function sectionTypes:Rename(newName)
                     name = newName
                 end
-                
+
                 function sectionTypes:SetVisible(bool)
                     sectionHolder.Visible = bool
                 end
-                
+
                 function sectionTypes:Clear()
                     for _, child in ipairs(sectionContent:GetChildren()) do
                         if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then
                             child:Destroy()
                         end
                     end
+                    updateRowLayout()
                 end
-                
+
                 function sectionTypes:Remove()
                     sectionHolder:Destroy()
+                    updateRowLayout()
                 end
-                
+
+                -- LABEL
                 function sectionTypes:Label(text)
                     local label = utility.create("TextLabel", {
                         ZIndex = 3,
@@ -916,6 +836,7 @@ function initLibrary()
                     return labelTypes
                 end
 
+                -- SPECIAL LABEL
                 function sectionTypes:SpecialLabel(text)
                     local specialLabel = utility.create("TextLabel", {
                         ZIndex = 5,
@@ -939,7 +860,7 @@ function initLibrary()
                         BackgroundColor3 = selectedTheme.textSecondary,
                         Parent = specialLabel
                     })
-                    
+
                     local lineBlock = utility.create("Frame", {
                         ZIndex = 4,
                         Size = UDim2.new(0, specialLabel.TextBounds.X + 6, 0, 1),
@@ -971,6 +892,7 @@ function initLibrary()
                     return specialLabelTypes
                 end
 
+                -- BUTTON
                 function sectionTypes:Button(opts)
                     local options = utility.table(opts)
                     local name = options.name
@@ -986,16 +908,16 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = sectionContent
                     })
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new{
-                            ColorSequenceKeypoint.new(0, selectedTheme.gradient1), 
+                            ColorSequenceKeypoint.new(0, selectedTheme.gradient1),
                             ColorSequenceKeypoint.new(1, selectedTheme.gradient2)
                         },
                         Parent = button
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 4,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -1019,11 +941,11 @@ function initLibrary()
                     function buttonTypes:Show()
                         button.Visible = true
                     end
-                    
+
                     function buttonTypes:Hide()
                         button.Visible = false
                     end
-                    
+
                     function buttonTypes:SetName(str)
                         title.Text = str
                     end
@@ -1031,14 +953,15 @@ function initLibrary()
                     function buttonTypes:SetCallback(func)
                         callback = func
                     end
-                    
+
                     return buttonTypes
                 end
 
+                -- TOGGLE
                 function sectionTypes:Toggle(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Toggle"
-                    local flag = options.flag 
+                    local flag = options.flag
                     local callback = options.callback or function() end
 
                     local toggled = false
@@ -1056,7 +979,7 @@ function initLibrary()
                         Font = Enum.Font.SourceSans,
                         Parent = sectionContent
                     })
-                    
+
                     local icon = utility.create("Frame", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 14, 1, -2),
@@ -1069,12 +992,12 @@ function initLibrary()
                     local iconGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new{
-                            ColorSequenceKeypoint.new(0, selectedTheme.gradient1), 
+                            ColorSequenceKeypoint.new(0, selectedTheme.gradient1),
                             ColorSequenceKeypoint.new(1, selectedTheme.gradient2)
                         },
                         Parent = icon
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -1103,12 +1026,12 @@ function initLibrary()
                         local gradientColor
                         if toggled then
                             gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(0, library.color),
                                 ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                             }
                         else
                             gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, selectedTheme.gradient1), 
+                                ColorSequenceKeypoint.new(0, selectedTheme.gradient1),
                                 ColorSequenceKeypoint.new(1, selectedTheme.gradient2)
                             }
                         end
@@ -1130,11 +1053,11 @@ function initLibrary()
                     function toggleTypes:Show()
                         toggle.Visible = true
                     end
-                    
+
                     function toggleTypes:Hide()
                         toggle.Visible = false
                     end
-                    
+
                     function toggleTypes:SetName(str)
                         title.Text = str
                     end
@@ -1156,6 +1079,7 @@ function initLibrary()
                     return toggleTypes
                 end
 
+                -- BOX
                 function sectionTypes:Box(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Box"
@@ -1169,17 +1093,14 @@ function initLibrary()
 
                     if boxType == "number" then
                         default = default:gsub("%D+", "")
-
                         if flag then
                             library.flags[flag] = tonumber(default)
                         end
-        
                         callback(tonumber(default))
                     else
                         if flag then
                             library.flags[flag] = default
                         end
-
                         callback(default)
                     end
 
@@ -1189,7 +1110,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = sectionContent
                     })
-                    
+
                     local box = utility.create("TextBox", {
                         ZIndex = 4,
                         Size = UDim2.new(1, 0, 0, 16),
@@ -1220,7 +1141,7 @@ function initLibrary()
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = bg
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 0, 16),
@@ -1246,11 +1167,11 @@ function initLibrary()
                     function boxTypes:Show()
                         boxHolder.Visible = true
                     end
-                    
+
                     function boxTypes:Hide()
                         boxHolder.Visible = false
                     end
-                    
+
                     function boxTypes:SetName(str)
                         title.Text = str
                     end
@@ -1262,20 +1183,16 @@ function initLibrary()
                     function boxTypes:Set(str)
                         if boxType == "string" then
                             box.Text = str
-
                             if flag then
                                 library.flags[flag] = str
                             end
-
                             callback(str)
                         else
                             str = str:gsub("%D+", "")
                             box.Text = str
-
                             if flag then
                                 library.flags[flag] = str
                             end
-
                             callback(tonumber(str))
                         end
                     end
@@ -1294,20 +1211,16 @@ function initLibrary()
                         flags.boxes[flag] = function(str)
                             if boxType == "string" then
                                 box.Text = str
-
                                 if flag then
                                     library.flags[flag] = str
                                 end
-
                                 callback(str)
                             else
                                 str = str:gsub("%D+", "")
                                 box.Text = str
-
                                 if flag then
                                     library.flags[flag] = str
                                 end
-
                                 callback(tonumber(str))
                             end
                         end
@@ -1315,7 +1228,8 @@ function initLibrary()
 
                     return boxTypes
                 end
-                
+
+                -- SLIDER
                 function sectionTypes:Slider(opts)
                     local options = utility.table(opts)
                     local min = options.min or 0
@@ -1326,12 +1240,11 @@ function initLibrary()
                     local flag = options.flag
                     local callback = options.callback or function() end
 
-                    decimals = math.floor(10^decimals)
+                    decimals = math.floor(10 ^ decimals)
 
                     if flag then
                         library.flags[flag] = default
                     end
-
                     callback(default)
 
                     local value = default
@@ -1345,7 +1258,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = sectionContent
                     })
-                    
+
                     local fill = utility.create("Frame", {
                         ZIndex = 4,
                         Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
@@ -1353,18 +1266,18 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = slider
                     })
-                    
+
                     local fillGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new{
-                            ColorSequenceKeypoint.new(0, library.color), 
+                            ColorSequenceKeypoint.new(0, library.color),
                             ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                         },
                         Parent = fill
                     })
 
                     table.insert(coloredGradients, fillGradient)
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
@@ -1387,32 +1300,29 @@ function initLibrary()
                     local function slide(input)
                         local sizeX = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
                         fill.Size = UDim2.new(sizeX, 0, 1, 0)
-
                         value = math.floor((((max - min) * sizeX) + min) * decimals) / decimals
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = value
                         end
-
                         callback(value)
                     end
 
                     slider.InputBegan:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             sliding = true
                             slide(input)
                         end
                     end)
 
                     slider.InputEnded:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             sliding = false
                         end
                     end)
 
                     inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                             if sliding then
                                 slide(input)
                             end
@@ -1438,11 +1348,9 @@ function initLibrary()
                         num = math.floor(math.clamp(num, min, max) * decimals) / decimals
                         value = num
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-                        
-                        if flag then 
+                        if flag then
                             library.flags[flag] = value
                         end
-
                         callback(value)
                     end
 
@@ -1450,11 +1358,9 @@ function initLibrary()
                         min = num
                         value = math.floor(math.clamp(value, min, max) * decimals) / decimals
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = value
                         end
-
                         callback(value)
                     end
 
@@ -1462,11 +1368,9 @@ function initLibrary()
                         max = num
                         value = math.floor(math.clamp(value, min, max) * decimals) / decimals
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = value
                         end
-
                         callback(value)
                     end
 
@@ -1479,6 +1383,7 @@ function initLibrary()
                     return sliderTypes
                 end
 
+                -- TOGGLE SLIDER
                 function sectionTypes:ToggleSlider(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Toggle Slider"
@@ -1492,7 +1397,7 @@ function initLibrary()
                     local toggleCallback = options.toggleCallback or function() end
                     local sliderCallback = options.sliderCallback or function() end
 
-                    decimals = math.floor(10^decimals)
+                    decimals = math.floor(10 ^ decimals)
 
                     local value = default
                     local toggled = false
@@ -1501,13 +1406,11 @@ function initLibrary()
                     if sliderFlag then
                         library.flags[sliderFlag] = default
                     end
-
                     sliderCallback(default)
 
                     if toggleFlag then
                         library.flags[toggleFlag] = toggled
                     end
-
                     toggleCallback(toggled)
 
                     local toggleSliderHolder = utility.create("Frame", {
@@ -1516,7 +1419,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = sectionContent
                     })
-                    
+
                     local slider = utility.create("Frame", {
                         ZIndex = 3,
                         Size = UDim2.new(1, 0, 0, 16),
@@ -1525,7 +1428,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = toggleSliderHolder
                     })
-                    
+
                     local fill = utility.create("Frame", {
                         ZIndex = 4,
                         Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
@@ -1533,24 +1436,24 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = slider
                     })
-                    
+
                     local fillGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new{
-                            ColorSequenceKeypoint.new(0, library.color), 
+                            ColorSequenceKeypoint.new(0, library.color),
                             ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                         },
                         Parent = fill
                     })
 
                     table.insert(coloredGradients, fillGradient)
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = slider
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 5,
                         Size = UDim2.new(1, 0, 1, 0),
@@ -1574,7 +1477,7 @@ function initLibrary()
                         Font = Enum.Font.SourceSans,
                         Parent = toggleSliderHolder
                     })
-                    
+
                     local icon = utility.create("TextButton", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 14, 1, -2),
@@ -1584,13 +1487,13 @@ function initLibrary()
                         Text = "",
                         Parent = toggle
                     })
-                    
+
                     local iconGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = icon
                     })
-                    
+
                     local toggleTitle = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -1608,7 +1511,6 @@ function initLibrary()
 
                     local function toggleToggle()
                         toggled = not toggled
-
                         if toggled then
                             table.insert(coloredGradients, iconGradient)
                         else
@@ -1619,7 +1521,7 @@ function initLibrary()
                         local gradientColor
                         if toggled then
                             gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(0, library.color),
                                 ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                             }
                         else
@@ -1632,7 +1534,6 @@ function initLibrary()
                         if toggleFlag then
                             library.flags[toggleFlag] = toggled
                         end
-
                         toggleCallback(toggled)
                     end
 
@@ -1641,32 +1542,29 @@ function initLibrary()
                     local function slide(input)
                         local sizeX = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
                         fill.Size = UDim2.new(sizeX, 0, 1, 0)
-
                         value = math.floor((((max - min) * sizeX) + min) * decimals) / decimals
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
-
-                        if sliderFlag then 
+                        if sliderFlag then
                             library.flags[sliderFlag] = value
                         end
-
                         sliderCallback(value)
                     end
 
                     slider.InputBegan:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             sliding = true
                             slide(input)
                         end
                     end)
 
                     slider.InputEnded:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             sliding = false
                         end
                     end)
 
                     inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                             if sliding then
                                 slide(input)
                             end
@@ -1693,11 +1591,9 @@ function initLibrary()
                         value = num
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
-                        
-                        if sliderFlag then 
+                        if sliderFlag then
                             library.flags[sliderFlag] = value
                         end
-
                         sliderCallback(value)
                     end
 
@@ -1706,11 +1602,9 @@ function initLibrary()
                         value = math.floor(math.clamp(value, min, max) * decimals) / decimals
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
-
-                        if sliderFlag then 
+                        if sliderFlag then
                             library.flags[sliderFlag] = value
                         end
-
                         sliderCallback(value)
                     end
 
@@ -1719,11 +1613,9 @@ function initLibrary()
                         value = math.floor(math.clamp(value, min, max) * decimals) / decimals
                         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
                         title.Text = valueText:gsub("%[VALUE%]", tostring(value))
-
-                        if sliderFlag then 
+                        if sliderFlag then
                             library.flags[sliderFlag] = value
                         end
-
                         sliderCallback(value)
                     end
 
@@ -1750,6 +1642,7 @@ function initLibrary()
                     return toggleSliderTypes
                 end
 
+                -- DROPDOWN
                 function sectionTypes:Dropdown(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Dropdown"
@@ -1774,7 +1667,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = sectionContent
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 0, 16),
@@ -1788,7 +1681,7 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = dropdownHolder
                     })
-                    
+
                     local open = utility.create("TextButton", {
                         ZIndex = 3,
                         Size = UDim2.new(1, 0, 0, 16),
@@ -1800,13 +1693,13 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = dropdownHolder
                     })
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = open
                     })
-                    
+
                     local value = utility.create("TextLabel", {
                         ZIndex = 4,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -1820,7 +1713,7 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = open
                     })
-                    
+
                     local icon = utility.create("ImageLabel", {
                         ZIndex = 4,
                         Size = UDim2.new(0, 14, 0, 14),
@@ -1831,7 +1724,7 @@ function initLibrary()
                         Image = "http://www.roblox.com/asset/?id=8747047318",
                         Parent = open
                     })
-                    
+
                     local contentFrame = utility.create("Frame", {
                         ZIndex = 10,
                         Visible = false,
@@ -1841,7 +1734,7 @@ function initLibrary()
                         BackgroundColor3 = selectedTheme.dropdown,
                         Parent = open
                     })
-                    
+
                     local contentHolder = utility.create("Frame", {
                         Size = UDim2.new(1, 0, 1, -4),
                         Position = UDim2.new(0, 0, 0, 2),
@@ -1872,7 +1765,6 @@ function initLibrary()
                                 v.Font = Enum.Font.Gotham
                             end
                         end
-
                         obj.Font = bool and Enum.Font.GothamSemibold or Enum.Font.Gotham
                         padding.PaddingLeft = bool and UDim.new(0, 10) or UDim.new(0, 6)
                         value.TextColor3 = bool and selectedTheme.text or selectedTheme.textSecondary
@@ -1882,7 +1774,7 @@ function initLibrary()
                         obj.Font = bool and Enum.Font.GothamSemibold or Enum.Font.Gotham
                         padding.PaddingLeft = bool and UDim.new(0, 10) or UDim.new(0, 6)
                     end
-                    
+
                     open.MouseButton1Click:Connect(openDropdown)
 
                     for _, opt in next, content do
@@ -1900,7 +1792,7 @@ function initLibrary()
                             TextXAlignment = Enum.TextXAlignment.Left,
                             Parent = contentHolder
                         })
-                        
+
                         local optionPadding = utility.create("UIPadding", {
                             PaddingLeft = current == opt and UDim.new(0, 10) or UDim.new(0, 6),
                             Parent = option
@@ -1912,47 +1804,37 @@ function initLibrary()
                                     current = opt
                                     selectObj(option, optionPadding, true)
                                     value.Text = opt
-                                    
                                     if flag then
                                         library.flags[flag] = opt
                                     end
-
                                     callback(opt)
                                 else
                                     current = nil
                                     selectObj(option, optionPadding, false)
                                     value.Text = "NONE"
-
                                     if flag then
                                         library.flags[flag] = nil
                                     end
-
                                     callback(nil)
                                 end
                             else
                                 if not table.find(chosen, opt) then
                                     table.insert(chosen, opt)
-
                                     multiSelectObj(option, optionPadding, true)
                                     value.TextColor3 = selectedTheme.text
                                     value.Text = table.concat(chosen, ", ")
-                                    
                                     if flag then
                                         library.flags[flag] = chosen
                                     end
-
                                     callback(chosen)
                                 else
                                     table.remove(chosen, table.find(chosen, opt))
-
                                     multiSelectObj(option, optionPadding, false)
                                     value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
                                     value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
-
                                     if flag then
                                         library.flags[flag] = chosen
                                     end
-
                                     callback(chosen)
                                 end
                             end
@@ -1981,34 +1863,27 @@ function initLibrary()
                                         current = opt
                                         selectObj(contentHolder:FindFirstChild(opt), contentHolder:FindFirstChild(opt):FindFirstChildOfClass("UIPadding"), true)
                                         value.Text = opt
-                                        
                                         if flag then
                                             library.flags[flag] = opt
                                         end
-
                                         callback(opt)
                                     else
                                         table.insert(chosen, opt)
-
                                         multiSelectObj(contentHolder:FindFirstChild(opt), contentHolder:FindFirstChild(opt):FindFirstChildOfClass("UIPadding"), true)
                                         value.TextColor3 = selectedTheme.text
                                         value.Text = table.concat(chosen, ", ")
-                                        
                                         if flag then
                                             library.flags[flag] = chosen
                                         end
-
                                         callback(chosen)
                                     end
                                 end
                             elseif multiChoice then
                                 table.clear(chosen)
                                 chosen = opt
-
                                 for i, v in next, opt do
                                     if contentHolder:FindFirstChild(v) then
                                         multiSelectObj(contentHolder:FindFirstChild(v), contentHolder:FindFirstChild(v):FindFirstChildOfClass("UIPadding"), true)
-
                                         value.TextColor3 = selectedTheme.text
                                         value.Text = table.concat(chosen, ", ")
                                     end
@@ -2017,39 +1892,31 @@ function initLibrary()
                         else
                             if not multiChoice then
                                 current = nil
-
                                 for i, v in next, contentHolder:GetChildren() do
                                     if v:IsA("TextButton") then
                                         v:FindFirstChildOfClass("UIPadding").PaddingLeft = UDim.new(0, 6)
                                         v.Font = Enum.Font.Gotham
                                     end
                                 end
-
                                 value.Text = "NONE"
                                 value.TextColor3 = selectedTheme.textSecondary
-
                                 if flag then
                                     library.flags[flag] = nil
                                 end
-
                                 callback(nil)
                             elseif multiChoice then
                                 table.clear(chosen)
-
                                 for i, v in next, contentHolder:GetChildren() do
                                     if v:IsA("TextButton") then
                                         v:FindFirstChildOfClass("UIPadding").PaddingLeft = UDim.new(0, 6)
                                         v.Font = Enum.Font.GothamSemiBold
                                     end
                                 end
-
                                 value.TextColor3 = selectedTheme.textSecondary
                                 value.Text = "NONE"
-
                                 if flag then
                                     library.flags[flag] = chosen
                                 end
-
                                 callback(chosen)
                             end
                         end
@@ -2057,7 +1924,6 @@ function initLibrary()
 
                     function dropdownTypes:Add(opt)
                         table.insert(content, opt)
-
                         local option = utility.create("TextButton", {
                             Name = opt,
                             ZIndex = 11,
@@ -2072,59 +1938,47 @@ function initLibrary()
                             TextXAlignment = Enum.TextXAlignment.Left,
                             Parent = contentHolder
                         })
-                        
                         local optionPadding = utility.create("UIPadding", {
                             PaddingLeft = current == opt and UDim.new(0, 10) or UDim.new(0, 6),
                             Parent = option
                         })
-
                         option.MouseButton1Click:Connect(function()
                             if not multiChoice then
                                 if current ~= opt then
                                     current = opt
                                     selectObj(option, optionPadding, true)
                                     value.Text = opt
-                                    
                                     if flag then
                                         library.flags[flag] = opt
                                     end
-
                                     callback(opt)
                                 else
                                     current = nil
                                     selectObj(option, optionPadding, false)
                                     value.Text = "NONE"
-
                                     if flag then
                                         library.flags[flag] = nil
                                     end
-
                                     callback(nil)
                                 end
                             else
                                 if not table.find(chosen, opt) then
                                     table.insert(chosen, opt)
-
                                     multiSelectObj(option, optionPadding, true)
                                     value.TextColor3 = selectedTheme.text
                                     value.Text = table.concat(chosen, ", ")
-                                    
                                     if flag then
                                         library.flags[flag] = chosen
                                     end
-
                                     callback(chosen)
                                 else
                                     table.remove(chosen, table.find(chosen, opt))
-
                                     multiSelectObj(option, optionPadding, false)
                                     value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
                                     value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
-
                                     if flag then
                                         library.flags[flag] = chosen
                                     end
-
                                     callback(chosen)
                                 end
                             end
@@ -2137,7 +1991,6 @@ function initLibrary()
                                 if current == opt then
                                     dropdownTypes:Set(nil)
                                 end
-
                                 if contentHolder:FindFirstChild(opt) then
                                     contentHolder:FindFirstChild(opt):Destroy()
                                 end
@@ -2147,7 +2000,6 @@ function initLibrary()
                                     value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
                                     value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
                                 end
-
                                 if contentHolder:FindFirstChild(opt) then
                                     contentHolder:FindFirstChild(opt):Destroy()
                                 end
@@ -2162,9 +2014,7 @@ function initLibrary()
                                 opt:Destroy()
                             end
                         end
-
                         dropdownTypes:Set(nil)
-
                         for _, opt in next, content do
                             local option = utility.create("TextButton", {
                                 Name = opt,
@@ -2180,59 +2030,47 @@ function initLibrary()
                                 TextXAlignment = Enum.TextXAlignment.Left,
                                 Parent = contentHolder
                             })
-                            
                             local optionPadding = utility.create("UIPadding", {
                                 PaddingLeft = current == opt and UDim.new(0, 10) or UDim.new(0, 6),
                                 Parent = option
                             })
-        
                             option.MouseButton1Click:Connect(function()
                                 if not multiChoice then
                                     if current ~= opt then
                                         current = opt
                                         selectObj(option, optionPadding, true)
                                         value.Text = opt
-                                        
                                         if flag then
                                             library.flags[flag] = opt
                                         end
-        
                                         callback(opt)
                                     else
                                         current = nil
                                         selectObj(option, optionPadding, false)
                                         value.Text = "NONE"
-        
                                         if flag then
                                             library.flags[flag] = nil
                                         end
-        
                                         callback(nil)
                                     end
                                 else
                                     if not table.find(chosen, opt) then
                                         table.insert(chosen, opt)
-        
                                         multiSelectObj(option, optionPadding, true)
                                         value.TextColor3 = selectedTheme.text
                                         value.Text = table.concat(chosen, ", ")
-                                        
                                         if flag then
                                             library.flags[flag] = chosen
                                         end
-        
                                         callback(chosen)
                                     else
                                         table.remove(chosen, table.find(chosen, opt))
-        
                                         multiSelectObj(option, optionPadding, false)
                                         value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
                                         value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
-        
                                         if flag then
                                             library.flags[flag] = chosen
                                         end
-        
                                         callback(chosen)
                                     end
                                 end
@@ -2254,7 +2092,8 @@ function initLibrary()
 
                     return dropdownTypes
                 end
-                
+
+                -- KEYBIND
                 function sectionTypes:Keybind(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Keybind"
@@ -2330,7 +2169,7 @@ function initLibrary()
                         Font = Enum.Font.SourceSans,
                         Parent = sectionContent
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -2344,7 +2183,7 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = keybind
                     })
-                    
+
                     local value = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -2362,33 +2201,39 @@ function initLibrary()
                     keybind.MouseButton1Click:Connect(function()
                         value.Text = "..."
                         value.TextColor3 = selectedTheme.text
-
                         local binding
                         binding = inputService.InputBegan:Connect(function(input)
                             local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
                             value.Text = keyString
                             value.TextColor3 = selectedTheme.textSecondary
-
                             if input.UserInputType == Enum.UserInputType.Keyboard then
                                 if not table.find(blacklist, input.KeyCode) then
                                     keyChosen = input.KeyCode
-                                    if flag then library.flags[flag] = input.KeyCode end
+                                    if flag then
+                                        library.flags[flag] = input.KeyCode
+                                    end
                                     binding:Disconnect()
                                 else
                                     keyChosen = nil
                                     value.Text = "NONE"
-                                    if flag then library.flags[flag] = nil end
+                                    if flag then
+                                        library.flags[flag] = nil
+                                    end
                                     binding:Disconnect()
                                 end
                             else
                                 if not table.find(blacklist, input.UserInputType) then
                                     keyChosen = input.UserInputType
-                                    if flag then library.flags[flag] = input.UserInputType end
+                                    if flag then
+                                        library.flags[flag] = input.UserInputType
+                                    end
                                     binding:Disconnect()
                                 else
                                     keyChosen = nil
                                     value.Text = "NONE"
-                                    if flag then library.flags[flag] = nil end
+                                    if flag then
+                                        library.flags[flag] = nil
+                                    end
                                     binding:Disconnect()
                                 end
                             end
@@ -2434,11 +2279,15 @@ function initLibrary()
                                 value.Text = keyString
                                 value.TextColor3 = selectedTheme.textSecondary
                                 keyChosen = newKey
-                                if flag then library.flags[flag] = newKey end
+                                if flag then
+                                    library.flags[flag] = newKey
+                                end
                             else
                                 keyChosen = nil
                                 value.Text = "NONE"
-                                if flag then library.flags[flag] = nil end
+                                if flag then
+                                    library.flags[flag] = nil
+                                end
                             end
                         end
                     end
@@ -2452,6 +2301,7 @@ function initLibrary()
                     return keybindTypes
                 end
 
+                -- TOGGLE KEYBIND
                 function sectionTypes:ToggleKeybind(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Toggle Keybind"
@@ -2519,7 +2369,6 @@ function initLibrary()
                     if toggleFlag then
                         library.flags[toggleFlag] = toggled
                     end
-
                     if keybindFlag then
                         library.flags[keybindFlag] = default
                     end
@@ -2558,13 +2407,13 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = toggleKeybind
                     })
-                    
+
                     local iconGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = icon
                     })
-                    
+
                     local value = utility.create("TextButton", {
                         ZIndex = 3,
                         BackgroundTransparency = 1,
@@ -2583,31 +2432,26 @@ function initLibrary()
 
                     local function toggleToggle()
                         toggled = not toggled
-
                         if toggled then
                             table.insert(coloredGradients, iconGradient)
                         else
                             table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
                         end
-
                         local textColor = toggled and selectedTheme.text or selectedTheme.textSecondary
                         local gradientColor
                         if toggled then
                             gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(0, library.color),
                                 ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                             }
                         else
                             gradientColor = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2)
                         end
-
                         iconGradient.Color = gradientColor
                         title.TextColor3 = textColor
-
                         if toggleFlag then
                             library.flags[toggleFlag] = toggled
                         end
-
                         toggleCallback(toggled)
                     end
 
@@ -2618,7 +2462,6 @@ function initLibrary()
                         value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
                         value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
                         value.TextColor3 = selectedTheme.text
-                    
                         local binding
                         binding = inputService.InputBegan:Connect(function(input)
                             local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
@@ -2626,37 +2469,44 @@ function initLibrary()
                             value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
                             value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
                             value.TextColor3 = selectedTheme.textSecondary
-                    
                             if input.UserInputType == Enum.UserInputType.Keyboard then
                                 if not table.find(blacklist, input.KeyCode) then
                                     keyChosen = input.KeyCode
-                                    if keybindFlag then library.flags[keybindFlag] = input.KeyCode end
+                                    if keybindFlag then
+                                        library.flags[keybindFlag] = input.KeyCode
+                                    end
                                     binding:Disconnect()
                                 else
                                     keyChosen = nil
                                     value.Text = "NONE"
                                     value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
                                     value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                    if keybindFlag then library.flags[keybindFlag] = nil end
+                                    if keybindFlag then
+                                        library.flags[keybindFlag] = nil
+                                    end
                                     binding:Disconnect()
                                 end
                             else
                                 if not table.find(blacklist, input.UserInputType) then
                                     keyChosen = input.UserInputType
-                                    if keybindFlag then library.flags[keybindFlag] = input.UserInputType end
+                                    if keybindFlag then
+                                        library.flags[keybindFlag] = input.UserInputType
+                                    end
                                     binding:Disconnect()
                                 else
                                     keyChosen = nil
                                     value.Text = "NONE"
                                     value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
                                     value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                    if keybindFlag then library.flags[keybindFlag] = nil end
+                                    if keybindFlag then
+                                        library.flags[keybindFlag] = nil
+                                    end
                                     binding:Disconnect()
                                 end
                             end
                         end)
                     end)
-                    
+
                     inputService.InputBegan:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.Keyboard then
                             if input.KeyCode == keyChosen then
@@ -2677,17 +2527,17 @@ function initLibrary()
                             keybindCallback(keyChosen)
                         end
                     end)
-                    
+
                     local toggleKeybindTypes = utility.table()
-                    
+
                     function toggleKeybindTypes:Show()
                         toggleKeybind.Visible = true
                     end
-                    
+
                     function toggleKeybindTypes:Hide()
                         toggleKeybind.Visible = false
                     end
-                    
+
                     function toggleKeybindTypes:SetName(str)
                         title.Text = str
                     end
@@ -2697,7 +2547,7 @@ function initLibrary()
                             toggleToggle()
                         end
                     end
-                    
+
                     function toggleKeybindTypes:Set(newKey)
                         if typeof(newKey) == "EnumItem" then
                             if not table.find(blacklist, newKey) then
@@ -2707,17 +2557,21 @@ function initLibrary()
                                 value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
                                 value.TextColor3 = selectedTheme.textSecondary
                                 keyChosen = newKey
-                                if keybindFlag then library.flags[keybindFlag] = newKey end
+                                if keybindFlag then
+                                    library.flags[keybindFlag] = newKey
+                                end
                             else
                                 keyChosen = nil
                                 value.Text = "NONE"
                                 value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
                                 value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
-                                if keybindFlag then library.flags[keybindFlag] = nil end
+                                if keybindFlag then
+                                    library.flags[keybindFlag] = nil
+                                end
                             end
                         end
                     end
-                    
+
                     if keybindFlag then
                         flags.keybinds[keybindFlag] = function(key)
                             toggleKeybindTypes:Set(key)
@@ -2729,10 +2583,11 @@ function initLibrary()
                             toggleKeybindTypes:Toggle(bool)
                         end
                     end
-                    
+
                     return toggleKeybindTypes
                 end
 
+                -- COLOR PICKER
                 function sectionTypes:ColorPicker(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Color Picker"
@@ -2749,7 +2604,6 @@ function initLibrary()
                     if flag then
                         library.flags[flag] = default
                     end
-
                     callback(default)
 
                     local colorPickerHolder = utility.create("Frame", {
@@ -2769,7 +2623,7 @@ function initLibrary()
                         Font = Enum.Font.SourceSans,
                         Parent = colorPickerHolder
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -2783,7 +2637,7 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = colorPicker
                     })
-                    
+
                     local icon = utility.create("Frame", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 22, 0, 14),
@@ -2792,7 +2646,7 @@ function initLibrary()
                         BackgroundColor3 = default,
                         Parent = colorPicker
                     })
-                    
+
                     local iconGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new{
@@ -2801,7 +2655,7 @@ function initLibrary()
                         },
                         Parent = icon
                     })
-                    
+
                     local picker = utility.create("Frame", {
                         ZIndex = 12,
                         Visible = false,
@@ -2812,7 +2666,7 @@ function initLibrary()
                         BackgroundColor3 = selectedTheme.picker,
                         Parent = colorPicker
                     })
-                    
+
                     local saturationFrame = utility.create("ImageLabel", {
                         ZIndex = 13,
                         Size = UDim2.new(1, -29, 0, 130),
@@ -2822,7 +2676,7 @@ function initLibrary()
                         Image = "http://www.roblox.com/asset/?id=8630797271",
                         Parent = picker
                     })
-                    
+
                     local saturationPicker = utility.create("Frame", {
                         ZIndex = 15,
                         Size = UDim2.new(0, 4, 0, 4),
@@ -2832,7 +2686,7 @@ function initLibrary()
                         BorderSizePixel = 1,
                         Parent = saturationFrame
                     })
-                    
+
                     local hueFrame = utility.create("ImageLabel", {
                         ZIndex = 13,
                         Size = UDim2.new(0, 14, 0, 130),
@@ -2845,7 +2699,7 @@ function initLibrary()
                         Image = "http://www.roblox.com/asset/?id=8630799159",
                         Parent = picker
                     })
-                    
+
                     local huePicker = utility.create("Frame", {
                         ZIndex = 15,
                         Size = UDim2.new(1, 0, 0, 2),
@@ -2855,7 +2709,7 @@ function initLibrary()
                         BorderSizePixel = 1,
                         Parent = hueFrame
                     })
-                    
+
                     local rgb = utility.create("TextBox", {
                         ZIndex = 14,
                         Size = UDim2.new(1, -10, 0, 16),
@@ -2872,7 +2726,7 @@ function initLibrary()
                         PlaceholderText = "R,  G,  B",
                         Parent = picker
                     })
-                    
+
                     local bg = utility.create("Frame", {
                         ZIndex = 13,
                         Size = UDim2.new(1, 0, 1, 0),
@@ -2880,13 +2734,13 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = rgb
                     })
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = bg
                     })
-                    
+
                     local hex = utility.create("TextBox", {
                         ZIndex = 14,
                         Size = UDim2.new(1, -10, 0, 16),
@@ -2903,19 +2757,19 @@ function initLibrary()
                         PlaceholderText = utility.rgb_to_hex(default),
                         Parent = picker
                     })
-                    
-                    local bg = utility.create("Frame", {
+
+                    local bg2 = utility.create("Frame", {
                         ZIndex = 13,
                         Size = UDim2.new(1, 0, 1, 0),
                         BorderColor3 = selectedTheme.background,
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = hex
                     })
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
-                        Parent = bg
+                        Parent = bg2
                     })
 
                     local function openPicker()
@@ -2930,38 +2784,33 @@ function initLibrary()
                         local sizeY = 1 - math.clamp((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y, 0, 1)
                         local posY = math.clamp(((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 2)
                         huePicker.Position = UDim2.new(0, 0, 0, posY)
-
                         hue = sizeY
-
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-
                         hsv = Color3.fromHSV(hue, sat, val)
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
 
                     hueFrame.InputBegan:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingHue = true
                             updateHue(input)
                         end
                     end)
 
                     hueFrame.InputEnded:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingHue = false
                         end
                     end)
 
                     inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                             if slidingHue then
                                 updateHue(input)
                             end
@@ -2973,42 +2822,35 @@ function initLibrary()
                         local sizeY = 1 - math.clamp((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y, 0, 1)
                         local posY = math.clamp(((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)
                         local posX = math.clamp(((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X) * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)
-
                         saturationPicker.Position = UDim2.new(0, posX, 0, posY)
-
                         sat = sizeX
                         val = sizeY
-
                         hsv = Color3.fromHSV(hue, sat, val)
-
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
 
                     saturationFrame.InputBegan:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingSaturation = true
                             updateSatVal(input)
                         end
                     end)
 
                     saturationFrame.InputEnded:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingSaturation = false
                         end
                     end)
 
                     inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                             if slidingSaturation then
                                 updateSatVal(input)
                             end
@@ -3020,11 +2862,11 @@ function initLibrary()
                     function colorPickerTypes:Show()
                         colorPickerHolder.Visible = true
                     end
-                    
+
                     function colorPickerTypes:Hide()
                         colorPickerHolder.Visible = false
                     end
-                    
+
                     function colorPickerTypes:SetName(str)
                         title.Text = str
                     end
@@ -3032,40 +2874,31 @@ function initLibrary()
                     function colorPickerTypes:SetRGB(color)
                         hue, sat, val = color:ToHSV()
                         hsv = Color3.fromHSV(hue, sat, val)
-
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
                         saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
                         huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
-
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
 
                     function colorPickerTypes:SetHex(hexValue)
-                        color = utility.hex_to_rgb(hexValue)
-                        
+                        local color = utility.hex_to_rgb(hexValue)
                         hue, sat, val = color:ToHSV()
                         hsv = Color3.fromHSV(hue, sat, val)
-
                         saturationFrame.BackgroundColor3 = hsv
                         icon.BackgroundColor3 = hsv
                         saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
                         huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
-
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-
-                        if flag then 
+                        if flag then
                             library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-
                         callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
 
@@ -3079,7 +2912,7 @@ function initLibrary()
                             rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         end
                     end)
-                        
+
                     hex.FocusLost:Connect(function()
                         if hex.Text:find("#") and hex.Text:len() == 7 then
                             colorPickerTypes:SetHex(hex.Text)
@@ -3103,6 +2936,7 @@ function initLibrary()
                     return colorPickerTypes
                 end
 
+                -- TOGGLE COLOR PICKER
                 function sectionTypes:ToggleColorPicker(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Toggle Color Picker"
@@ -3122,13 +2956,11 @@ function initLibrary()
                     if colorPickerFlag then
                         library.flags[colorPickerFlag] = default
                     end
-
                     colorPickerCallback(default)
 
                     if toggleFlag then
                         library.flags[toggleFlag] = toggled
                     end
-
                     toggleCallback(false)
 
                     local toggleColorPickerHolder = utility.create("Frame", {
@@ -3157,7 +2989,7 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = colorPicker
                     })
-                    
+
                     local iconGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
@@ -3173,7 +3005,7 @@ function initLibrary()
                         BackgroundColor3 = default,
                         Parent = colorPicker
                     })
-                    
+
                     local colorPickerIconGradient = utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new{
@@ -3182,7 +3014,7 @@ function initLibrary()
                         },
                         Parent = colorPickerIcon
                     })
-                    
+
                     local title = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 1, 0),
@@ -3197,7 +3029,7 @@ function initLibrary()
                         TextXAlignment = Enum.TextXAlignment.Left,
                         Parent = icon
                     })
-                    
+
                     local picker = utility.create("Frame", {
                         ZIndex = 12,
                         Visible = false,
@@ -3208,7 +3040,7 @@ function initLibrary()
                         BackgroundColor3 = selectedTheme.picker,
                         Parent = colorPicker
                     })
-                    
+
                     local saturationFrame = utility.create("ImageLabel", {
                         ZIndex = 13,
                         Size = UDim2.new(1, -29, 0, 130),
@@ -3218,7 +3050,7 @@ function initLibrary()
                         Image = "http://www.roblox.com/asset/?id=8630797271",
                         Parent = picker
                     })
-                    
+
                     local saturationPicker = utility.create("Frame", {
                         ZIndex = 15,
                         Size = UDim2.new(0, 4, 0, 4),
@@ -3228,7 +3060,7 @@ function initLibrary()
                         BorderSizePixel = 1,
                         Parent = saturationFrame
                     })
-                    
+
                     local hueFrame = utility.create("ImageLabel", {
                         ZIndex = 13,
                         Size = UDim2.new(0, 14, 0, 130),
@@ -3241,7 +3073,7 @@ function initLibrary()
                         Image = "http://www.roblox.com/asset/?id=8630799159",
                         Parent = picker
                     })
-                    
+
                     local huePicker = utility.create("Frame", {
                         ZIndex = 15,
                         Size = UDim2.new(1, 0, 0, 2),
@@ -3251,7 +3083,7 @@ function initLibrary()
                         BorderSizePixel = 1,
                         Parent = hueFrame
                     })
-                    
+
                     local rgb = utility.create("TextBox", {
                         ZIndex = 14,
                         Size = UDim2.new(1, -10, 0, 16),
@@ -3268,7 +3100,7 @@ function initLibrary()
                         PlaceholderText = "R,  G,  B",
                         Parent = picker
                     })
-                    
+
                     local bg = utility.create("Frame", {
                         ZIndex = 13,
                         Size = UDim2.new(1, 0, 1, 0),
@@ -3276,13 +3108,13 @@ function initLibrary()
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = rgb
                     })
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
                         Parent = bg
                     })
-                    
+
                     local hex = utility.create("TextBox", {
                         ZIndex = 14,
                         Size = UDim2.new(1, -10, 0, 16),
@@ -3299,48 +3131,43 @@ function initLibrary()
                         PlaceholderText = utility.rgb_to_hex(default),
                         Parent = picker
                     })
-                    
-                    local bg = utility.create("Frame", {
+
+                    local bg2 = utility.create("Frame", {
                         ZIndex = 13,
                         Size = UDim2.new(1, 0, 1, 0),
                         BorderColor3 = selectedTheme.background,
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         Parent = hex
                     })
-                    
+
                     utility.create("UIGradient", {
                         Rotation = 90,
                         Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
-                        Parent = bg
+                        Parent = bg2
                     })
 
                     local function toggleToggle()
                         toggled = not toggled
-
                         if toggled then
                             table.insert(coloredGradients, iconGradient)
                         else
                             table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
                         end
-
                         local textColor = toggled and selectedTheme.text or selectedTheme.textSecondary
                         local gradientColor
                         if toggled then
                             gradientColor = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(0, library.color),
                                 ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                             }
                         else
                             gradientColor = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2)
                         end
-
                         iconGradient.Color = gradientColor
                         title.TextColor3 = textColor
-
                         if toggleFlag then
                             library.flags[toggleFlag] = toggled
                         end
-
                         toggleCallback(toggled)
                     end
 
@@ -3351,108 +3178,96 @@ function initLibrary()
                         picker.Visible = open
                         toggleColorPickerHolder.Size = UDim2.new(1, 0, 0, open and colorPicker.AbsoluteSize.Y + picker.AbsoluteSize.Y + 3 or 16)
                     end
-                    
+
                     colorPickerIcon.MouseButton1Click:connect(openPicker)
-                    
+
                     local function updateHue(input)
                         local sizeY = 1 - math.clamp((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y, 0, 1)
                         local posY = math.clamp(((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 2)
                         huePicker.Position = UDim2.new(0, 0, 0, posY)
-                    
                         hue = sizeY
-                    
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-                    
                         hsv = Color3.fromHSV(hue, sat, val)
                         saturationFrame.BackgroundColor3 = hsv
                         colorPickerIcon.BackgroundColor3 = hsv
-                    
-                        if colorPickerFlag then 
+                        if colorPickerFlag then
                             library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-                    
                         colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
-                    
+
                     hueFrame.InputBegan:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingHue = true
                             updateHue(input)
                         end
                     end)
-                    
+
                     hueFrame.InputEnded:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingHue = false
                         end
                     end)
-                    
+
                     inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                             if slidingHue then
                                 updateHue(input)
                             end
                         end
                     end)
-                    
+
                     local function updateSatVal(input)
                         local sizeX = math.clamp((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X, 0, 1)
                         local sizeY = 1 - math.clamp((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y, 0, 1)
                         local posY = math.clamp(((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)
                         local posX = math.clamp(((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X) * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)
-                    
                         saturationPicker.Position = UDim2.new(0, posX, 0, posY)
-                    
                         sat = sizeX
                         val = sizeY
-                    
                         hsv = Color3.fromHSV(hue, sat, val)
-                    
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-                    
                         saturationFrame.BackgroundColor3 = hsv
                         colorPickerIcon.BackgroundColor3 = hsv
-                    
-                        if colorPickerFlag then 
+                        if colorPickerFlag then
                             library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-                    
                         colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
-                    
+
                     saturationFrame.InputBegan:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingSaturation = true
                             updateSatVal(input)
                         end
                     end)
-                    
+
                     saturationFrame.InputEnded:Connect(function(input)
-                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                             slidingSaturation = false
                         end
                     end)
-                    
+
                     inputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                             if slidingSaturation then
                                 updateSatVal(input)
                             end
                         end
                     end)
-                    
+
                     local toggleColorPickerTypes = utility.table()
-                    
+
                     function toggleColorPickerTypes:Show()
                         toggleColorPickerHolder.Visible = true
                     end
-                    
+
                     function toggleColorPickerTypes:Hide()
                         toggleColorPickerHolder.Visible = false
                     end
-                    
+
                     function toggleColorPickerTypes:SetName(str)
                         title.Text = str
                     end
@@ -3462,47 +3277,38 @@ function initLibrary()
                             toggleToggle()
                         end
                     end
-                    
+
                     function toggleColorPickerTypes:SetRGB(color)
                         hue, sat, val = color:ToHSV()
                         hsv = Color3.fromHSV(hue, sat, val)
-                    
                         saturationFrame.BackgroundColor3 = hsv
                         colorPickerIcon.BackgroundColor3 = hsv
                         saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
                         huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
-                    
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-                    
-                        if colorPickerFlag then 
+                        if colorPickerFlag then
                             library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-                    
                         colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
-                    
+
                     function toggleColorPickerTypes:SetHex(hexValue)
-                        color = utility.hex_to_rgb(hexValue)
-                        
+                        local color = utility.hex_to_rgb(hexValue)
                         hue, sat, val = color:ToHSV()
                         hsv = Color3.fromHSV(hue, sat, val)
-                    
                         saturationFrame.BackgroundColor3 = hsv
                         colorPickerIcon.BackgroundColor3 = hsv
                         saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
                         huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
-                    
                         rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
-                    
-                        if colorPickerFlag then 
+                        if colorPickerFlag then
                             library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
                         end
-                    
                         colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                     end
-                    
+
                     rgb.FocusLost:Connect(function()
                         local _, amount = rgb.Text:gsub(", ", "")
                         if amount == 2 then
@@ -3513,7 +3319,7 @@ function initLibrary()
                             rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         end
                     end)
-                        
+
                     hex.FocusLost:Connect(function()
                         if hex.Text:find("#") and hex.Text:len() == 7 then
                             toggleColorPickerTypes:SetHex(hex.Text)
@@ -3521,13 +3327,13 @@ function initLibrary()
                             hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
                         end
                     end)
-                    
+
                     hex:GetPropertyChangedSignal("Text"):Connect(function()
                         if hex.Text == "" then
                             hex.Text = "#"
                         end
                     end)
-                    
+
                     if colorPickerFlag then
                         flags.colorpickers[colorPickerFlag] = function(color)
                             toggleColorPickerTypes:SetRGB(color)
@@ -3539,7 +3345,7 @@ function initLibrary()
                             toggleColorPickerTypes:Toggle(bool)
                         end
                     end
-                    
+
                     return toggleColorPickerTypes
                 end
 

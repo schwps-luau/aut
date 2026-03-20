@@ -587,14 +587,22 @@ function initLibrary()
                 Parent = tabs
             })
             
+            -- КОНТЕЙНЕР ДЛЯ ВСЕХ КОЛОНОК (для правильного позиционирования)
+            local columnsContainer = utility.create("Frame", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Parent = tab
+            })
+            
             -- КОЛОНКА 1 (верхняя левая)
             local column1 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 1, 0),
+                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = tab
+                Parent = columnsContainer
             })
 
             local column1List = utility.create("UIListLayout", {
@@ -609,13 +617,13 @@ function initLibrary()
 
             -- КОЛОНКА 2 (верхняя правая)
             local column2 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 1, 0),
+                Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = tab
+                Parent = columnsContainer
             })
 
             local column2List = utility.create("UIListLayout", {
@@ -630,13 +638,13 @@ function initLibrary()
             
             -- КОЛОНКА 3 (нижняя левая)
             local column3 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 1, 0),
+                Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = tab
+                Parent = columnsContainer
             })
 
             local column3List = utility.create("UIListLayout", {
@@ -651,13 +659,13 @@ function initLibrary()
             
             -- КОЛОНКА 4 (нижняя правая)
             local column4 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 1, 0),
+                Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = tab
+                Parent = columnsContainer
             })
 
             local column4List = utility.create("UIListLayout", {

@@ -1,3 +1,243 @@
+--[[
+Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
+Yun Devs: zomb#7741, nives#0001, loot#1337
+Special Thanks To: Qw#1549
+--]]
+function initLibrary()
+    local folderName = "config holder"
+    local gameConfigFolder = "cfgs"
+
+    if not isfolder(gameConfigFolder) then
+        makefolder(gameConfigFolder)
+    end
+
+    local inputService = game:GetService("UserInputService")
+    local tweenService = game:GetService("TweenService")
+    local runService = game:GetService("RunService")
+    local coreGui = game:GetService("CoreGui")
+
+    local utility = {}
+
+    function utility.create(class, properties)
+        properties = properties or {}
+        local obj = Instance.new(class)
+        local forcedProperties = { AutoButtonColor = false }
+        for prop, v in next, properties do
+            obj[prop] = v
+        end
+        for prop, v in next, forcedProperties do
+            pcall(function()
+                obj[prop] = v
+            end)
+        end
+        return obj
+    end
+
+    function utility.change_color(color, amount)
+        local r = math.clamp(math.floor(color.r * 255) + amount, 0, 255)
+        local g = math.clamp(math.floor(color.g * 255) + amount, 0, 255)
+        local b = math.clamp(math.floor(color.b * 255) + amount, 0, 255)
+        return Color3.fromRGB(r, g, b)
+    end
+
+    function utility.get_rgb(color)
+        local r = math.floor(color.r * 255)
+        local g = math.floor(color.g * 255)
+        local b = math.floor(color.b * 255)
+        return r, g, b
+    end
+
+    function utility.tween(obj, info, properties, callback)
+        local anim = tweenService:Create(obj, TweenInfo.new(unpack(info)), properties)
+        anim:Play()
+        if callback then
+            anim.Completed:Connect(callback)
+        end
+    end
+
+    function utility.drag(obj, dragSpeed)
+        local start, objPosition, dragging
+        obj.InputBegan:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                dragging = true
+                start = input.Position
+                objPosition = obj.Position
+            end
+        end)
+        obj.InputEnded:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                dragging = false
+            end
+        end)
+        inputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging == true then
+                    utility.tween(obj, {dragSpeed}, {Position = UDim2.new(objPosition.X.Scale, objPosition.X.Offset + (input.Position - start).X, objPosition.Y.Scale, objPosition.Y.Offset + (input.Position - start).Y)})
+                end
+            end
+        end)
+    end
+
+    function utility.get_center(sizeX, sizeY)
+        return UDim2.new(0.5, -(sizeX / 2), 0.5, -(sizeY / 2))
+    end
+
+    function utility.hex_to_rgb(hex)
+        return Color3.fromRGB(tonumber("0x" .. hex:sub(2, 3)), tonumber("0x" .. hex:sub(4, 5)), tonumber("0x" .. hex:sub(6, 7)))
+    end
+
+    function utility.rgb_to_hex(color)
+        return string.format("#%02X%02X%02X", math.clamp(color.R * 255, 0, 255), math.clamp(color.G * 255, 0, 255), math.clamp(color.B * 255, 0, 255))
+    end
+
+    function utility.table(tbl)
+        local oldtbl = tbl or {}
+        local newtbl = {}
+        local formattedtbl = {}
+        for option, v in next, oldtbl do
+            newtbl[option:lower()] = v
+        end
+        setmetatable(formattedtbl, {
+            __newindex = function(t, k, v)
+                rawset(newtbl, k:lower(), v)
+            end,
+            __index = function(t, k, v)
+                return newtbl[k:lower()]
+            end
+        })
+        return formattedtbl
+    end
+
+    local library = utility.table{
+        flags = {},
+        toggled = true,
+        color = Color3.fromRGB(255, 0, 0),
+        keybind = Enum.KeyCode.RightShift,
+        dragSpeed = 0.25
+    }
+
+    local coloredGradients = {}
+
+    function library:SetColor(color)
+        library.color = color
+        for _, gradient in ipairs(coloredGradients) do
+            if gradient and gradient.Parent then
+                gradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, library.color),
+                    ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                }
+            end
+        end
+    end
+
+    function library:SetKey(key)
+        library.keybind = key
+    end
+
+    local gui = utility.create("ScreenGui")
+
+    inputService.InputBegan:Connect(function(input)
+        if input.KeyCode == library.keybind then
+            library.toggled = not library.toggled
+            gui.Enabled = library.toggled
+        end
+    end)
+
+    if syn and syn.protect_gui then
+        syn.protect_gui(gui)
+    end
+
+    gui.Parent = coreGui
+
+    local flags = {toggles = {}, boxes = {}, sliders = {}, dropdowns = {}, multidropdowns = {}, keybinds = {}, colorpickers = {}}
+
+    function library:LoadConfig(file)
+        local str = readfile(gameConfigFolder .. "/" .. file .. ".cfg")
+        local tbl = loadstring(str)()
+        for flag, value in next, tbl.toggles do
+            if flags.toggles[flag] then
+                flags.toggles[flag](value)
+            end
+        end
+        for flag, value in next, tbl.boxes do
+            if flags.boxes[flag] then
+                flags.boxes[flag](value)
+            end
+        end
+        for flag, value in next, tbl.sliders do
+            if flags.sliders[flag] then
+                flags.sliders[flag](value)
+            end
+        end
+        for flag, value in next, tbl.dropdowns do
+            if flags.dropdowns[flag] then
+                flags.dropdowns[flag](value)
+            end
+        end
+        for flag, value in next, tbl.multidropdowns do
+            if flags.multidropdowns[flag] then
+                flags.multidropdowns[flag](value)
+            end
+        end
+        for flag, value in next, tbl.keybinds do
+            if flags.keybinds[flag] then
+                flags.keybinds[flag](value)
+            end
+        end
+        for flag, value in next, tbl.colorpickers do
+            if flags.colorpickers[flag] then
+                flags.colorpickers[flag](value)
+            end
+        end
+    end
+
+    function library:SaveConfig(name)
+        local configstr = "{toggles={"
+        local count = 0
+        for flag, _ in next, flags.toggles do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},boxes={"
+        count = 0
+        for flag, _ in next, flags.boxes do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},sliders={"
+        count = 0
+        for flag, _ in next, flags.sliders do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},dropdowns={"
+        count = 0
+        for flag, _ in next, flags.dropdowns do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},multidropdowns={"
+        count = 0
+        for flag, _ in next, flags.multidropdowns do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']={'" .. table.concat(library.flags[flag], "','") .. "'},"
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},keybinds={"
+        count = 0
+        for flag, _ in next, flags.keybinds do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},colorpickers={"
+        count = 0
+        for flag, _ in next, flags.colorpickers do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=Color3.new(" .. tostring(library.flags[flag]) .. "),"
+        end
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "}}"
+        writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
+    end
+
 function library:Load(opts)
     local options = utility.table(opts)
     local name = options.name or "Epic UI Library"
@@ -3107,4 +3347,7 @@ function library:Load(opts)
     end
 
     return windowTypes
+end
+
+    return library
 end

@@ -1,4 +1,4 @@
---[[asdda
+--[[
 Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
@@ -555,6 +555,10 @@ function initLibrary()
             gui.Enabled = false
         end
 
+        function windowTypes:SetPosition(x, y)
+            topbar.Position = UDim2.new(0, x, 0, y)
+        end
+
         function windowTypes:Tab(name)
             windowTypes.count = windowTypes.count + 1
             name = name or "Tab"
@@ -583,25 +587,22 @@ function initLibrary()
                 Parent = tabs
             })
             
-            -- Создаем контейнер для сетки 2x2
-            local gridContainer = utility.create("Frame", {
+            -- КОНТЕЙНЕР ДЛЯ ВСЕХ КОЛОНОК (для правильного позиционирования)
+            local columnsContainer = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 1, 0),
                 BackgroundTransparency = 1,
                 Parent = tab
             })
             
-            -- Колонка 1 (верхняя левая)
+            -- КОЛОНКА 1 (верхняя левая)
             local column1 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
-                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = columnsContainer
             })
 
             local column1List = utility.create("UIListLayout", {
@@ -614,18 +615,15 @@ function initLibrary()
                 column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
             end)
 
-            -- Колонка 2 (верхняя правая)
+            -- КОЛОНКА 2 (верхняя правая)
             local column2 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
-                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = columnsContainer
             })
 
             local column2List = utility.create("UIListLayout", {
@@ -637,19 +635,16 @@ function initLibrary()
             column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
             end)
-
-            -- Колонка 3 (нижняя левая, под первой)
+            
+            -- КОЛОНКА 3 (нижняя левая)
             local column3 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
-                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = columnsContainer
             })
 
             local column3List = utility.create("UIListLayout", {
@@ -661,19 +656,16 @@ function initLibrary()
             column3List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
             end)
-
-            -- Колонка 4 (нижняя правая, под второй)
+            
+            -- КОЛОНКА 4 (нижняя правая)
             local column4 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
-                ScrollBarImageTransparency = 1,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = columnsContainer
             })
 
             local column4List = utility.create("UIListLayout", {
@@ -785,6 +777,31 @@ function initLibrary()
                 end)
 
                 local sectionTypes = utility.table()
+                
+                function sectionTypes:GetName()
+                    return name
+                end
+                
+                function sectionTypes:Rename(newName)
+                    name = newName
+                end
+                
+                function sectionTypes:SetVisible(bool)
+                    sectionHolder.Visible = bool
+                end
+                
+                function sectionTypes:Clear()
+                    for _, child in ipairs(sectionContent:GetChildren()) do
+                        if child:IsA("TextButton") or child:IsA("TextLabel") or child:IsA("Frame") then
+                            child:Destroy()
+                        end
+                    end
+                end
+                
+                function sectionTypes:Remove()
+                    sectionHolder:Destroy()
+                end
+                
                 function sectionTypes:Label(text)
                     local label = utility.create("TextLabel", {
                         ZIndex = 3,
@@ -1217,6 +1234,7 @@ function initLibrary()
 
                     return boxTypes
                 end
+                
                 function sectionTypes:Slider(opts)
                     local options = utility.table(opts)
                     local min = options.min or 0
@@ -2155,6 +2173,7 @@ function initLibrary()
 
                     return dropdownTypes
                 end
+                
                 function sectionTypes:Keybind(opts)
                     local options = utility.table(opts)
                     local name = options.name or "Keybind"

@@ -17,9 +17,6 @@ function initLibrary()
     local tweenService = game:GetService("TweenService")
     local runService = game:GetService("RunService")
     local coreGui = game:GetService("CoreGui")
-    local players = game:GetService("Players")
-    local localPlayer = players.LocalPlayer
-    local stats = game:GetService("Stats")
 
 
     local utility = {}
@@ -158,44 +155,22 @@ function initLibrary()
         toggled = true,
         color = Color3.fromRGB(255, 0, 0),
         keybind = Enum.KeyCode.RightShift, 
-        dragSpeed = 0.25,
-        watermarkFrame = nil,
-        watermarkUpdateConnection = nil
+        dragSpeed = 0.25
     }    
 
 
     local coloredGradients = {}
-    local allSections = {}
 
 
     function library:SetColor(color)
-        library.color = color
-        for _, gradient in ipairs(coloredGradients) do
-            if gradient and gradient.Parent then
-                gradient.Color = ColorSequence.new{
-                    ColorSequenceKeypoint.new(0, library.color), 
-                    ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
-                }
-            end
-        end
-        -- Обновляем цвета ватермарки
-        if library.watermarkFrame then
-            local border = library.watermarkFrame:FindFirstChild("Border")
-            if border then
-                border.BackgroundColor3 = library.color
-            end
-            for _, child in ipairs(library.watermarkFrame:GetDescendants()) do
-                if child:IsA("TextLabel") and child.Name == "Value" then
-                    child.TextColor3 = library.color
-                end
-            end
-        end
+     library.color = color
     end
     
     function library:SetKey(key)
-        library.keybind = key
+     library.keybind = key
     end
    
+
     local gui = utility.create("ScreenGui")
 
 
@@ -222,51 +197,37 @@ function initLibrary()
         local tbl = loadstring(str)()
         
         for flag, value in next, tbl.toggles do
-            if flags.toggles[flag] then
-                flags.toggles[flag](value)
-            end
+            flags.toggles[flag](value)
         end
 
 
         for flag, value in next, tbl.boxes do
-            if flags.boxes[flag] then
-                flags.boxes[flag](value)
-            end
+            flags.boxes[flag](value)
         end
 
 
         for flag, value in next, tbl.sliders do
-            if flags.sliders[flag] then
-                flags.sliders[flag](value)
-            end
+            flags.sliders[flag](value)
         end
 
 
         for flag, value in next, tbl.dropdowns do
-            if flags.dropdowns[flag] then
-                flags.dropdowns[flag](value)
-            end
+            flags.dropdowns[flag](value)
         end
 
 
         for flag, value in next, tbl.multidropdowns do
-            if flags.multidropdowns[flag] then
-                flags.multidropdowns[flag](value)
-            end
+            flags.multidropdowns[flag](value)
         end
 
 
         for flag, value in next, tbl.keybinds do
-            if flags.keybinds[flag] then
-                flags.keybinds[flag](value)
-            end
+            flags.keybinds[flag](value)
         end
 
 
         for flag, value in next, tbl.colorpickers do
-            if flags.colorpickers[flag] then
-                flags.colorpickers[flag](value)
-            end
+            flags.colorpickers[flag](value)
         end
     end
 
@@ -346,198 +307,6 @@ function initLibrary()
 
 
         writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
-    end
-
-    -- WATERMARK
-    function library:CreateWatermark(elements, position)
-        if library.watermarkFrame then
-            library.watermarkFrame:Destroy()
-        end
-        if library.watermarkUpdateConnection then
-            library.watermarkUpdateConnection:Disconnect()
-        end
-        
-        position = position or "top-left"
-        
-        local posX = 0
-        local posY = 0
-        local anchorX = 0
-        local anchorY = 0
-        
-        if position == "top-left" then
-            posX, posY = 10, 10
-            anchorX, anchorY = 0, 0
-        elseif position == "top-right" then
-            posX, posY = -10, 10
-            anchorX, anchorY = 1, 0
-        elseif position == "bottom-left" then
-            posX, posY = 10, -10
-            anchorX, anchorY = 0, 1
-        elseif position == "bottom-right" then
-            posX, posY = -10, -10
-            anchorX, anchorY = 1, 1
-        end
-        
-        library.watermarkFrame = utility.create("Frame", {
-            Name = "Watermark",
-            Size = UDim2.new(0, 220, 0, 80),
-            Position = UDim2.new(anchorX, posX, anchorY, posY),
-            BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-            BorderSizePixel = 0,
-            BackgroundTransparency = 0.15,
-            Parent = gui
-        })
-        
-        local border = utility.create("Frame", {
-            Name = "Border",
-            Size = UDim2.new(1, 0, 0, 2),
-            Position = UDim2.new(0, 0, 0, 0),
-            BackgroundColor3 = library.color,
-            BorderSizePixel = 0,
-            Parent = library.watermarkFrame
-        })
-        
-        local title = utility.create("TextLabel", {
-            Name = "Title",
-            Size = UDim2.new(1, -10, 0, 18),
-            Position = UDim2.new(0, 5, 0, 2),
-            BackgroundTransparency = 1,
-            Text = "Yun UI",
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextSize = 12,
-            Font = Enum.Font.GothamSemibold,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = library.watermarkFrame
-        })
-        
-        local contentHolder = utility.create("Frame", {
-            Size = UDim2.new(1, -10, 1, -22),
-            Position = UDim2.new(0, 5, 0, 20),
-            BackgroundTransparency = 1,
-            Parent = library.watermarkFrame
-        })
-        
-        local contentList = utility.create("UIListLayout", {
-            SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 4),
-            Parent = contentHolder
-        })
-        
-        local valueLabels = {}
-        
-        local function updateWatermark()
-            if not library.watermarkFrame then return end
-            
-            for _, child in ipairs(contentHolder:GetChildren()) do
-                if child:IsA("Frame") then
-                    child:Destroy()
-                end
-            end
-            
-            valueLabels = {}
-            
-            for _, element in ipairs(elements) do
-                local elementType = element.type or "text"
-                local label = element.label or ""
-                
-                local row = utility.create("Frame", {
-                    Size = UDim2.new(1, 0, 0, 16),
-                    BackgroundTransparency = 1,
-                    Parent = contentHolder
-                })
-                
-                local labelText = utility.create("TextLabel", {
-                    Size = UDim2.new(0.5, -2, 1, 0),
-                    BackgroundTransparency = 1,
-                    Text = label,
-                    TextColor3 = Color3.fromRGB(180, 180, 180),
-                    TextSize = 11,
-                    Font = Enum.Font.Gotham,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = row
-                })
-                
-                local valueText = utility.create("TextLabel", {
-                    Name = "Value",
-                    Size = UDim2.new(0.5, -2, 1, 0),
-                    Position = UDim2.new(0.5, 2, 0, 0),
-                    BackgroundTransparency = 1,
-                    Text = "",
-                    TextColor3 = library.color,
-                    TextSize = 11,
-                    Font = Enum.Font.GothamSemibold,
-                    TextXAlignment = Enum.TextXAlignment.Right,
-                    Parent = row
-                })
-                
-                table.insert(valueLabels, {type = elementType, label = valueText, row = row})
-            end
-            
-            local function updateValues()
-                for _, v in ipairs(valueLabels) do
-                    local value = ""
-                    if v.type == "time" then
-                        value = os.date("%H:%M:%S")
-                    elseif v.type == "date" then
-                        value = os.date("%d/%m/%Y")
-                    elseif v.type == "datetime" then
-                        value = os.date("%H:%M:%S %d/%m")
-                    elseif v.type == "fps" then
-                        local fps = math.floor(1 / runService.RenderStepped:Wait())
-                        value = fps .. " FPS"
-                    elseif v.type == "ping" then
-                        local ping = stats.Network:GetAveragePing()
-                        value = math.floor(ping) .. " ms"
-                    elseif v.type == "player_name" then
-                        value = localPlayer.Name
-                    elseif v.type == "player_display_name" then
-                        value = localPlayer.DisplayName
-                    elseif v.type == "player_id" then
-                        value = localPlayer.UserId
-                    elseif v.type == "memory" then
-                        local mem = stats.Memory:GetAverageMemoryUsageMb()
-                        value = math.floor(mem) .. " MB"
-                    elseif v.type == "uptime" then
-                        local uptime = os.clock()
-                        local hours = math.floor(uptime / 3600)
-                        local minutes = math.floor((uptime % 3600) / 60)
-                        local seconds = math.floor(uptime % 60)
-                        value = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-                    else
-                        value = element.value or ""
-                    end
-                    v.label.Text = value
-                end
-            end
-            
-            updateValues()
-            library.watermarkUpdateConnection = runService.RenderStepped:Connect(updateValues)
-            
-            local function updateSize()
-                local totalHeight = 22
-                for _, v in ipairs(valueLabels) do
-                    totalHeight = totalHeight + 20
-                end
-                library.watermarkFrame.Size = UDim2.new(0, 220, 0, totalHeight)
-            end
-            
-            updateSize()
-        end
-        
-        updateWatermark()
-        
-        return library.watermarkFrame
-    end
-    
-    function library:RemoveWatermark()
-        if library.watermarkFrame then
-            library.watermarkFrame:Destroy()
-            library.watermarkFrame = nil
-        end
-        if library.watermarkUpdateConnection then
-            library.watermarkUpdateConnection:Disconnect()
-            library.watermarkUpdateConnection = nil
-        end
     end
 
     function library:Load(opts)
@@ -777,16 +546,6 @@ function initLibrary()
         })
 
         local windowTypes = utility.table({count = 0})
-        
-        function windowTypes:SetSize(width, height)
-            topbar.Size = UDim2.new(0, width, 0, height)
-            main.Size = UDim2.new(1, 0, 0, height)
-            topbar.Position = utility.get_center(width, height)
-        end
-        
-        function windowTypes:SetPosition(x, y)
-            topbar.Position = UDim2.new(0, x, 0, y)
-        end
 
         function windowTypes:Show()
             gui.Enabled = true
@@ -794,6 +553,10 @@ function initLibrary()
 
         function windowTypes:Hide()
             gui.Enabled = false
+        end
+
+        function windowTypes:SetPosition(x, y)
+            topbar.Position = UDim2.new(0, x, 0, y)
         end
 
         function windowTypes:Tab(name)
@@ -826,8 +589,7 @@ function initLibrary()
             
             -- КОЛОНКА 1 (верхняя левая)
             local column1 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
-                Position = UDim2.new(0, 0, 0, 0),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
@@ -847,7 +609,7 @@ function initLibrary()
 
             -- КОЛОНКА 2 (верхняя правая)
             local column2 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
@@ -868,7 +630,7 @@ function initLibrary()
             
             -- КОЛОНКА 3 (нижняя левая)
             local column3 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0, 0, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
@@ -889,7 +651,7 @@ function initLibrary()
             
             -- КОЛОНКА 4 (нижняя правая)
             local column4 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0.5, 2, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
@@ -1006,13 +768,6 @@ function initLibrary()
                     sectionHolder.Size = UDim2.new(1, 0, 0, sectionContentList.AbsoluteContentSize.Y + 38)
                 end)
 
-                local sectionData = {
-                    sectionHolder = sectionHolder,
-                    sectionContent = sectionContent,
-                    elements = {}
-                }
-                table.insert(allSections, sectionData)
-
                 local sectionTypes = utility.table()
                 
                 function sectionTypes:GetName()
@@ -1033,20 +788,12 @@ function initLibrary()
                             child:Destroy()
                         end
                     end
-                    sectionData.elements = {}
                 end
                 
                 function sectionTypes:Remove()
                     sectionHolder:Destroy()
-                    for i, data in ipairs(allSections) do
-                        if data == sectionData then
-                            table.remove(allSections, i)
-                            break
-                        end
-                    end
                 end
                 
-                -- LABEL
                 function sectionTypes:Label(text)
                     local label = utility.create("TextLabel", {
                         ZIndex = 3,
@@ -1064,8 +811,6 @@ function initLibrary()
                     })
 
                     local labelTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = label, name = text})
 
                     function labelTypes:Show()
                         label.Visible = true
@@ -1077,368 +822,9 @@ function initLibrary()
 
                     function labelTypes:Set(str)
                         label.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == label then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     return labelTypes
-                end
-                
-                -- TOOLTIP
-                function sectionTypes:Tooltip(text, hoverText)
-                    local tooltipHolder = utility.create("Frame", {
-                        Size = UDim2.new(1, 0, 0, 16),
-                        BackgroundTransparency = 1,
-                        Parent = sectionContent
-                    })
-                    
-                    local tooltipText = utility.create("TextLabel", {
-                        Size = UDim2.new(1, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Text = text,
-                        TextColor3 = selectedTheme.text,
-                        TextSize = 13,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Parent = tooltipHolder
-                    })
-                    
-                    local tooltipPopup = utility.create("Frame", {
-                        Size = UDim2.new(0, 200, 0, 30),
-                        Position = UDim2.new(0, 0, 1, 2),
-                        BackgroundColor3 = selectedTheme.secondary,
-                        BorderColor3 = selectedTheme.border,
-                        Visible = false,
-                        ZIndex = 10,
-                        Parent = tooltipHolder
-                    })
-                    
-                    local tooltipLabel = utility.create("TextLabel", {
-                        Size = UDim2.new(1, -8, 1, -4),
-                        Position = UDim2.new(0, 4, 0, 2),
-                        BackgroundTransparency = 1,
-                        Text = hoverText,
-                        TextColor3 = selectedTheme.text,
-                        TextSize = 11,
-                        Font = Enum.Font.Gotham,
-                        TextWrapped = true,
-                        Parent = tooltipPopup
-                    })
-                    
-                    tooltipText.MouseEnter:Connect(function()
-                        tooltipPopup.Visible = true
-                        local textSize = tooltipLabel.TextBounds.X + 16
-                        tooltipPopup.Size = UDim2.new(0, math.max(100, math.min(300, textSize)), 0, tooltipLabel.TextBounds.Y + 8)
-                    end)
-                    
-                    tooltipText.MouseLeave:Connect(function()
-                        tooltipPopup.Visible = false
-                    end)
-                    
-                    local tooltipTypes = utility.table()
-                    table.insert(sectionData.elements, {element = tooltipHolder, name = text})
-                    
-                    function tooltipTypes:Show()
-                        tooltipHolder.Visible = true
-                    end
-                    
-                    function tooltipTypes:Hide()
-                        tooltipHolder.Visible = false
-                    end
-                    
-                    function tooltipTypes:SetText(newText)
-                        tooltipText.Text = newText
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == tooltipHolder then
-                                elem.name = newText
-                                break
-                            end
-                        end
-                    end
-                    
-                    function tooltipTypes:SetHoverText(newText)
-                        tooltipLabel.Text = newText
-                    end
-                    
-                    return tooltipTypes
-                end
-                
-                -- COUNTER
-                function sectionTypes:Counter(opts)
-                    local options = utility.table(opts)
-                    local name = options.name or "Counter"
-                    local min = options.min or 0
-                    local max = options.max or 100
-                    local default = options.default or 0
-                    local flag = options.flag
-                    local callback = options.callback or function() end
-                    
-                    default = math.clamp(default, min, max)
-                    
-                    if flag then
-                        library.flags[flag] = default
-                    end
-                    
-                    callback(default)
-                    
-                    local counterHolder = utility.create("Frame", {
-                        Size = UDim2.new(1, 0, 0, 28),
-                        BackgroundTransparency = 1,
-                        Parent = sectionContent
-                    })
-                    
-                    local title = utility.create("TextLabel", {
-                        Size = UDim2.new(0.6, -5, 1, 0),
-                        BackgroundTransparency = 1,
-                        Text = name,
-                        TextColor3 = selectedTheme.text,
-                        TextSize = 13,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Parent = counterHolder
-                    })
-                    
-                    local controls = utility.create("Frame", {
-                        Size = UDim2.new(0.4, 0, 1, 0),
-                        Position = UDim2.new(0.6, 5, 0, 0),
-                        BackgroundTransparency = 1,
-                        Parent = counterHolder
-                    })
-                    
-                    local minusButton = utility.create("TextButton", {
-                        Size = UDim2.new(0.3, -2, 1, 0),
-                        BackgroundColor3 = selectedTheme.quaternary,
-                        BorderColor3 = selectedTheme.border,
-                        Text = "-",
-                        TextColor3 = selectedTheme.text,
-                        TextSize = 16,
-                        Font = Enum.Font.GothamBold,
-                        Parent = controls
-                    })
-                    
-                    utility.create("UIGradient", {
-                        Rotation = 90,
-                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
-                        Parent = minusButton
-                    })
-                    
-                    local valueLabel = utility.create("TextLabel", {
-                        Size = UDim2.new(0.4, 0, 1, 0),
-                        Position = UDim2.new(0.3, 2, 0, 0),
-                        BackgroundTransparency = 1,
-                        Text = tostring(default),
-                        TextColor3 = library.color,
-                        TextSize = 13,
-                        Font = Enum.Font.GothamSemibold,
-                        Parent = controls
-                    })
-                    
-                    local plusButton = utility.create("TextButton", {
-                        Size = UDim2.new(0.3, -2, 1, 0),
-                        Position = UDim2.new(0.7, 2, 0, 0),
-                        BackgroundColor3 = selectedTheme.quaternary,
-                        BorderColor3 = selectedTheme.border,
-                        Text = "+",
-                        TextColor3 = selectedTheme.text,
-                        TextSize = 16,
-                        Font = Enum.Font.GothamBold,
-                        Parent = controls
-                    })
-                    
-                    utility.create("UIGradient", {
-                        Rotation = 90,
-                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
-                        Parent = plusButton
-                    })
-                    
-                    local currentValue = default
-                    
-                    local function updateValue(newValue)
-                        currentValue = math.clamp(newValue, min, max)
-                        valueLabel.Text = tostring(currentValue)
-                        
-                        if flag then
-                            library.flags[flag] = currentValue
-                        end
-                        
-                        callback(currentValue)
-                    end
-                    
-                    minusButton.MouseButton1Click:Connect(function()
-                        updateValue(currentValue - 1)
-                    end)
-                    
-                    plusButton.MouseButton1Click:Connect(function()
-                        updateValue(currentValue + 1)
-                    end)
-                    
-                    local counterTypes = utility.table()
-                    table.insert(sectionData.elements, {element = counterHolder, name = name})
-                    
-                    function counterTypes:Show()
-                        counterHolder.Visible = true
-                    end
-                    
-                    function counterTypes:Hide()
-                        counterHolder.Visible = false
-                    end
-                    
-                    function counterTypes:SetName(str)
-                        title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == counterHolder then
-                                elem.name = str
-                                break
-                            end
-                        end
-                    end
-                    
-                    function counterTypes:SetValue(value)
-                        updateValue(value)
-                    end
-                    
-                    function counterTypes:GetValue()
-                        return currentValue
-                    end
-                    
-                    function counterTypes:SetMin(newMin)
-                        min = newMin
-                        updateValue(currentValue)
-                    end
-                    
-                    function counterTypes:SetMax(newMax)
-                        max = newMax
-                        updateValue(currentValue)
-                    end
-                    
-                    if flag then
-                        flags.sliders[flag] = function(value)
-                            counterTypes:SetValue(value)
-                        end
-                    end
-                    
-                    return counterTypes
-                end
-                
-                -- IMAGE
-                function sectionTypes:Image(opts)
-                    local options = utility.table(opts)
-                    local imageUrl = options.url or ""
-                    local sizeX = options.sizeX or 100
-                    local sizeY = options.sizeY or 100
-                    
-                    local imageHolder = utility.create("Frame", {
-                        Size = UDim2.new(0, sizeX, 0, sizeY),
-                        BackgroundTransparency = 1,
-                        Parent = sectionContent
-                    })
-                    
-                    local image = utility.create("ImageLabel", {
-                        Size = UDim2.new(1, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Image = imageUrl,
-                        ScaleType = Enum.ScaleType.Stretch,
-                        Parent = imageHolder
-                    })
-                    
-                    local imageTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = imageHolder, name = "Image"})
-                    
-                    function imageTypes:Show()
-                        imageHolder.Visible = true
-                    end
-                    
-                    function imageTypes:Hide()
-                        imageHolder.Visible = false
-                    end
-                    
-                    function imageTypes:SetUrl(url)
-                        image.Image = url
-                    end
-                    
-                    return imageTypes
-                end
-                
-                -- HYPERLINK
-                function sectionTypes:Hyperlink(opts)
-                    local options = utility.table(opts)
-                    local text = options.text or "Link"
-                    local url = options.url or "https://www.roblox.com"
-                    
-                    local link = utility.create("TextButton", {
-                        ZIndex = 3,
-                        Size = UDim2.new(0, 0, 0, 16),
-                        BackgroundTransparency = 1,
-                        Text = "",
-                        Parent = sectionContent
-                    })
-                    
-                    local linkLabel = utility.create("TextLabel", {
-                        Size = UDim2.new(0, 0, 1, 0),
-                        BackgroundTransparency = 1,
-                        Text = text,
-                        TextColor3 = Color3.fromRGB(0, 150, 255),
-                        TextSize = 13,
-                        Font = Enum.Font.Gotham,
-                        TextXAlignment = Enum.TextXAlignment.Left,
-                        Parent = link
-                    })
-                    
-                    link.Size = UDim2.new(0, linkLabel.TextBounds.X + 2, 0, 16)
-                    
-                    local underline = utility.create("Frame", {
-                        Size = UDim2.new(1, 0, 0, 1),
-                        Position = UDim2.new(0, 0, 1, -2),
-                        BackgroundColor3 = Color3.fromRGB(0, 150, 255),
-                        BackgroundTransparency = 0.5,
-                        Parent = linkLabel
-                    })
-                    
-                    local linkTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = link, name = text})
-                    
-                    link.MouseButton1Click:Connect(function()
-                        if syn and syn.request then
-                            syn.request({
-                                Url = url,
-                                Method = "GET"
-                            })
-                        else
-                            library:Notify({title = "Hyperlink", message = "Opening: " .. url, duration = 2})
-                        end
-                    end)
-                    
-                    function linkTypes:Show()
-                        link.Visible = true
-                    end
-                    
-                    function linkTypes:Hide()
-                        link.Visible = false
-                    end
-                    
-                    function linkTypes:SetText(newText)
-                        text = newText
-                        linkLabel.Text = newText
-                        link.Size = UDim2.new(0, linkLabel.TextBounds.X + 2, 0, 16)
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == link then
-                                elem.name = newText
-                                break
-                            end
-                        end
-                    end
-                    
-                    function linkTypes:SetUrl(newUrl)
-                        url = newUrl
-                    end
-                    
-                    return linkTypes
                 end
 
                 function sectionTypes:SpecialLabel(text)
@@ -1480,8 +866,6 @@ function initLibrary()
                     end)
 
                     local specialLabelTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = specialLabel, name = text})
 
                     function specialLabelTypes:Show()
                         specialLabel.Visible = true
@@ -1493,12 +877,6 @@ function initLibrary()
 
                     function specialLabelTypes:Set(str)
                         specialLabel.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == specialLabel then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     return specialLabelTypes
@@ -1544,8 +922,6 @@ function initLibrary()
                     })
 
                     local buttonTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = button, name = name})
 
                     button.MouseButton1Click:Connect(function()
                         callback(buttonTypes)
@@ -1561,12 +937,6 @@ function initLibrary()
                     
                     function buttonTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == button then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function buttonTypes:SetCallback(func)
@@ -1667,8 +1037,6 @@ function initLibrary()
                     toggle.MouseButton1Click:Connect(toggleToggle)
 
                     local toggleTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = toggle, name = name})
 
                     function toggleTypes:Show()
                         toggle.Visible = true
@@ -1680,12 +1048,6 @@ function initLibrary()
                     
                     function toggleTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == toggle then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function toggleTypes:Toggle(bool)
@@ -1791,8 +1153,6 @@ function initLibrary()
                     end)
 
                     local boxTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = boxHolder, name = name})
 
                     function boxTypes:Show()
                         boxHolder.Visible = true
@@ -1804,12 +1164,6 @@ function initLibrary()
                     
                     function boxTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == boxHolder then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function boxTypes:SetPlaceholder(str)
@@ -1977,8 +1331,6 @@ function initLibrary()
                     end)
 
                     local sliderTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = slider, name = "Slider"})
 
                     function sliderTypes:Show()
                         slider.Visible = true
@@ -2233,8 +1585,6 @@ function initLibrary()
                     end)
 
                     local toggleSliderTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = toggleSliderHolder, name = name})
 
                     function toggleSliderTypes:Show()
                         toggleSliderHolder.Visible = true
@@ -2521,8 +1871,6 @@ function initLibrary()
                     end
 
                     local dropdownTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = dropdownHolder, name = name})
 
                     function dropdownTypes:Show()
                         dropdownHolder.Visible = true
@@ -2534,12 +1882,6 @@ function initLibrary()
 
                     function dropdownTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == dropdownHolder then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function dropdownTypes:Set(opt)
@@ -2983,8 +2325,6 @@ function initLibrary()
                     end)
 
                     local keybindTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = keybind, name = name})
 
                     function keybindTypes:Show()
                         keybind.Visible = true
@@ -2996,12 +2336,6 @@ function initLibrary()
 
                     function keybindTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == keybind then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function keybindTypes:Set(newKey)
@@ -3257,8 +2591,6 @@ function initLibrary()
                     
                     local toggleKeybindTypes = utility.table()
                     
-                    table.insert(sectionData.elements, {element = toggleKeybind, name = name})
-                    
                     function toggleKeybindTypes:Show()
                         toggleKeybind.Visible = true
                     end
@@ -3269,12 +2601,6 @@ function initLibrary()
                     
                     function toggleKeybindTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == toggleKeybind then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function toggleKeybindTypes:Toggle(bool)
@@ -3601,8 +2927,6 @@ function initLibrary()
                     end)
 
                     local colorPickerTypes = utility.table()
-                    
-                    table.insert(sectionData.elements, {element = colorPickerHolder, name = name})
 
                     function colorPickerTypes:Show()
                         colorPickerHolder.Visible = true
@@ -3614,12 +2938,6 @@ function initLibrary()
                     
                     function colorPickerTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == colorPickerHolder then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function colorPickerTypes:SetRGB(color)
@@ -4038,8 +3356,6 @@ function initLibrary()
                     
                     local toggleColorPickerTypes = utility.table()
                     
-                    table.insert(sectionData.elements, {element = toggleColorPickerHolder, name = name})
-                    
                     function toggleColorPickerTypes:Show()
                         toggleColorPickerHolder.Visible = true
                     end
@@ -4050,12 +3366,6 @@ function initLibrary()
                     
                     function toggleColorPickerTypes:SetName(str)
                         title.Text = str
-                        for _, elem in ipairs(sectionData.elements) do
-                            if elem.element == toggleColorPickerHolder then
-                                elem.name = str
-                                break
-                            end
-                        end
                     end
 
                     function toggleColorPickerTypes:Toggle(bool)

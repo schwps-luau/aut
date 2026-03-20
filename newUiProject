@@ -1,488 +1,3456 @@
 --[[
-    ONIXAR MINECRAFT UI (на основе LinoriaLib + Vape ui lib)
-    Полностью готовый дизайн под Night DLC / Vape
-]]
+Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
+Yun Devs: zomb#7741, nives#0001, loot#1337
+Special Thanks To: Qw#1549
+--]]
+function initLibrary()
+    local folderName = "config holder"
+    local gameConfigFolder = "cfgs"
 
-local Library = {}
-local GUI = Instance.new("ScreenGui")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 
-GUI.Name = "OnixarMinecraftUI"
-GUI.Parent = game:GetService("CoreGui")
+    if not isfolder(gameConfigFolder) then
+        makefolder(gameConfigFolder)
+    end
 
--- Защита для Synapse/Executor'ов
-if syn and syn.protect_gui then
-    syn.protect_gui(GUI)
-end
 
--- Основные цвета
-local Colors = {
-    Background = Color3.fromRGB(0, 0, 0),
-    Second = Color3.fromRGB(10, 10, 10),
-    Third = Color3.fromRGB(20, 20, 20),
-    Accent = Color3.fromRGB(255, 170, 0),  -- Майнкрафт-жёлтый
-    Text = Color3.fromRGB(255, 255, 255),
-    TextDisabled = Color3.fromRGB(120, 120, 120),
-    Border = Color3.fromRGB(40, 40, 40)
-}
+    local inputService = game:GetService("UserInputService")
+    local tweenService = game:GetService("TweenService")
+    local runService = game:GetService("RunService")
+    local coreGui = game:GetService("CoreGui")
 
--- ============================================================
--- ОСНОВНАЯ ФУНКЦИЯ СОЗДАНИЯ ОКНА
--- ============================================================
-function Library:CreateWindow(config)
-    config = config or {}
-    local name = config.name or "ONIXAR"
-    local width = config.width or 260
-    local height = config.height or 400
-    
-    -- Затемнение фона (полупрозрачное)
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.new(0, 0, 0)
-    bg.BackgroundTransparency = 0.5
-    bg.Parent = GUI
-    
-    -- Главное окно
-    local Window = Instance.new("Frame")
-    Window.Size = UDim2.new(0, width, 0, height)
-    Window.Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
-    Window.BackgroundColor3 = Colors.Background
-    Window.BackgroundTransparency = 0.15
-    Window.BorderSizePixel = 2
-    Window.BorderColor3 = Colors.Accent
-    Window.Parent = GUI
-    
-    -- Скругление углов
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 8)
-    UICorner.Parent = Window
-    
-    -- Заголовок
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 35)
-    Title.BackgroundTransparency = 1
-    Title.Text = name
-    Title.TextColor3 = Colors.Accent
-    Title.TextSize = 20
-    Title.Font = Enum.Font.SourceSansBold
-    Title.Parent = Window
-    
-    -- Контейнер для табов (левая панель)
-    local TabContainer = Instance.new("Frame")
-    TabContainer.Size = UDim2.new(0, 50, 1, -40)
-    TabContainer.Position = UDim2.new(0, 5, 0, 35)
-    TabContainer.BackgroundTransparency = 1
-    TabContainer.Parent = Window
-    
-    -- Контейнер для контента (правая часть)
-    local ContentContainer = Instance.new("ScrollingFrame")
-    ContentContainer.Size = UDim2.new(1, -65, 1, -45)
-    ContentContainer.Position = UDim2.new(0, 60, 0, 40)
-    ContentContainer.BackgroundTransparency = 1
-    ContentContainer.BorderSizePixel = 0
-    ContentContainer.ScrollBarThickness = 4
-    ContentContainer.ScrollBarImageColor3 = Colors.Accent
-    ContentContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    ContentContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    ContentContainer.Parent = Window
-    
-    local ContentList = Instance.new("UIListLayout")
-    ContentList.Parent = ContentContainer
-    ContentList.SortOrder = Enum.SortOrder.LayoutOrder
-    ContentList.Padding = UDim.new(0, 4)
-    
-    -- Перетаскивание окна
-    local Dragging = false
-    local DragInput
-    local DragStart
-    local StartPos
-    
-    Title.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            Dragging = true
-            DragStart = input.Position
-            StartPos = Window.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    Dragging = false
-                end
+
+    local utility = {}
+
+
+    function utility.create(class, properties)
+        properties = properties or {}
+
+
+        local obj = Instance.new(class)
+
+
+        local forcedProperties = {
+            AutoButtonColor = false
+        }
+
+
+        for prop, v in next, properties do
+            obj[prop] = v
+        end
+
+
+        for prop, v in next, forcedProperties do
+            pcall(function()
+                obj[prop] = v
             end)
         end
-    end)
-    
-    Title.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            DragInput = input
+        
+        return obj
+    end
+
+
+    function utility.change_color(color, amount)
+        local r = math.clamp(math.floor(color.r * 255) + amount, 0, 255)
+        local g = math.clamp(math.floor(color.g * 255) + amount, 0, 255)
+        local b = math.clamp(math.floor(color.b * 255) + amount, 0, 255)
+
+
+        return Color3.fromRGB(r, g, b)
+    end
+
+
+    function utility.get_rgb(color)
+        local r = math.floor(color.r * 255)
+        local g = math.floor(color.g * 255)
+        local b = math.floor(color.b * 255)
+
+
+        return r, g, b
+    end
+
+
+    function utility.tween(obj, info, properties, callback)
+        local anim = tweenService:Create(obj, TweenInfo.new(unpack(info)), properties)
+        anim:Play()
+
+
+        if callback then
+            anim.Completed:Connect(callback)
         end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == DragInput and Dragging then
-            local delta = input.Position - DragStart
-            Window.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
-        end
-    end)
-    
-    -- API для окна
-    local WindowAPI = {}
-    local Tabs = {}
-    
-    -- ============================================================
-    -- ДОБАВЛЕНИЕ ТАБА
-    -- ============================================================
-    function WindowAPI:Tab(name)
-        local TabButton = Instance.new("TextButton")
-        TabButton.Size = UDim2.new(1, 0, 0, 35)
-        TabButton.Position = UDim2.new(0, 0, 0, (#Tabs * 40))
-        TabButton.BackgroundTransparency = 1
-        TabButton.Text = name
-        TabButton.TextColor3 = Colors.TextDisabled
-        TabButton.TextSize = 14
-        TabButton.Font = Enum.Font.SourceSansBold
-        TabButton.Parent = TabContainer
-        
-        local TabContent = Instance.new("Frame")
-        TabContent.Size = UDim2.new(1, 0, 1, 0)
-        TabContent.BackgroundTransparency = 1
-        TabContent.Visible = (#Tabs == 0)
-        TabContent.Parent = ContentContainer
-        
-        local TabList = Instance.new("UIListLayout")
-        TabList.Parent = TabContent
-        TabList.SortOrder = Enum.SortOrder.LayoutOrder
-        TabList.Padding = UDim.new(0, 4)
-        
-        local TabAPI = {Content = TabContent}
-        
-        TabButton.MouseButton1Click:Connect(function()
-            for _, btn in ipairs(TabContainer:GetChildren()) do
-                if btn:IsA("TextButton") then
-                    btn.TextColor3 = Colors.TextDisabled
-                end
+    end
+
+
+    function utility.drag(obj, dragSpeed)
+        local start, objPosition, dragging
+
+
+        obj.InputBegan:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                dragging = true
+                start = input.Position
+                objPosition = obj.Position
             end
-            TabButton.TextColor3 = Colors.Accent
-            
-            for _, content in ipairs(ContentContainer:GetChildren()) do
-                if content:IsA("Frame") then
-                    content.Visible = false
-                end
-            end
-            TabContent.Visible = true
         end)
-        
-        table.insert(Tabs, TabButton)
-        
-        -- ============================================================
-        -- ТОГГЛ (ПРОСТО ТЕКСТ)
-        -- ============================================================
-        function TabAPI:Toggle(config)
-            config = config or {}
-            local text = config.text or "Toggle"
-            local callback = config.callback or function() end
-            local default = config.default or false
-            
-            local enabled = default
-            
-            local Frame = Instance.new("Frame")
-            Frame.Size = UDim2.new(1, 0, 0, 30)
-            Frame.BackgroundTransparency = 1
-            Frame.Parent = TabContent
-            
-            local UICorner = Instance.new("UICorner")
-            UICorner.CornerRadius = UDim.new(0, 8)
-            UICorner.Parent = Frame
-            
-            local Button = Instance.new("TextButton")
-            Button.Size = UDim2.new(1, 0, 1, 0)
-            Button.BackgroundTransparency = 1
-            Button.Text = ""
-            Button.Parent = Frame
-            
-            local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(1, -10, 1, 0)
-            Label.Position = UDim2.new(0, 5, 0, 0)
-            Label.BackgroundTransparency = 1
-            Label.Text = text
-            Label.TextColor3 = enabled and Colors.Text or Colors.TextDisabled
-            Label.TextSize = 18
-            Label.Font = Enum.Font.SourceSans
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = Frame
-            
-            Button.MouseButton1Click:Connect(function()
-                enabled = not enabled
-                Label.TextColor3 = enabled and Colors.Text or Colors.TextDisabled
-                callback(enabled)
-            end)
-            
-            Button.MouseEnter:Connect(function()
-                Frame.BackgroundColor3 = Colors.Third
-            end)
-            
-            Button.MouseLeave:Connect(function()
-                Frame.BackgroundColor3 = Color3.new(0, 0, 0)
-            end)
-            
-            local Obj = {}
-            function Obj:Set(state)
-                enabled = state
-                Label.TextColor3 = enabled and Colors.Text or Colors.TextDisabled
-                callback(enabled)
+
+
+        obj.InputEnded:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                dragging = false
             end
-            return Obj
+        end)
+
+
+        inputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+              if dragging == true then
+                utility.tween(obj, {dragSpeed}, {Position = UDim2.new(objPosition.X.Scale, objPosition.X.Offset + (input.Position - start).X, objPosition.Y.Scale, objPosition.Y.Offset + (input.Position - start).Y)})
+              end
+            end
+        end)
+    end
+
+
+    function utility.get_center(sizeX, sizeY)
+        return UDim2.new(0.5, -(sizeX / 2), 0.5, -(sizeY / 2))
+    end
+
+
+    function utility.hex_to_rgb(hex)
+        return Color3.fromRGB(tonumber("0x" .. hex:sub(2, 3)), tonumber("0x" .. hex:sub(4, 5)), tonumber("0x"..hex:sub(6, 7)))
+    end
+
+
+    function utility.rgb_to_hex(color)
+        return string.format("#%02X%02X%02X", math.clamp(color.R * 255, 0, 255), math.clamp(color.G * 255, 0, 255), math.clamp(color.B * 255, 0, 255))
+    end
+
+
+    function utility.table(tbl)
+        local oldtbl = tbl or {}
+        local newtbl = {}
+        local formattedtbl = {}
+
+
+        for option, v in next, oldtbl do
+            newtbl[option:lower()] = v
         end
-        
-        -- ============================================================
-        -- СЛАЙДЕР
-        -- ============================================================
-        function TabAPI:Slider(config)
-            config = config or {}
-            local text = config.text or "Slider"
-            local min = config.min or 0
-            local max = config.max or 100
-            local default = config.default or 0
-            local suffix = config.suffix or ""
-            local callback = config.callback or function() end
-            
-            local value = default
-            local dragging = false
-            
-            local Frame = Instance.new("Frame")
-            Frame.Size = UDim2.new(1, 0, 0, 45)
-            Frame.BackgroundTransparency = 1
-            Frame.Parent = TabContent
-            
-            local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(1, -10, 0, 20)
-            Label.Position = UDim2.new(0, 5, 0, 0)
-            Label.BackgroundTransparency = 1
-            Label.Text = text
-            Label.TextColor3 = Colors.Text
-            Label.TextSize = 18
-            Label.Font = Enum.Font.SourceSans
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = Frame
-            
-            local ValueLabel = Instance.new("TextLabel")
-            ValueLabel.Size = UDim2.new(1, -10, 0, 20)
-            ValueLabel.BackgroundTransparency = 1
-            ValueLabel.Text = tostring(value) .. suffix
-            ValueLabel.TextColor3 = Colors.Accent
-            ValueLabel.TextSize = 18
-            ValueLabel.Font = Enum.Font.SourceSansBold
-            ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-            ValueLabel.Parent = Frame
-            
-            local SliderFrame = Instance.new("Frame")
-            SliderFrame.Size = UDim2.new(1, -10, 0, 5)
-            SliderFrame.Position = UDim2.new(0, 5, 0, 25)
-            SliderFrame.BackgroundColor3 = Colors.Third
-            SliderFrame.Parent = Frame
-            
-            local SliderCorner = Instance.new("UICorner")
-            SliderCorner.CornerRadius = UDim.new(0, 3)
-            SliderCorner.Parent = SliderFrame
-            
-            local Fill = Instance.new("Frame")
-            Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-            Fill.BackgroundColor3 = Colors.Accent
-            Fill.Parent = SliderFrame
-            
-            local FillCorner = Instance.new("UICorner")
-            FillCorner.CornerRadius = UDim.new(0, 3)
-            FillCorner.Parent = Fill
-            
-            local function update(posX)
-                local rel = (posX - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X
-                rel = math.clamp(rel, 0, 1)
-                Fill.Size = UDim2.new(rel, 0, 1, 0)
-                value = math.floor((min + (max - min) * rel) * 10) / 10
-                ValueLabel.Text = tostring(value) .. suffix
-                callback(value)
+
+
+        setmetatable(formattedtbl, {
+            __newindex = function(t, k, v)
+                rawset(newtbl, k:lower(), v)
+            end,
+            __index = function(t, k, v)
+                return newtbl[k:lower()]
             end
-            
-            SliderFrame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = true
-                    update(input.Position.X)
-                end
-            end)
-            
-            SliderFrame.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = false
-                end
-            end)
-            
-            UserInputService.InputChanged:Connect(function(input)
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    update(input.Position.X)
-                end
-            end)
-            
-            local Obj = {}
-            function Obj:Set(val)
-                val = math.clamp(val, min, max)
-                value = math.floor(val * 10) / 10
-                Fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-                ValueLabel.Text = tostring(value) .. suffix
-                callback(value)
-            end
-            return Obj
-        end
-        
-        -- ============================================================
-        -- ДРОПДАУН
-        -- ============================================================
-        function TabAPI:Dropdown(config)
-            config = config or {}
-            local text = config.text or "Dropdown"
-            local items = config.items or {}
-            local default = config.default or items[1]
-            local callback = config.callback or function() end
-            
-            local selected = default
-            local opened = false
-            
-            local Frame = Instance.new("Frame")
-            Frame.Size = UDim2.new(1, 0, 0, 30)
-            Frame.BackgroundTransparency = 1
-            Frame.Parent = TabContent
-            
-            local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(0.5, -5, 1, 0)
-            Label.Position = UDim2.new(0, 5, 0, 0)
-            Label.BackgroundTransparency = 1
-            Label.Text = text
-            Label.TextColor3 = Colors.Text
-            Label.TextSize = 18
-            Label.Font = Enum.Font.SourceSans
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = Frame
-            
-            local DropButton = Instance.new("TextButton")
-            DropButton.Size = UDim2.new(0.5, -5, 0, 26)
-            DropButton.Position = UDim2.new(0.5, 0, 0.5, -13)
-            DropButton.BackgroundColor3 = Colors.Third
-            DropButton.Text = selected
-            DropButton.TextColor3 = Colors.Text
-            DropButton.TextSize = 16
-            DropButton.Font = Enum.Font.SourceSans
-            DropButton.Parent = Frame
-            
-            local ButtonCorner = Instance.new("UICorner")
-            ButtonCorner.CornerRadius = UDim.new(0, 8)
-            ButtonCorner.Parent = DropButton
-            
-            local Arrow = Instance.new("TextLabel")
-            Arrow.Size = UDim2.new(0, 20, 1, 0)
-            Arrow.Position = UDim2.new(1, -20, 0, 0)
-            Arrow.BackgroundTransparency = 1
-            Arrow.Text = "▼"
-            Arrow.TextColor3 = Colors.Accent
-            Arrow.TextSize = 14
-            Arrow.Font = Enum.Font.SourceSansBold
-            Arrow.Parent = DropButton
-            
-            local DropContainer = Instance.new("Frame")
-            DropContainer.Size = UDim2.new(0.5, -5, 0, 0)
-            DropContainer.Position = UDim2.new(0.5, 0, 1, 2)
-            DropContainer.BackgroundColor3 = Colors.Second
-            DropContainer.BorderSizePixel = 1
-            DropContainer.BorderColor3 = Colors.Border
-            DropContainer.ClipsDescendants = true
-            DropContainer.Visible = false
-            DropContainer.ZIndex = 10
-            DropContainer.Parent = Frame
-            
-            local ContainerCorner = Instance.new("UICorner")
-            ContainerCorner.CornerRadius = UDim.new(0, 8)
-            ContainerCorner.Parent = DropContainer
-            
-            local DropList = Instance.new("UIListLayout")
-            DropList.Parent = DropContainer
-            DropList.SortOrder = Enum.SortOrder.LayoutOrder
-            DropList.Padding = UDim.new(0, 2)
-            
-            DropButton.MouseButton1Click:Connect(function()
-                opened = not opened
-                DropContainer.Visible = opened
-                Arrow.Text = opened and "▲" or "▼"
-                if opened then
-                    DropContainer.Size = UDim2.new(0.5, -5, 0, #items * 28)
-                else
-                    DropContainer.Size = UDim2.new(0.5, -5, 0, 0)
-                end
-            end)
-            
-            for _, item in ipairs(items) do
-                local ItemButton = Instance.new("TextButton")
-                ItemButton.Size = UDim2.new(1, 0, 0, 26)
-                ItemButton.BackgroundTransparency = 1
-                ItemButton.Text = item
-                ItemButton.TextColor3 = Colors.TextDisabled
-                ItemButton.TextSize = 16
-                ItemButton.Font = Enum.Font.SourceSans
-                ItemButton.ZIndex = 11
-                ItemButton.Parent = DropContainer
-                
-                ItemButton.MouseButton1Click:Connect(function()
-                    selected = item
-                    DropButton.Text = selected
-                    opened = false
-                    DropContainer.Visible = false
-                    Arrow.Text = "▼"
-                    DropContainer.Size = UDim2.new(0.5, -5, 0, 0)
-                    callback(selected)
-                end)
-                
-                ItemButton.MouseEnter:Connect(function()
-                    ItemButton.TextColor3 = Colors.Text
-                    ItemButton.BackgroundTransparency = 0.9
-                end)
-                
-                ItemButton.MouseLeave:Connect(function()
-                    ItemButton.TextColor3 = Colors.TextDisabled
-                    ItemButton.BackgroundTransparency = 1
-                end)
-            end
-            
-            local Obj = {}
-            function Obj:Set(value)
-                if table.find(items, value) then
-                    selected = value
-                    DropButton.Text = selected
-                    callback(selected)
-                end
-            end
-            return Obj
-        end
-        
-        return TabAPI
+        })
+
+
+        return formattedtbl
+    end
+
+
+    local library = utility.table{
+        flags = {}, 
+        toggled = true,
+        color = Color3.fromRGB(255, 0, 0),
+        keybind = Enum.KeyCode.RightShift, 
+        dragSpeed = 0.25
+    }    
+
+
+    local coloredGradients = {}
+
+
+    function library:SetColor(color)
+     library.color = color
     end
     
-    return WindowAPI
+    function library:SetKey(key)
+     library.keybind = key
+    end
+   
+
+    local gui = utility.create("ScreenGui")
+
+
+    inputService.InputBegan:Connect(function(input)
+        if input.KeyCode == library.keybind then
+            library.toggled = not library.toggled
+            gui.Enabled = library.toggled
+        end
+    end)
+   
+    if syn and syn.protect_gui then
+        syn.protect_gui(gui)
+    end
+
+
+    gui.Parent = coreGui
+
+
+    local flags = {toggles = {}, boxes = {}, sliders = {}, dropdowns = {}, multidropdowns = {}, keybinds = {}, colorpickers = {}}
+
+
+    function library:LoadConfig(file)
+        local str = readfile(gameConfigFolder .. "/" .. file .. ".cfg")
+        local tbl = loadstring(str)()
+        
+        for flag, value in next, tbl.toggles do
+            flags.toggles[flag](value)
+        end
+
+
+        for flag, value in next, tbl.boxes do
+            flags.boxes[flag](value)
+        end
+
+
+        for flag, value in next, tbl.sliders do
+            flags.sliders[flag](value)
+        end
+
+
+        for flag, value in next, tbl.dropdowns do
+            flags.dropdowns[flag](value)
+        end
+
+
+        for flag, value in next, tbl.multidropdowns do
+            flags.multidropdowns[flag](value)
+        end
+
+
+        for flag, value in next, tbl.keybinds do
+            flags.keybinds[flag](value)
+        end
+
+
+        for flag, value in next, tbl.colorpickers do
+            flags.colorpickers[flag](value)
+        end
+    end
+
+
+    function library:SaveConfig(name)
+        local configstr = "{toggles={"
+        local count = 0
+
+
+        for flag, _ in next, flags.toggles do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},boxes={"
+
+
+        count = 0
+        for flag, _ in next, flags.boxes do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},sliders={"
+
+
+        count = 0
+        for flag, _ in next, flags.sliders do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},dropdowns={"
+
+
+        count = 0
+        for flag, _ in next, flags.dropdowns do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']='" .. tostring(library.flags[flag]) .. "',"
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},multidropdowns={"
+
+
+        count = 0
+        for flag, _ in next, flags.multidropdowns do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']={'" .. table.concat(library.flags[flag], "','") .. "'},"
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},keybinds={"
+
+
+        count = 0
+        for flag, _ in next, flags.keybinds do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=" .. tostring(library.flags[flag]) .. ","
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "},colorpickers={"
+
+
+        count = 0
+        for flag, _ in next, flags.colorpickers do
+            count = count + 1
+            configstr = configstr .. "['" .. flag .. "']=Color3.new(" .. tostring(library.flags[flag]) .. "),"
+        end
+
+
+        configstr = (count > 0 and configstr:sub(1, -2) or configstr) .. "}}"
+
+
+        writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
+    end
+
+    function library:Load(opts)
+        local options = utility.table(opts)
+        local name = options.name or "Epic UI Library"
+        local sizeX = options.sizeX or 466
+        local sizeY = options.sizeY or 350
+        local color = options.color or Color3.fromRGB(128, 128, 128)
+        local dragSpeed = options.dragSpeed or 0
+        local theme = options.theme or "dark"
+
+        local themeColors = {
+            dark = Color3.fromRGB(128, 128, 128),      
+            light = Color3.fromRGB(240, 240, 240),     
+            blue = Color3.fromRGB(30, 50, 90),          
+            ["light blue"] = Color3.fromRGB(200, 220, 240), 
+            red = Color3.fromRGB(90, 30, 30),          
+            ["light red"] = Color3.fromRGB(250, 220, 220),
+            purple = Color3.fromRGB(60, 30, 90),       
+            ["light purple"] = Color3.fromRGB(230, 210, 250), 
+            green = Color3.fromRGB(30, 70, 30),         
+            ["light green"] = Color3.fromRGB(210, 240, 210) 
+        }
+
+        if color == Color3.fromRGB(128, 128, 128) and theme:lower() ~= "dark" then
+            color = themeColors[theme:lower()] or color
+        end
+
+        local themes = {
+            dark = {
+                background = Color3.fromRGB(22, 22, 22),
+                secondary = Color3.fromRGB(32, 32, 32),
+                tertiary = Color3.fromRGB(26, 26, 26),
+                quaternary = Color3.fromRGB(28, 28, 28),
+                quinary = Color3.fromRGB(22, 22, 22),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(180, 180, 180),
+                border = Color3.fromRGB(20, 20, 20),
+                gradient1 = Color3.fromRGB(32, 32, 32),
+                gradient2 = Color3.fromRGB(17, 17, 17),
+                dropdown = Color3.fromRGB(33, 33, 33),
+                picker = Color3.fromRGB(20, 20, 20)
+            },
+            light = {
+                background = Color3.fromRGB(240, 240, 240),
+                secondary = Color3.fromRGB(255, 255, 255),
+                tertiary = Color3.fromRGB(230, 230, 230),
+                quaternary = Color3.fromRGB(250, 250, 250),
+                quinary = Color3.fromRGB(240, 240, 240),
+                text = Color3.fromRGB(0, 0, 0),
+                textSecondary = Color3.fromRGB(80, 80, 80),
+                border = Color3.fromRGB(200, 200, 200),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(220, 220, 220),
+                dropdown = Color3.fromRGB(245, 245, 245),
+                picker = Color3.fromRGB(255, 255, 255)
+            },
+            blue = {
+                background = Color3.fromRGB(10, 20, 40),
+                secondary = Color3.fromRGB(20, 35, 60),
+                tertiary = Color3.fromRGB(15, 30, 50),
+                quaternary = Color3.fromRGB(25, 40, 70),
+                quinary = Color3.fromRGB(10, 25, 45),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(180, 200, 255),
+                border = Color3.fromRGB(30, 50, 90),
+                gradient1 = Color3.fromRGB(25, 45, 80),
+                gradient2 = Color3.fromRGB(10, 25, 50),
+                dropdown = Color3.fromRGB(30, 45, 75),
+                picker = Color3.fromRGB(20, 35, 65)
+            },
+            ["light blue"] = {
+                background = Color3.fromRGB(200, 220, 240),
+                secondary = Color3.fromRGB(220, 235, 250),
+                tertiary = Color3.fromRGB(210, 225, 245),
+                quaternary = Color3.fromRGB(230, 240, 255),
+                quinary = Color3.fromRGB(200, 220, 240),
+                text = Color3.fromRGB(0, 20, 40),
+                textSecondary = Color3.fromRGB(40, 80, 120),
+                border = Color3.fromRGB(150, 180, 210),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(200, 220, 240),
+                dropdown = Color3.fromRGB(210, 225, 245),
+                picker = Color3.fromRGB(220, 235, 250)
+            },
+            red = {
+                background = Color3.fromRGB(40, 10, 10),
+                secondary = Color3.fromRGB(60, 20, 20),
+                tertiary = Color3.fromRGB(50, 15, 15),
+                quaternary = Color3.fromRGB(70, 25, 25),
+                quinary = Color3.fromRGB(45, 10, 10),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(255, 180, 180),
+                border = Color3.fromRGB(90, 30, 30),
+                gradient1 = Color3.fromRGB(80, 25, 25),
+                gradient2 = Color3.fromRGB(50, 10, 10),
+                dropdown = Color3.fromRGB(70, 25, 25),
+                picker = Color3.fromRGB(60, 20, 20)
+            },
+            ["light red"] = {
+                background = Color3.fromRGB(250, 220, 220),
+                secondary = Color3.fromRGB(255, 235, 235),
+                tertiary = Color3.fromRGB(245, 225, 225),
+                quaternary = Color3.fromRGB(255, 240, 240),
+                quinary = Color3.fromRGB(250, 220, 220),
+                text = Color3.fromRGB(80, 0, 0),
+                textSecondary = Color3.fromRGB(150, 60, 60),
+                border = Color3.fromRGB(210, 150, 150),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(250, 220, 220),
+                dropdown = Color3.fromRGB(245, 225, 225),
+                picker = Color3.fromRGB(255, 235, 235)
+            },
+            purple = {
+                background = Color3.fromRGB(30, 10, 40),
+                secondary = Color3.fromRGB(45, 20, 60),
+                tertiary = Color3.fromRGB(35, 15, 50),
+                quaternary = Color3.fromRGB(50, 25, 70),
+                quinary = Color3.fromRGB(30, 15, 45),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(220, 180, 255),
+                border = Color3.fromRGB(60, 30, 90),
+                gradient1 = Color3.fromRGB(55, 25, 80),
+                gradient2 = Color3.fromRGB(30, 10, 50),
+                dropdown = Color3.fromRGB(50, 25, 70),
+                picker = Color3.fromRGB(40, 20, 60)
+            },
+            ["light purple"] = {
+                background = Color3.fromRGB(230, 210, 250),
+                secondary = Color3.fromRGB(245, 225, 255),
+                tertiary = Color3.fromRGB(235, 215, 250),
+                quaternary = Color3.fromRGB(250, 235, 255),
+                quinary = Color3.fromRGB(230, 210, 245),
+                text = Color3.fromRGB(40, 10, 60),
+                textSecondary = Color3.fromRGB(100, 50, 140),
+                border = Color3.fromRGB(180, 140, 210),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(230, 210, 245),
+                dropdown = Color3.fromRGB(235, 215, 250),
+                picker = Color3.fromRGB(245, 225, 255)
+            },
+            green = {
+                background = Color3.fromRGB(10, 30, 10),
+                secondary = Color3.fromRGB(20, 45, 20),
+                tertiary = Color3.fromRGB(15, 35, 15),
+                quaternary = Color3.fromRGB(25, 50, 25),
+                quinary = Color3.fromRGB(10, 30, 10),
+                text = Color3.fromRGB(255, 255, 255),
+                textSecondary = Color3.fromRGB(180, 255, 180),
+                border = Color3.fromRGB(30, 70, 30),
+                gradient1 = Color3.fromRGB(25, 60, 25),
+                gradient2 = Color3.fromRGB(10, 40, 10),
+                dropdown = Color3.fromRGB(25, 55, 25),
+                picker = Color3.fromRGB(20, 45, 20)
+            },
+            ["light green"] = {
+                background = Color3.fromRGB(210, 240, 210),
+                secondary = Color3.fromRGB(225, 250, 225),
+                tertiary = Color3.fromRGB(215, 240, 215),
+                quaternary = Color3.fromRGB(235, 255, 235),
+                quinary = Color3.fromRGB(210, 240, 210),
+                text = Color3.fromRGB(0, 40, 0),
+                textSecondary = Color3.fromRGB(40, 100, 40),
+                border = Color3.fromRGB(150, 200, 150),
+                gradient1 = Color3.fromRGB(255, 255, 255),
+                gradient2 = Color3.fromRGB(210, 240, 210),
+                dropdown = Color3.fromRGB(215, 240, 215),
+                picker = Color3.fromRGB(225, 250, 225)
+            }
+        }
+        
+        local selectedTheme = themes[theme:lower()] or themes.dark
+        library.color = color
+
+        -- Создание основного окна
+        local topbar = utility.create("Frame", {
+            ZIndex = 2,
+            Size = UDim2.new(0, sizeX, 0, 26),
+            Position = utility.get_center(sizeX, sizeY),
+            BorderSizePixel = 0,
+            BackgroundColor3 = selectedTheme.background,
+            Parent = gui
+        })
+
+        utility.drag(topbar, dragSpeed)
+
+        utility.create("TextLabel", {
+            ZIndex = 3,
+            Size = UDim2.new(0, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 8, 0, 0),
+            FontSize = Enum.FontSize.Size14,
+            TextSize = 14,
+            TextColor3 = selectedTheme.text,
+            Text = name,
+            Font = Enum.Font.GothamSemibold,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = topbar
+        })
+        
+        local main = utility.create("Frame", {
+            Size = UDim2.new(1, 0, 0, sizeY),
+            BorderColor3 = selectedTheme.border,
+            BackgroundColor3 = selectedTheme.secondary,
+            Parent = topbar
+        })
+
+        local tabs = utility.create("Frame", {
+            ZIndex = 2,
+            Size = UDim2.new(1, -8, 1, -64),
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 4, 0, 58),
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            Parent = main
+        })
+        
+        local tabToggles = utility.create("Frame", {
+            ZIndex = 2,
+            Size = UDim2.new(1, 0, 0, 26),
+            BorderColor3 = selectedTheme.border,
+            Position = UDim2.new(0, 0, 0, 26),
+            BackgroundColor3 = selectedTheme.tertiary,
+            Parent = main
+        })
+
+        local tabTogglesHolder = utility.create("Frame", {
+            Size = UDim2.new(1, -12, 1, 0),
+            Position = UDim2.new(0, 6, 0, 0),
+            Parent = tabToggles
+        })
+
+        utility.create("UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 4),
+            Parent = tabTogglesHolder
+        })
+
+        local windowTypes = utility.table({count = 0})
+
+        function windowTypes:Show()
+            gui.Enabled = true
+        end
+
+        function windowTypes:Hide()
+            gui.Enabled = false
+        end
+
+        function windowTypes:Tab(name)
+            windowTypes.count = windowTypes.count + 1
+            name = name or "Tab"
+
+            local toggled = windowTypes.count == 1
+
+            local tabToggle = utility.create("TextButton", {
+                ZIndex = 3,
+                BackgroundTransparency = 1,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                FontSize = Enum.FontSize.Size14,
+                TextSize = 14,
+                TextColor3 = selectedTheme.text,
+                Text = name,
+                Font = toggled and Enum.Font.GothamSemibold or Enum.Font.Gotham,
+                Parent = tabTogglesHolder
+            })
+            
+            tabToggle.Size = UDim2.new(0, tabToggle.TextBounds.X + 12, 1, 0)
+
+            local tab = utility.create("Frame", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                Visible = toggled,
+                Parent = tabs
+            })
+            
+            -- Создаем контейнер для сетки 2x2
+            local gridContainer = utility.create("Frame", {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                Parent = tab
+            })
+            
+            -- Колонка 1 (верхняя левая)
+            local column1 = utility.create("ScrollingFrame", {
+                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Position = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
+                Parent = gridContainer
+            })
+
+            local column1List = utility.create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 6),
+                Parent = column1
+            })
+
+            column1List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
+            end)
+
+            -- Колонка 2 (верхняя правая)
+            local column2 = utility.create("ScrollingFrame", {
+                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Position = UDim2.new(0.5, 2, 0, 0),
+                BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
+                Parent = gridContainer
+            })
+
+            local column2List = utility.create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 6),
+                Parent = column2
+            })
+
+            column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
+            end)
+
+            -- Колонка 3 (нижняя левая, под первой)
+            local column3 = utility.create("ScrollingFrame", {
+                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Position = UDim2.new(0, 0, 0.5, 2),
+                BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
+                Parent = gridContainer
+            })
+
+            local column3List = utility.create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 6),
+                Parent = column3
+            })
+
+            column3List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
+            end)
+
+            -- Колонка 4 (нижняя правая, под второй)
+            local column4 = utility.create("ScrollingFrame", {
+                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Position = UDim2.new(0.5, 2, 0.5, 2),
+                BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0),
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
+                Parent = gridContainer
+            })
+
+            local column4List = utility.create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 6),
+                Parent = column4
+            })
+
+            column4List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
+            end)
+
+            local function openTab()
+                for _, obj in next, tabTogglesHolder:GetChildren() do
+                    if obj:IsA("TextButton") then
+                        obj.Font = Enum.Font.Gotham
+                    end
+                end
+
+                tabToggle.Font = Enum.Font.GothamSemibold
+
+                for _, obj in next, tabs:GetChildren() do
+                    obj.Visible = false
+                end
+
+                tab.Visible = true
+            end
+
+            tabToggle.MouseButton1Click:Connect(openTab)
+
+            local tabTypes = utility.table()
+
+            function tabTypes:Open()
+                openTab()
+            end
+        
+            function tabTypes:Section(opts)
+                local options = utility.table(opts)
+                local name = options.name or "Section"
+                local column = options.column or 1
+                
+                local columnFrame
+                if column == 1 then
+                    columnFrame = column1
+                elseif column == 2 then
+                    columnFrame = column2
+                elseif column == 3 then
+                    columnFrame = column3
+                elseif column == 4 then
+                    columnFrame = column4
+                else
+                    columnFrame = column1
+                end
+                
+                local sectionHolder = utility.create("Frame", {
+                    Size = UDim2.new(1, 0, 0, 26),
+                    BackgroundTransparency = 1,
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    Parent = columnFrame
+                })
+                
+                local section = utility.create("Frame", {
+                    ZIndex = 2,
+                    Size = UDim2.new(1, -2, 1, -2),
+                    BorderColor3 = selectedTheme.background,
+                    Position = UDim2.new(0, 1, 0, 1),
+                    BackgroundColor3 = selectedTheme.quaternary,
+                    Parent = sectionHolder
+                })
+                
+                local sectionTopbar = utility.create("Frame", {
+                    ZIndex = 3,
+                    Size = UDim2.new(1, 0, 0, 24),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = selectedTheme.quinary,
+                    Parent = section
+                })
+
+                utility.create("TextLabel", {
+                    ZIndex = 3,
+                    Size = UDim2.new(0, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0, 8, 0, 0),
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                    FontSize = Enum.FontSize.Size14,
+                    TextSize = 13,
+                    TextColor3 = selectedTheme.text,
+                    Text = name,
+                    Font = Enum.Font.GothamSemibold,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = sectionTopbar
+                })
+
+                local sectionContent = utility.create("Frame", {
+                    Size = UDim2.new(1, -12, 1, -36),
+                    Position = UDim2.new(0, 6, 0, 30),
+                    BackgroundTransparency = 1,
+                    Parent = section
+                })
+                
+                local sectionContentList = utility.create("UIListLayout", {
+                    SortOrder = Enum.SortOrder.LayoutOrder,
+                    Padding = UDim.new(0, 6),
+                    Parent = sectionContent
+                })
+
+                sectionContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                    sectionHolder.Size = UDim2.new(1, 0, 0, sectionContentList.AbsoluteContentSize.Y + 38)
+                end)
+
+                local sectionTypes = utility.table()
+                function sectionTypes:Label(text)
+                    local label = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 0, 14),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 8, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        Text = text,
+                        TextColor3 = selectedTheme.text,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = sectionContent
+                    })
+
+                    local labelTypes = utility.table()
+
+                    function labelTypes:Show()
+                        label.Visible = true
+                    end
+
+                    function labelTypes:Hide()
+                        label.Visible = false
+                    end
+
+                    function labelTypes:Set(str)
+                        label.Text = str
+                    end
+
+                    return labelTypes
+                end
+
+                function sectionTypes:SpecialLabel(text)
+                    local specialLabel = utility.create("TextLabel", {
+                        ZIndex = 5,
+                        Size = UDim2.new(1, 0, 0, 14),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 8, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        Text = text,
+                        TextColor3 = selectedTheme.text,
+                        Font = Enum.Font.Gotham,
+                        Parent = sectionContent
+                    })
+
+                    utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(1, 0, 0, 1),
+                        Position = UDim2.new(0, 0, 0.5, 1),
+                        BorderSizePixel = 0,
+                        BackgroundColor3 = selectedTheme.textSecondary,
+                        Parent = specialLabel
+                    })
+                    
+                    local lineBlock = utility.create("Frame", {
+                        ZIndex = 4,
+                        Size = UDim2.new(0, specialLabel.TextBounds.X + 6, 0, 1),
+                        Position = UDim2.new(0.5, -((specialLabel.TextBounds.X + 6) / 2), 0.5, 1),
+                        BorderSizePixel = 0,
+                        BackgroundColor3 = selectedTheme.quaternary,
+                        Parent = specialLabel
+                    })
+
+                    specialLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+                        lineBlock.Size = UDim2.new(0, specialLabel.TextBounds.X + 6, 0, 1)
+                        lineBlock.Position = UDim2.new(0.5, -((specialLabel.TextBounds.X + 6) / 2), 0.5, 1)
+                    end)
+
+                    local specialLabelTypes = utility.table()
+
+                    function specialLabelTypes:Show()
+                        specialLabel.Visible = true
+                    end
+
+                    function specialLabelTypes:Hide()
+                        specialLabel.Visible = false
+                    end
+
+                    function specialLabelTypes:Set(str)
+                        specialLabel.Text = str
+                    end
+
+                    return specialLabelTypes
+                end
+
+                function sectionTypes:Button(opts)
+                    local options = utility.table(opts)
+                    local name = options.name
+                    local callback = options.callback
+
+                    local button = utility.create("TextButton", {
+                        ZIndex = 3,
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BorderColor3 = selectedTheme.background,
+                        Font = Enum.Font.Gotham,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Text = "",
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = sectionContent
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, selectedTheme.gradient1), 
+                            ColorSequenceKeypoint.new(1, selectedTheme.gradient2)
+                        },
+                        Parent = button
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 4,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 8, 0, 0),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.text,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = button
+                    })
+
+                    local buttonTypes = utility.table()
+
+                    button.MouseButton1Click:Connect(function()
+                        callback(buttonTypes)
+                    end)
+
+                    function buttonTypes:Show()
+                        button.Visible = true
+                    end
+                    
+                    function buttonTypes:Hide()
+                        button.Visible = false
+                    end
+                    
+                    function buttonTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function buttonTypes:SetCallback(func)
+                        callback = func
+                    end
+                    
+                    return buttonTypes
+                end
+
+                function sectionTypes:Toggle(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Toggle"
+                    local flag = options.flag 
+                    local callback = options.callback or function() end
+
+                    local toggled = false
+
+                    if flag then
+                        library.flags[flag] = toggled
+                    end
+
+                    callback(toggled)
+
+                    local toggle = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = sectionContent
+                    })
+                    
+                    local icon = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 14, 1, -2),
+                        BorderColor3 = Color3.fromRGB(37, 37, 37),
+                        Position = UDim2.new(0, 0, 0, 1),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = toggle
+                    })
+
+                    local iconGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, selectedTheme.gradient1), 
+                            ColorSequenceKeypoint.new(1, selectedTheme.gradient2)
+                        },
+                        Parent = icon
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, 7, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.textSecondary,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = icon
+                    })
+
+                    local function toggleToggle()
+                        toggled = not toggled
+
+                        if toggled then
+                            table.insert(coloredGradients, iconGradient)
+                        else
+                            table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
+                        end
+
+                        local textColor = toggled and selectedTheme.text or selectedTheme.textSecondary
+                        local gradientColor
+                        if toggled then
+                            gradientColor = ColorSequence.new{
+                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                            }
+                        else
+                            gradientColor = ColorSequence.new{
+                                ColorSequenceKeypoint.new(0, selectedTheme.gradient1), 
+                                ColorSequenceKeypoint.new(1, selectedTheme.gradient2)
+                            }
+                        end
+
+                        iconGradient.Color = gradientColor
+                        title.TextColor3 = textColor
+
+                        if flag then
+                            library.flags[flag] = toggled
+                        end
+
+                        callback(toggled)
+                    end
+
+                    toggle.MouseButton1Click:Connect(toggleToggle)
+
+                    local toggleTypes = utility.table()
+
+                    function toggleTypes:Show()
+                        toggle.Visible = true
+                    end
+                    
+                    function toggleTypes:Hide()
+                        toggle.Visible = false
+                    end
+                    
+                    function toggleTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function toggleTypes:Toggle(bool)
+                        if toggled ~= bool then
+                            toggleToggle()
+                        end
+                    end
+
+                    if flag then
+                        flags.toggles[flag] = function(bool)
+                            if toggled ~= bool then
+                                toggleToggle()
+                            end
+                        end
+                    end
+
+                    return toggleTypes
+                end
+
+                function sectionTypes:Box(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Box"
+                    local placeholder = options.placeholder or "Box"
+                    local default = options.default or ""
+                    local boxType = options.type or "string"
+                    local flag = options.flag
+                    local callback = options.callback or function() end
+
+                    boxType = boxType:lower()
+
+                    if boxType == "number" then
+                        default = default:gsub("%D+", "")
+
+                        if flag then
+                            library.flags[flag] = tonumber(default)
+                        end
+        
+                        callback(tonumber(default))
+                    else
+                        if flag then
+                            library.flags[flag] = default
+                        end
+
+                        callback(default)
+                    end
+
+                    local boxHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 36),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = sectionContent
+                    })
+                    
+                    local box = utility.create("TextBox", {
+                        ZIndex = 4,
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 0, 1, -16),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = default,
+                        Font = Enum.Font.Gotham,
+                        PlaceholderText = placeholder,
+                        Parent = boxHolder
+                    })
+
+                    local bg = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 0, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = box
+                    })
+
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = bg
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.text,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = boxHolder
+                    })
+
+                    box:GetPropertyChangedSignal("Text"):Connect(function()
+                        if boxType == "number" then
+                            box.Text = box.Text:gsub("%D+", "")
+                        end
+                    end)
+
+                    local boxTypes = utility.table()
+
+                    function boxTypes:Show()
+                        boxHolder.Visible = true
+                    end
+                    
+                    function boxTypes:Hide()
+                        boxHolder.Visible = false
+                    end
+                    
+                    function boxTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function boxTypes:SetPlaceholder(str)
+                        box.PlaceholderText = str
+                    end
+
+                    function boxTypes:Set(str)
+                        if boxType == "string" then
+                            box.Text = str
+
+                            if flag then
+                                library.flags[flag] = str
+                            end
+
+                            callback(str)
+                        else
+                            str = str:gsub("%D+", "")
+                            box.Text = str
+
+                            if flag then
+                                library.flags[flag] = str
+                            end
+
+                            callback(tonumber(str))
+                        end
+                    end
+
+                    box.FocusLost:Connect(function()
+                        boxTypes:Set(box.Text)
+                    end)
+
+                    function boxTypes:SetType(str)
+                        if str:lower() == "number" or str:lower() == "string" then
+                            boxType = str:lower()
+                        end
+                    end
+
+                    if flag then
+                        flags.boxes[flag] = function(str)
+                            if boxType == "string" then
+                                box.Text = str
+
+                                if flag then
+                                    library.flags[flag] = str
+                                end
+
+                                callback(str)
+                            else
+                                str = str:gsub("%D+", "")
+                                box.Text = str
+
+                                if flag then
+                                    library.flags[flag] = str
+                                end
+
+                                callback(tonumber(str))
+                            end
+                        end
+                    end
+
+                    return boxTypes
+                end
+                function sectionTypes:Slider(opts)
+                    local options = utility.table(opts)
+                    local min = options.min or 0
+                    local max = options.max or 100
+                    local valueText = options.valueText or "Slider: [VALUE]/" .. tostring(max)
+                    local default = options.default or math.clamp(0, min, max)
+                    local decimals = options.decimals or 0.1
+                    local flag = options.flag
+                    local callback = options.callback or function() end
+
+                    decimals = math.floor(10^decimals)
+
+                    if flag then
+                        library.flags[flag] = default
+                    end
+
+                    callback(default)
+
+                    local value = default
+                    local sliding = false
+
+                    local slider = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 0, 1, -13),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = sectionContent
+                    })
+                    
+                    local fill = utility.create("Frame", {
+                        ZIndex = 4,
+                        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
+                        BorderSizePixel = 0,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = slider
+                    })
+                    
+                    local fillGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, library.color), 
+                            ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                        },
+                        Parent = fill
+                    })
+
+                    table.insert(coloredGradients, fillGradient)
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = slider
+                    })
+
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 5,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = valueText:gsub("%[VALUE%]", tostring(default)),
+                        Font = Enum.Font.Gotham,
+                        Parent = slider
+                    })
+
+                    local function slide(input)
+                        local sizeX = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+                        fill.Size = UDim2.new(sizeX, 0, 1, 0)
+
+                        value = math.floor((((max - min) * sizeX) + min) * decimals) / decimals
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+
+                        if flag then 
+                            library.flags[flag] = value
+                        end
+
+                        callback(value)
+                    end
+
+                    slider.InputBegan:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            sliding = true
+                            slide(input)
+                        end
+                    end)
+
+                    slider.InputEnded:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            sliding = false
+                        end
+                    end)
+
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                            if sliding then
+                                slide(input)
+                            end
+                        end
+                    end)
+
+                    local sliderTypes = utility.table()
+
+                    function sliderTypes:Show()
+                        slider.Visible = true
+                    end
+
+                    function sliderTypes:Hide()
+                        slider.Visible = false
+                    end
+
+                    function sliderTypes:SetValueText(str)
+                        valueText = str
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+                    end
+
+                    function sliderTypes:Set(num)
+                        num = math.floor(math.clamp(num, min, max) * decimals) / decimals
+                        value = num
+                        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                        
+                        if flag then 
+                            library.flags[flag] = value
+                        end
+
+                        callback(value)
+                    end
+
+                    function sliderTypes:SetMin(num)
+                        min = num
+                        value = math.floor(math.clamp(value, min, max) * decimals) / decimals
+                        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+
+                        if flag then 
+                            library.flags[flag] = value
+                        end
+
+                        callback(value)
+                    end
+
+                    function sliderTypes:SetMax(num)
+                        max = num
+                        value = math.floor(math.clamp(value, min, max) * decimals) / decimals
+                        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+
+                        if flag then 
+                            library.flags[flag] = value
+                        end
+
+                        callback(value)
+                    end
+
+                    if flag then
+                        flags.sliders[flag] = function(num)
+                            sliderTypes:Set(num)
+                        end
+                    end
+
+                    return sliderTypes
+                end
+
+                function sectionTypes:ToggleSlider(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Toggle Slider"
+                    local min = options.min or 0
+                    local max = options.max or 100
+                    local valueText = options.valueText or "Toggle Slider: [VALUE]/" .. tostring(max)
+                    local default = options.default or math.clamp(0, min, max)
+                    local decimals = options.decimals or 0
+                    local toggleFlag = options.toggleFlag
+                    local sliderFlag = options.sliderFlag
+                    local toggleCallback = options.toggleCallback or function() end
+                    local sliderCallback = options.sliderCallback or function() end
+
+                    decimals = math.floor(10^decimals)
+
+                    local value = default
+                    local toggled = false
+                    local sliding = false
+
+                    if sliderFlag then
+                        library.flags[sliderFlag] = default
+                    end
+
+                    sliderCallback(default)
+
+                    if toggleFlag then
+                        library.flags[toggleFlag] = toggled
+                    end
+
+                    toggleCallback(toggled)
+
+                    local toggleSliderHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 35),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = sectionContent
+                    })
+                    
+                    local slider = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 0, 1, -16),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = toggleSliderHolder
+                    })
+                    
+                    local fill = utility.create("Frame", {
+                        ZIndex = 4,
+                        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
+                        BorderSizePixel = 0,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = slider
+                    })
+                    
+                    local fillGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, library.color), 
+                            ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                        },
+                        Parent = fill
+                    })
+
+                    table.insert(coloredGradients, fillGradient)
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = slider
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 5,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = valueText:gsub("%[VALUE%]", tostring(default)),
+                        Font = Enum.Font.Gotham,
+                        Parent = slider
+                    })
+
+                    local toggle = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 14,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = toggleSliderHolder
+                    })
+                    
+                    local icon = utility.create("TextButton", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 14, 1, -2),
+                        BorderColor3 = Color3.fromRGB(37, 37, 37),
+                        Position = UDim2.new(0, 0, 0, 1),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Text = "",
+                        Parent = toggle
+                    })
+                    
+                    local iconGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = icon
+                    })
+                    
+                    local toggleTitle = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, 7, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.textSecondary,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = icon
+                    })
+
+                    local function toggleToggle()
+                        toggled = not toggled
+
+                        if toggled then
+                            table.insert(coloredGradients, iconGradient)
+                        else
+                            table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
+                        end
+
+                        local textColor = toggled and selectedTheme.text or selectedTheme.textSecondary
+                        local gradientColor
+                        if toggled then
+                            gradientColor = ColorSequence.new{
+                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                            }
+                        else
+                            gradientColor = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2)
+                        end
+
+                        iconGradient.Color = gradientColor
+                        toggleTitle.TextColor3 = textColor
+
+                        if toggleFlag then
+                            library.flags[toggleFlag] = toggled
+                        end
+
+                        toggleCallback(toggled)
+                    end
+
+                    toggle.MouseButton1Click:Connect(toggleToggle)
+
+                    local function slide(input)
+                        local sizeX = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+                        fill.Size = UDim2.new(sizeX, 0, 1, 0)
+
+                        value = math.floor((((max - min) * sizeX) + min) * decimals) / decimals
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+
+                        if sliderFlag then 
+                            library.flags[sliderFlag] = value
+                        end
+
+                        sliderCallback(value)
+                    end
+
+                    slider.InputBegan:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            sliding = true
+                            slide(input)
+                        end
+                    end)
+
+                    slider.InputEnded:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            sliding = false
+                        end
+                    end)
+
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                            if sliding then
+                                slide(input)
+                            end
+                        end
+                    end)
+
+                    local toggleSliderTypes = utility.table()
+
+                    function toggleSliderTypes:Show()
+                        toggleSliderHolder.Visible = true
+                    end
+
+                    function toggleSliderTypes:Hide()
+                        toggleSliderHolder.Visible = false
+                    end
+
+                    function toggleSliderTypes:SetValueText(str)
+                        valueText = str
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+                    end
+
+                    function toggleSliderTypes:Set(num)
+                        num = math.floor(math.clamp(num, min, max) * decimals) / decimals
+                        value = num
+                        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+                        
+                        if sliderFlag then 
+                            library.flags[sliderFlag] = value
+                        end
+
+                        sliderCallback(value)
+                    end
+
+                    function toggleSliderTypes:SetMin(num)
+                        min = num
+                        value = math.floor(math.clamp(value, min, max) * decimals) / decimals
+                        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+
+                        if sliderFlag then 
+                            library.flags[sliderFlag] = value
+                        end
+
+                        sliderCallback(value)
+                    end
+
+                    function toggleSliderTypes:SetMax(num)
+                        max = num
+                        value = math.floor(math.clamp(value, min, max) * decimals) / decimals
+                        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+                        title.Text = valueText:gsub("%[VALUE%]", tostring(value))
+
+                        if sliderFlag then 
+                            library.flags[sliderFlag] = value
+                        end
+
+                        sliderCallback(value)
+                    end
+
+                    function toggleSliderTypes:Toggle(bool)
+                        if toggled ~= bool then
+                            toggleToggle()
+                        end
+                    end
+
+                    if toggleFlag then
+                        flags.toggles[toggleFlag] = function(bool)
+                            if toggled ~= bool then
+                                toggleToggle()
+                            end
+                        end
+                    end
+
+                    if sliderFlag then
+                        flags.sliders[sliderFlag] = function(num)
+                            toggleSliderTypes:Set(num)
+                        end
+                    end
+
+                    return toggleSliderTypes
+                end
+
+                function sectionTypes:Dropdown(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Dropdown"
+                    local content = options.content or {}
+                    local multiChoice = options.multiChoice or false
+                    local default = (options.default and table.find(content, options.default)) or (multiChoice and {} or nil)
+                    local flag = options.flag
+                    local callback = options.callback or function() end
+
+                    if flag then
+                        library.flags[flag] = default
+                    end
+                    callback(default)
+
+                    local opened = false
+                    local current = default
+                    local chosen = {}
+
+                    local dropdownHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 36),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = sectionContent
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.text,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = dropdownHolder
+                    })
+                    
+                    local open = utility.create("TextButton", {
+                        ZIndex = 3,
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 0, 0, 20),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Text = "",
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = dropdownHolder
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = open
+                    })
+                    
+                    local value = utility.create("TextLabel", {
+                        ZIndex = 4,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 8, 0, 0),
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = (multiChoice and (#default > 0 and selectedTheme.text or selectedTheme.textSecondary)) or (default and selectedTheme.text or selectedTheme.textSecondary),
+                        Text = multiChoice and (#default > 0 and table.concat(default, ", ") or "NONE") or (default or "NONE"),
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = open
+                    })
+                    
+                    local icon = utility.create("ImageLabel", {
+                        ZIndex = 4,
+                        Size = UDim2.new(0, 14, 0, 14),
+                        Rotation = 180,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, -16, 0, 1),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Image = "http://www.roblox.com/asset/?id=8747047318",
+                        Parent = open
+                    })
+                    
+                    local contentFrame = utility.create("Frame", {
+                        ZIndex = 10,
+                        Visible = false,
+                        Size = UDim2.new(1, 0, 0, 0),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 0, 1, 3),
+                        BackgroundColor3 = selectedTheme.dropdown,
+                        Parent = open
+                    })
+                    
+                    local contentHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 1, -4),
+                        Position = UDim2.new(0, 0, 0, 2),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = contentFrame
+                    })
+
+                    local contentList = utility.create("UIListLayout", {
+                        SortOrder = Enum.SortOrder.LayoutOrder,
+                        Parent = contentHolder
+                    })
+
+                    contentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                        contentFrame.Size = UDim2.new(1, 0, 0, contentList.AbsoluteContentSize.Y + 4)
+                    end)
+
+                    local function openDropdown()
+                        opened = not opened
+                        icon.Rotation = opened and 0 or 180
+                        contentFrame.Visible = opened
+                        dropdownHolder.Size = UDim2.new(1, 0, 0, opened and dropdownHolder.AbsoluteSize.Y + contentFrame.AbsoluteSize.Y + 3 or 36)
+                    end
+
+                    local function selectObj(obj, padding, bool)
+                        for i, v in next, contentHolder:GetChildren() do
+                            if v:IsA("TextButton") then
+                                v:FindFirstChildOfClass("UIPadding").PaddingLeft = UDim.new(0, 6)
+                                v.Font = Enum.Font.Gotham
+                            end
+                        end
+
+                        obj.Font = bool and Enum.Font.GothamSemibold or Enum.Font.Gotham
+                        padding.PaddingLeft = bool and UDim.new(0, 10) or UDim.new(0, 6)
+                        value.TextColor3 = bool and selectedTheme.text or selectedTheme.textSecondary
+                    end
+
+                    local function multiSelectObj(obj, padding, bool)
+                        obj.Font = bool and Enum.Font.GothamSemibold or Enum.Font.Gotham
+                        padding.PaddingLeft = bool and UDim.new(0, 10) or UDim.new(0, 6)
+                    end
+                    
+                    open.MouseButton1Click:Connect(openDropdown)
+
+                    for _, opt in next, content do
+                        local option = utility.create("TextButton", {
+                            Name = opt,
+                            ZIndex = 11,
+                            Size = UDim2.new(1, 0, 0, 14),
+                            BackgroundTransparency = 1,
+                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                            FontSize = Enum.FontSize.Size12,
+                            TextSize = 12,
+                            TextColor3 = selectedTheme.text,
+                            Text = tostring(opt),
+                            Font = current == opt and Enum.Font.GothamSemibold or Enum.Font.Gotham,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                            Parent = contentHolder
+                        })
+                        
+                        local optionPadding = utility.create("UIPadding", {
+                            PaddingLeft = current == opt and UDim.new(0, 10) or UDim.new(0, 6),
+                            Parent = option
+                        })
+
+                        option.MouseButton1Click:Connect(function()
+                            if not multiChoice then
+                                if current ~= opt then
+                                    current = opt
+                                    selectObj(option, optionPadding, true)
+                                    value.Text = opt
+                                    
+                                    if flag then
+                                        library.flags[flag] = opt
+                                    end
+
+                                    callback(opt)
+                                else
+                                    current = nil
+                                    selectObj(option, optionPadding, false)
+                                    value.Text = "NONE"
+
+                                    if flag then
+                                        library.flags[flag] = nil
+                                    end
+
+                                    callback(nil)
+                                end
+                            else
+                                if not table.find(chosen, opt) then
+                                    table.insert(chosen, opt)
+
+                                    multiSelectObj(option, optionPadding, true)
+                                    value.TextColor3 = selectedTheme.text
+                                    value.Text = table.concat(chosen, ", ")
+                                    
+                                    if flag then
+                                        library.flags[flag] = chosen
+                                    end
+
+                                    callback(chosen)
+                                else
+                                    table.remove(chosen, table.find(chosen, opt))
+
+                                    multiSelectObj(option, optionPadding, false)
+                                    value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
+                                    value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
+
+                                    if flag then
+                                        library.flags[flag] = chosen
+                                    end
+
+                                    callback(chosen)
+                                end
+                            end
+                        end)
+                    end
+
+                    local dropdownTypes = utility.table()
+
+                    function dropdownTypes:Show()
+                        dropdownHolder.Visible = true
+                    end
+
+                    function dropdownTypes:Hide()
+                        dropdownHolder.Visible = false
+                    end
+
+                    function dropdownTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function dropdownTypes:Set(opt)
+                        if opt then
+                            if typeof(opt) == "string" then
+                                if table.find(content, opt) then
+                                    if not multiChoice then
+                                        current = opt
+                                        selectObj(contentHolder:FindFirstChild(opt), contentHolder:FindFirstChild(opt):FindFirstChildOfClass("UIPadding"), true)
+                                        value.Text = opt
+                                        
+                                        if flag then
+                                            library.flags[flag] = opt
+                                        end
+
+                                        callback(opt)
+                                    else
+                                        table.insert(chosen, opt)
+
+                                        multiSelectObj(contentHolder:FindFirstChild(opt), contentHolder:FindFirstChild(opt):FindFirstChildOfClass("UIPadding"), true)
+                                        value.TextColor3 = selectedTheme.text
+                                        value.Text = table.concat(chosen, ", ")
+                                        
+                                        if flag then
+                                            library.flags[flag] = chosen
+                                        end
+
+                                        callback(chosen)
+                                    end
+                                end
+                            elseif multiChoice then
+                                table.clear(chosen)
+                                chosen = opt
+
+                                for i, v in next, opt do
+                                    if contentHolder:FindFirstChild(v) then
+                                        multiSelectObj(contentHolder:FindFirstChild(v), contentHolder:FindFirstChild(v):FindFirstChildOfClass("UIPadding"), true)
+
+                                        value.TextColor3 = selectedTheme.text
+                                        value.Text = table.concat(chosen, ", ")
+                                    end
+                                end
+                            end
+                        else
+                            if not multiChoice then
+                                current = nil
+
+                                for i, v in next, contentHolder:GetChildren() do
+                                    if v:IsA("TextButton") then
+                                        v:FindFirstChildOfClass("UIPadding").PaddingLeft = UDim.new(0, 6)
+                                        v.Font = Enum.Font.Gotham
+                                    end
+                                end
+
+                                value.Text = "NONE"
+                                value.TextColor3 = selectedTheme.textSecondary
+
+                                if flag then
+                                    library.flags[flag] = nil
+                                end
+
+                                callback(nil)
+                            elseif multiChoice then
+                                table.clear(chosen)
+
+                                for i, v in next, contentHolder:GetChildren() do
+                                    if v:IsA("TextButton") then
+                                        v:FindFirstChildOfClass("UIPadding").PaddingLeft = UDim.new(0, 6)
+                                        v.Font = Enum.Font.GothamSemiBold
+                                    end
+                                end
+
+                                value.TextColor3 = selectedTheme.textSecondary
+                                value.Text = "NONE"
+
+                                if flag then
+                                    library.flags[flag] = chosen
+                                end
+
+                                callback(chosen)
+                            end
+                        end
+                    end
+
+                    function dropdownTypes:Add(opt)
+                        table.insert(content, opt)
+
+                        local option = utility.create("TextButton", {
+                            Name = opt,
+                            ZIndex = 11,
+                            Size = UDim2.new(1, 0, 0, 14),
+                            BackgroundTransparency = 1,
+                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                            FontSize = Enum.FontSize.Size12,
+                            TextSize = 12,
+                            TextColor3 = selectedTheme.text,
+                            Text = tostring(opt),
+                            Font = current == opt and Enum.Font.GothamSemibold or Enum.Font.Gotham,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                            Parent = contentHolder
+                        })
+                        
+                        local optionPadding = utility.create("UIPadding", {
+                            PaddingLeft = current == opt and UDim.new(0, 10) or UDim.new(0, 6),
+                            Parent = option
+                        })
+
+                        option.MouseButton1Click:Connect(function()
+                            if not multiChoice then
+                                if current ~= opt then
+                                    current = opt
+                                    selectObj(option, optionPadding, true)
+                                    value.Text = opt
+                                    
+                                    if flag then
+                                        library.flags[flag] = opt
+                                    end
+
+                                    callback(opt)
+                                else
+                                    current = nil
+                                    selectObj(option, optionPadding, false)
+                                    value.Text = "NONE"
+
+                                    if flag then
+                                        library.flags[flag] = nil
+                                    end
+
+                                    callback(nil)
+                                end
+                            else
+                                if not table.find(chosen, opt) then
+                                    table.insert(chosen, opt)
+
+                                    multiSelectObj(option, optionPadding, true)
+                                    value.TextColor3 = selectedTheme.text
+                                    value.Text = table.concat(chosen, ", ")
+                                    
+                                    if flag then
+                                        library.flags[flag] = chosen
+                                    end
+
+                                    callback(chosen)
+                                else
+                                    table.remove(chosen, table.find(chosen, opt))
+
+                                    multiSelectObj(option, optionPadding, false)
+                                    value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
+                                    value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
+
+                                    if flag then
+                                        library.flags[flag] = chosen
+                                    end
+
+                                    callback(chosen)
+                                end
+                            end
+                        end)
+                    end
+
+                    function dropdownTypes:Remove(opt)
+                        if table.find(content, opt) then
+                            if not multiChoice then
+                                if current == opt then
+                                    dropdownTypes:Set(nil)
+                                end
+
+                                if contentHolder:FindFirstChild(opt) then
+                                    contentHolder:FindFirstChild(opt):Destroy()
+                                end
+                            else
+                                if table.find(chosen, opt) then
+                                    table.remove(chosen, table.find(chosen, opt))
+                                    value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
+                                    value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
+                                end
+
+                                if contentHolder:FindFirstChild(opt) then
+                                    contentHolder:FindFirstChild(opt):Destroy()
+                                end
+                            end
+                        end
+                    end
+
+                    function dropdownTypes:Refresh(tbl)
+                        content = tbl
+                        for _, opt in next, contentHolder:GetChildren() do
+                            if opt:IsA("TextButton") then
+                                opt:Destroy()
+                            end
+                        end
+
+                        dropdownTypes:Set(nil)
+
+                        for _, opt in next, content do
+                            local option = utility.create("TextButton", {
+                                Name = opt,
+                                ZIndex = 11,
+                                Size = UDim2.new(1, 0, 0, 14),
+                                BackgroundTransparency = 1,
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                FontSize = Enum.FontSize.Size12,
+                                TextSize = 12,
+                                TextColor3 = selectedTheme.text,
+                                Text = tostring(opt),
+                                Font = current == opt and Enum.Font.GothamSemibold or Enum.Font.Gotham,
+                                TextXAlignment = Enum.TextXAlignment.Left,
+                                Parent = contentHolder
+                            })
+                            
+                            local optionPadding = utility.create("UIPadding", {
+                                PaddingLeft = current == opt and UDim.new(0, 10) or UDim.new(0, 6),
+                                Parent = option
+                            })
+        
+                            option.MouseButton1Click:Connect(function()
+                                if not multiChoice then
+                                    if current ~= opt then
+                                        current = opt
+                                        selectObj(option, optionPadding, true)
+                                        value.Text = opt
+                                        
+                                        if flag then
+                                            library.flags[flag] = opt
+                                        end
+        
+                                        callback(opt)
+                                    else
+                                        current = nil
+                                        selectObj(option, optionPadding, false)
+                                        value.Text = "NONE"
+        
+                                        if flag then
+                                            library.flags[flag] = nil
+                                        end
+        
+                                        callback(nil)
+                                    end
+                                else
+                                    if not table.find(chosen, opt) then
+                                        table.insert(chosen, opt)
+        
+                                        multiSelectObj(option, optionPadding, true)
+                                        value.TextColor3 = selectedTheme.text
+                                        value.Text = table.concat(chosen, ", ")
+                                        
+                                        if flag then
+                                            library.flags[flag] = chosen
+                                        end
+        
+                                        callback(chosen)
+                                    else
+                                        table.remove(chosen, table.find(chosen, opt))
+        
+                                        multiSelectObj(option, optionPadding, false)
+                                        value.TextColor3 = #chosen > 0 and selectedTheme.text or selectedTheme.textSecondary
+                                        value.Text = #chosen > 0 and table.concat(chosen, ", ") or "NONE"
+        
+                                        if flag then
+                                            library.flags[flag] = chosen
+                                        end
+        
+                                        callback(chosen)
+                                    end
+                                end
+                            end)
+                        end
+                    end
+
+                    if flag then
+                        if not multiChoice then
+                            flags.dropdowns[flag] = function(opt)
+                                dropdownTypes:Set(opt)
+                            end
+                        else
+                            flags.multidropdowns[flag] = function(opt)
+                                dropdownTypes:Set(opt)
+                            end
+                        end
+                    end
+
+                    return dropdownTypes
+                end
+                function sectionTypes:Keybind(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Keybind"
+                    local default = options.default
+                    local blacklist = options.blacklist or {}
+                    local flag = options.flag
+                    local callback = options.callback or function() end
+
+                    if flag then
+                        library.flags[flag] = default
+                    end
+
+                    local keys = {
+                        [Enum.KeyCode.LeftShift] = "LeftShift";
+                        [Enum.KeyCode.RightShift] = "RightShift";
+                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
+                        [Enum.KeyCode.RightControl] = "RightCtrl";
+                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
+                        [Enum.KeyCode.RightAlt] = "RightAlt";
+                        [Enum.KeyCode.CapsLock] = "CapsLock";
+                        [Enum.KeyCode.One] = "1";
+                        [Enum.KeyCode.Two] = "2";
+                        [Enum.KeyCode.Three] = "3";
+                        [Enum.KeyCode.Four] = "4";
+                        [Enum.KeyCode.Five] = "5";
+                        [Enum.KeyCode.Six] = "6";
+                        [Enum.KeyCode.Seven] = "7";
+                        [Enum.KeyCode.Eight] = "8";
+                        [Enum.KeyCode.Nine] = "9";
+                        [Enum.KeyCode.Zero] = "0";
+                        [Enum.KeyCode.KeypadOne] = "N1";
+                        [Enum.KeyCode.KeypadTwo] = "N2";
+                        [Enum.KeyCode.KeypadThree] = "N3";
+                        [Enum.KeyCode.KeypadFour] = "N4";
+                        [Enum.KeyCode.KeypadFive] = "N5";
+                        [Enum.KeyCode.KeypadSix] = "N6";
+                        [Enum.KeyCode.KeypadSeven] = "N7";
+                        [Enum.KeyCode.KeypadEight] = "N8";
+                        [Enum.KeyCode.KeypadNine] = "N9";
+                        [Enum.KeyCode.KeypadZero] = "N0";
+                        [Enum.KeyCode.Minus] = "-";
+                        [Enum.KeyCode.Equals] = "=";
+                        [Enum.KeyCode.Tilde] = "~";
+                        [Enum.KeyCode.LeftBracket] = "[";
+                        [Enum.KeyCode.RightBracket] = "]";
+                        [Enum.KeyCode.RightParenthesis] = ")";
+                        [Enum.KeyCode.LeftParenthesis] = "(";
+                        [Enum.KeyCode.Semicolon] = ";";
+                        [Enum.KeyCode.Quote] = "'";
+                        [Enum.KeyCode.BackSlash] = "\\";
+                        [Enum.KeyCode.Comma] = ";";
+                        [Enum.KeyCode.Period] = ".";
+                        [Enum.KeyCode.Slash] = "/";
+                        [Enum.KeyCode.Asterisk] = "*";
+                        [Enum.KeyCode.Plus] = "+";
+                        [Enum.KeyCode.Period] = ".";
+                        [Enum.KeyCode.Backquote] = "`";
+                        [Enum.UserInputType.MouseButton1] = "Mouse1";
+                        [Enum.UserInputType.MouseButton2] = "Mouse2";
+                        [Enum.UserInputType.MouseButton3] = "Mouse3";
+                        [Enum.UserInputType.MouseWheel] = "MouseWheel";
+                    }
+
+                    local keyChosen = default
+
+                    local keybind = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 14,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = sectionContent
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.text,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = keybind
+                    })
+                    
+                    local value = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, 0, 0, 0),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.textSecondary,
+                        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Right,
+                        Parent = keybind
+                    })
+
+                    keybind.MouseButton1Click:Connect(function()
+                        value.Text = "..."
+                        value.TextColor3 = selectedTheme.text
+
+                        local binding
+                        binding = inputService.InputBegan:Connect(function(input)
+                            local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+                            value.Text = keyString
+                            value.TextColor3 = selectedTheme.textSecondary
+
+                            if input.UserInputType == Enum.UserInputType.Keyboard then
+                                if not table.find(blacklist, input.KeyCode) then
+                                    keyChosen = input.KeyCode
+                                    if flag then library.flags[flag] = input.KeyCode end
+                                    binding:Disconnect()
+                                else
+                                    keyChosen = nil
+                                    value.Text = "NONE"
+                                    if flag then library.flags[flag] = nil end
+                                    binding:Disconnect()
+                                end
+                            else
+                                if not table.find(blacklist, input.UserInputType) then
+                                    keyChosen = input.UserInputType
+                                    if flag then library.flags[flag] = input.UserInputType end
+                                    binding:Disconnect()
+                                else
+                                    keyChosen = nil
+                                    value.Text = "NONE"
+                                    if flag then library.flags[flag] = nil end
+                                    binding:Disconnect()
+                                end
+                            end
+                        end)
+                    end)
+
+                    inputService.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.Keyboard then
+                            if input.KeyCode == keyChosen then
+                                callback(keyChosen)
+                            end
+                        elseif input.UserInputType ~= Enum.UserInputType.MouseWheel then
+                            if input.UserInputType == keyChosen then
+                                callback(keyChosen)
+                            end
+                        end
+                    end)
+
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
+                            callback(keyChosen)
+                        end
+                    end)
+
+                    local keybindTypes = utility.table()
+
+                    function keybindTypes:Show()
+                        keybind.Visible = true
+                    end
+
+                    function keybindTypes:Hide()
+                        keybind.Visible = false
+                    end
+
+                    function keybindTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function keybindTypes:Set(newKey)
+                        if typeof(newKey) == "EnumItem" then
+                            if not table.find(blacklist, newKey) then
+                                local keyString = keys[newKey] or tostring(newKey):gsub("Enum.KeyCode.", "")
+                                value.Text = keyString
+                                value.TextColor3 = selectedTheme.textSecondary
+                                keyChosen = newKey
+                                if flag then library.flags[flag] = newKey end
+                            else
+                                keyChosen = nil
+                                value.Text = "NONE"
+                                if flag then library.flags[flag] = nil end
+                            end
+                        end
+                    end
+
+                    if flag then
+                        flags.keybinds[flag] = function(key)
+                            keybindTypes:Set(key)
+                        end
+                    end
+
+                    return keybindTypes
+                end
+
+                function sectionTypes:ToggleKeybind(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Toggle Keybind"
+                    local default = options.default
+                    local blacklist = options.blacklist or {}
+                    local toggleFlag = options.toggleFlag
+                    local keybindFlag = options.keybindFlag
+                    local toggleCallback = options.toggleCallback or function() end
+                    local keybindCallback = options.keybindCallback or function() end
+
+                    local keys = {
+                        [Enum.KeyCode.LeftShift] = "LeftShift";
+                        [Enum.KeyCode.RightShift] = "RightShift";
+                        [Enum.KeyCode.LeftControl] = "LeftCtrl";
+                        [Enum.KeyCode.RightControl] = "RightCtrl";
+                        [Enum.KeyCode.LeftAlt] = "LeftAlt";
+                        [Enum.KeyCode.RightAlt] = "RightAlt";
+                        [Enum.KeyCode.CapsLock] = "CapsLock";
+                        [Enum.KeyCode.One] = "1";
+                        [Enum.KeyCode.Two] = "2";
+                        [Enum.KeyCode.Three] = "3";
+                        [Enum.KeyCode.Four] = "4";
+                        [Enum.KeyCode.Five] = "5";
+                        [Enum.KeyCode.Six] = "6";
+                        [Enum.KeyCode.Seven] = "7";
+                        [Enum.KeyCode.Eight] = "8";
+                        [Enum.KeyCode.Nine] = "9";
+                        [Enum.KeyCode.Zero] = "0";
+                        [Enum.KeyCode.KeypadOne] = "N1";
+                        [Enum.KeyCode.KeypadTwo] = "N2";
+                        [Enum.KeyCode.KeypadThree] = "N3";
+                        [Enum.KeyCode.KeypadFour] = "N4";
+                        [Enum.KeyCode.KeypadFive] = "N5";
+                        [Enum.KeyCode.KeypadSix] = "N6";
+                        [Enum.KeyCode.KeypadSeven] = "N7";
+                        [Enum.KeyCode.KeypadEight] = "N8";
+                        [Enum.KeyCode.KeypadNine] = "N9";
+                        [Enum.KeyCode.KeypadZero] = "N0";
+                        [Enum.KeyCode.Minus] = "-";
+                        [Enum.KeyCode.Equals] = "=";
+                        [Enum.KeyCode.Tilde] = "~";
+                        [Enum.KeyCode.LeftBracket] = "[";
+                        [Enum.KeyCode.RightBracket] = "]";
+                        [Enum.KeyCode.RightParenthesis] = ")";
+                        [Enum.KeyCode.LeftParenthesis] = "(";
+                        [Enum.KeyCode.Semicolon] = ";";
+                        [Enum.KeyCode.Quote] = "'";
+                        [Enum.KeyCode.BackSlash] = "\\";
+                        [Enum.KeyCode.Comma] = ";";
+                        [Enum.KeyCode.Period] = ".";
+                        [Enum.KeyCode.Slash] = "/";
+                        [Enum.KeyCode.Asterisk] = "*";
+                        [Enum.KeyCode.Plus] = "+";
+                        [Enum.KeyCode.Period] = ".";
+                        [Enum.KeyCode.Backquote] = "`";
+                        [Enum.UserInputType.MouseButton1] = "Mouse1";
+                        [Enum.UserInputType.MouseButton2] = "Mouse2";
+                        [Enum.UserInputType.MouseButton3] = "Mouse3";
+                        [Enum.UserInputType.MouseWheel] = "MouseWheel";
+                    }
+
+                    local toggled = false
+                    local keyChosen = default
+
+                    if toggleFlag then
+                        library.flags[toggleFlag] = toggled
+                    end
+
+                    if keybindFlag then
+                        library.flags[keybindFlag] = default
+                    end
+
+                    local toggleKeybind = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 14,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = sectionContent
+                    })
+
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 21, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.textSecondary,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = toggleKeybind
+                    })
+
+                    local icon = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 14, 1, -2),
+                        BorderColor3 = Color3.fromRGB(37, 37, 37),
+                        Position = UDim2.new(0, 0, 0, 1),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = toggleKeybind
+                    })
+                    
+                    local iconGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = icon
+                    })
+                    
+                    local value = utility.create("TextButton", {
+                        ZIndex = 3,
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.textSecondary,
+                        Text = default and (keys[default] or tostring(default):gsub("Enum.KeyCode.", "")) or "NONE",
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Right,
+                        Parent = toggleKeybind
+                    })
+
+                    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+
+                    local function toggleToggle()
+                        toggled = not toggled
+
+                        if toggled then
+                            table.insert(coloredGradients, iconGradient)
+                        else
+                            table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
+                        end
+
+                        local textColor = toggled and selectedTheme.text or selectedTheme.textSecondary
+                        local gradientColor
+                        if toggled then
+                            gradientColor = ColorSequence.new{
+                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                            }
+                        else
+                            gradientColor = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2)
+                        end
+
+                        iconGradient.Color = gradientColor
+                        title.TextColor3 = textColor
+
+                        if toggleFlag then
+                            library.flags[toggleFlag] = toggled
+                        end
+
+                        toggleCallback(toggled)
+                    end
+
+                    toggleKeybind.MouseButton1Click:Connect(toggleToggle)
+
+                    value.MouseButton1Click:Connect(function()
+                        value.Text = "..."
+                        value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                        value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                        value.TextColor3 = selectedTheme.text
+                    
+                        local binding
+                        binding = inputService.InputBegan:Connect(function(input)
+                            local keyString = keys[input.KeyCode] or keys[input.UserInputType] or tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+                            value.Text = keyString
+                            value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                            value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                            value.TextColor3 = selectedTheme.textSecondary
+                    
+                            if input.UserInputType == Enum.UserInputType.Keyboard then
+                                if not table.find(blacklist, input.KeyCode) then
+                                    keyChosen = input.KeyCode
+                                    if keybindFlag then library.flags[keybindFlag] = input.KeyCode end
+                                    binding:Disconnect()
+                                else
+                                    keyChosen = nil
+                                    value.Text = "NONE"
+                                    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                                    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                                    if keybindFlag then library.flags[keybindFlag] = nil end
+                                    binding:Disconnect()
+                                end
+                            else
+                                if not table.find(blacklist, input.UserInputType) then
+                                    keyChosen = input.UserInputType
+                                    if keybindFlag then library.flags[keybindFlag] = input.UserInputType end
+                                    binding:Disconnect()
+                                else
+                                    keyChosen = nil
+                                    value.Text = "NONE"
+                                    value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                                    value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                                    if keybindFlag then library.flags[keybindFlag] = nil end
+                                    binding:Disconnect()
+                                end
+                            end
+                        end)
+                    end)
+                    
+                    inputService.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.Keyboard then
+                            if input.KeyCode == keyChosen then
+                                toggleToggle()
+                                keybindCallback(keyChosen)
+                            end
+                        elseif input.UserInputType ~= Enum.UserInputType.MouseWheel then
+                            if input.UserInputType == keyChosen then
+                                toggleToggle()
+                                keybindCallback(keyChosen)
+                            end
+                        end
+                    end)
+
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputType == keyChosen then
+                            toggleToggle()
+                            keybindCallback(keyChosen)
+                        end
+                    end)
+                    
+                    local toggleKeybindTypes = utility.table()
+                    
+                    function toggleKeybindTypes:Show()
+                        toggleKeybind.Visible = true
+                    end
+                    
+                    function toggleKeybindTypes:Hide()
+                        toggleKeybind.Visible = false
+                    end
+                    
+                    function toggleKeybindTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function toggleKeybindTypes:Toggle(bool)
+                        if toggled ~= bool then
+                            toggleToggle()
+                        end
+                    end
+                    
+                    function toggleKeybindTypes:Set(newKey)
+                        if typeof(newKey) == "EnumItem" then
+                            if not table.find(blacklist, newKey) then
+                                local keyString = keys[newKey] or tostring(newKey):gsub("Enum.KeyCode.", "")
+                                value.Text = keyString
+                                value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                                value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                                value.TextColor3 = selectedTheme.textSecondary
+                                keyChosen = newKey
+                                if keybindFlag then library.flags[keybindFlag] = newKey end
+                            else
+                                keyChosen = nil
+                                value.Text = "NONE"
+                                value.Size = UDim2.new(0, value.TextBounds.X, 1, 0)
+                                value.Position = UDim2.new(1, -value.TextBounds.X, 0, 0)
+                                if keybindFlag then library.flags[keybindFlag] = nil end
+                            end
+                        end
+                    end
+                    
+                    if keybindFlag then
+                        flags.keybinds[keybindFlag] = function(key)
+                            toggleKeybindTypes:Set(key)
+                        end
+                    end
+
+                    if toggleFlag then
+                        flags.toggles[toggleFlag] = function(bool)
+                            toggleKeybindTypes:Toggle(bool)
+                        end
+                    end
+                    
+                    return toggleKeybindTypes
+                end
+
+                function sectionTypes:ColorPicker(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Color Picker"
+                    local default = options.default or Color3.fromRGB(255, 255, 255)
+                    local flag = options.flag
+                    local callback = options.callback or function() end
+
+                    local open = false
+                    local hue, sat, val = default:ToHSV()
+                    local slidingHue = false
+                    local slidingSaturation = false
+                    local hsv = Color3.fromHSV(hue, sat, val)
+
+                    if flag then
+                        library.flags[flag] = default
+                    end
+
+                    callback(default)
+
+                    local colorPickerHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        Position = UDim2.new(0, 0, 0, 0),
+                        BackgroundTransparency = 1,
+                        Parent = sectionContent
+                    })
+
+                    local colorPicker = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 14,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = colorPickerHolder
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.text,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = colorPicker
+                    })
+                    
+                    local icon = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 22, 0, 14),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(1, -22, 0, 1),
+                        BackgroundColor3 = default,
+                        Parent = colorPicker
+                    })
+                    
+                    local iconGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(105, 105, 105))
+                        },
+                        Parent = icon
+                    })
+                    
+                    local picker = utility.create("Frame", {
+                        ZIndex = 12,
+                        Visible = false,
+                        Size = UDim2.new(1, -8, 0, 183),
+                        ClipsDescendants = true,
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 12, 1, 3),
+                        BackgroundColor3 = selectedTheme.picker,
+                        Parent = colorPicker
+                    })
+                    
+                    local saturationFrame = utility.create("ImageLabel", {
+                        ZIndex = 13,
+                        Size = UDim2.new(1, -29, 0, 130),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 5, 0, 5),
+                        BackgroundColor3 = Color3.fromRGB(255, 0, 4),
+                        Image = "http://www.roblox.com/asset/?id=8630797271",
+                        Parent = picker
+                    })
+                    
+                    local saturationPicker = utility.create("Frame", {
+                        ZIndex = 15,
+                        Size = UDim2.new(0, 4, 0, 4),
+                        Position = UDim2.new(0, 5, 0, 5),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                        BorderSizePixel = 1,
+                        Parent = saturationFrame
+                    })
+                    
+                    local hueFrame = utility.create("ImageLabel", {
+                        ZIndex = 13,
+                        Size = UDim2.new(0, 14, 0, 130),
+                        ClipsDescendants = true,
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, -19, 0, 5),
+                        BackgroundColor3 = Color3.fromRGB(255, 0, 4),
+                        ScaleType = Enum.ScaleType.Crop,
+                        Image = "http://www.roblox.com/asset/?id=8630799159",
+                        Parent = picker
+                    })
+                    
+                    local huePicker = utility.create("Frame", {
+                        ZIndex = 15,
+                        Size = UDim2.new(1, 0, 0, 2),
+                        Position = UDim2.new(0, 0, 0, 10),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                        BorderSizePixel = 1,
+                        Parent = hueFrame
+                    })
+                    
+                    local rgb = utility.create("TextBox", {
+                        ZIndex = 14,
+                        Size = UDim2.new(1, -10, 0, 16),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 5, 1, -42),
+                        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                        PlaceholderColor3 = selectedTheme.textSecondary,
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = table.concat({utility.get_rgb(default)}, ", "),
+                        ClearTextOnFocus = false,
+                        Font = Enum.Font.Gotham,
+                        PlaceholderText = "R,  G,  B",
+                        Parent = picker
+                    })
+                    
+                    local bg = utility.create("Frame", {
+                        ZIndex = 13,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = rgb
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = bg
+                    })
+                    
+                    local hex = utility.create("TextBox", {
+                        ZIndex = 14,
+                        Size = UDim2.new(1, -10, 0, 16),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 5, 1, -21),
+                        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                        PlaceholderColor3 = selectedTheme.textSecondary,
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = utility.rgb_to_hex(default),
+                        ClearTextOnFocus = false,
+                        Font = Enum.Font.Gotham,
+                        PlaceholderText = utility.rgb_to_hex(default),
+                        Parent = picker
+                    })
+                    
+                    local bg = utility.create("Frame", {
+                        ZIndex = 13,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = hex
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = bg
+                    })
+
+                    local function openPicker()
+                        open = not open
+                        picker.Visible = open
+                        colorPickerHolder.Size = UDim2.new(1, 0, 0, open and colorPicker.AbsoluteSize.Y + picker.AbsoluteSize.Y + 3 or 16)
+                    end
+
+                    colorPicker.MouseButton1Click:connect(openPicker)
+
+                    local function updateHue(input)
+                        local sizeY = 1 - math.clamp((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y, 0, 1)
+                        local posY = math.clamp(((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 2)
+                        huePicker.Position = UDim2.new(0, 0, 0, posY)
+
+                        hue = sizeY
+
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
+                        hsv = Color3.fromHSV(hue, sat, val)
+                        saturationFrame.BackgroundColor3 = hsv
+                        icon.BackgroundColor3 = hsv
+
+                        if flag then 
+                            library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+
+                        callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+
+                    hueFrame.InputBegan:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingHue = true
+                            updateHue(input)
+                        end
+                    end)
+
+                    hueFrame.InputEnded:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingHue = false
+                        end
+                    end)
+
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                            if slidingHue then
+                                updateHue(input)
+                            end
+                        end
+                    end)
+
+                    local function updateSatVal(input)
+                        local sizeX = math.clamp((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X, 0, 1)
+                        local sizeY = 1 - math.clamp((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y, 0, 1)
+                        local posY = math.clamp(((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)
+                        local posX = math.clamp(((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X) * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)
+
+                        saturationPicker.Position = UDim2.new(0, posX, 0, posY)
+
+                        sat = sizeX
+                        val = sizeY
+
+                        hsv = Color3.fromHSV(hue, sat, val)
+
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
+                        saturationFrame.BackgroundColor3 = hsv
+                        icon.BackgroundColor3 = hsv
+
+                        if flag then 
+                            library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+
+                        callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+
+                    saturationFrame.InputBegan:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingSaturation = true
+                            updateSatVal(input)
+                        end
+                    end)
+
+                    saturationFrame.InputEnded:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingSaturation = false
+                        end
+                    end)
+
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                            if slidingSaturation then
+                                updateSatVal(input)
+                            end
+                        end
+                    end)
+
+                    local colorPickerTypes = utility.table()
+
+                    function colorPickerTypes:Show()
+                        colorPickerHolder.Visible = true
+                    end
+                    
+                    function colorPickerTypes:Hide()
+                        colorPickerHolder.Visible = false
+                    end
+                    
+                    function colorPickerTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function colorPickerTypes:SetRGB(color)
+                        hue, sat, val = color:ToHSV()
+                        hsv = Color3.fromHSV(hue, sat, val)
+
+                        saturationFrame.BackgroundColor3 = hsv
+                        icon.BackgroundColor3 = hsv
+                        saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
+                        huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
+
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
+                        if flag then 
+                            library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+
+                        callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+
+                    function colorPickerTypes:SetHex(hexValue)
+                        color = utility.hex_to_rgb(hexValue)
+                        
+                        hue, sat, val = color:ToHSV()
+                        hsv = Color3.fromHSV(hue, sat, val)
+
+                        saturationFrame.BackgroundColor3 = hsv
+                        icon.BackgroundColor3 = hsv
+                        saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
+                        huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
+
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+
+                        if flag then 
+                            library.flags[flag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+
+                        callback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+
+                    rgb.FocusLost:Connect(function()
+                        local _, amount = rgb.Text:gsub(", ", "")
+                        if amount == 2 then
+                            local values = rgb.Text:split(", ")
+                            local r, g, b = math.clamp(values[1], 0, 255), math.clamp(values[2], 0, 255), math.clamp(values[3], 0, 255)
+                            colorPickerTypes:SetRGB(Color3.fromRGB(r, g, b))
+                        else
+                            rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        end
+                    end
+                        
+                    hex.FocusLost:Connect(function()
+                        if hex.Text:find("#") and hex.Text:len() == 7 then
+                            colorPickerTypes:SetHex(hex.Text)
+                        else
+                            hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                        end
+                    end)
+
+                    hex:GetPropertyChangedSignal("Text"):Connect(function()
+                        if hex.Text == "" then
+                            hex.Text = "#"
+                        end
+                    end)
+
+                    if flag then
+                        flags.colorpickers[flag] = function(color)
+                            colorPickerTypes:SetRGB(color)
+                        end
+                    end
+
+                    return colorPickerTypes
+                end
+
+                function sectionTypes:ToggleColorPicker(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Toggle Color Picker"
+                    local default = options.default or Color3.fromRGB(255, 255, 255)
+                    local toggleFlag = options.toggleFlag
+                    local colorPickerFlag = options.colorPickerFlag
+                    local toggleCallback = options.toggleCallback or function() end
+                    local colorPickerCallback = options.colorPickerCallback or function() end
+
+                    local open = false
+                    local toggled = false
+                    local hue, sat, val = default:ToHSV()
+                    local slidingHue = false
+                    local slidingSaturation = false
+                    local hsv = Color3.fromHSV(hue, sat, val)
+
+                    if colorPickerFlag then
+                        library.flags[colorPickerFlag] = default
+                    end
+
+                    colorPickerCallback(default)
+
+                    if toggleFlag then
+                        library.flags[toggleFlag] = toggled
+                    end
+
+                    toggleCallback(false)
+
+                    local toggleColorPickerHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        Position = UDim2.new(0, 0, 0, 0),
+                        BackgroundTransparency = 1,
+                        Parent = sectionContent
+                    })
+
+                    local colorPicker = utility.create("TextButton", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 14,
+                        TextColor3 = Color3.fromRGB(0, 0, 0),
+                        Font = Enum.Font.SourceSans,
+                        Parent = toggleColorPickerHolder
+                    })
+
+                    local icon = utility.create("Frame", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 14, 1, -2),
+                        BorderColor3 = Color3.fromRGB(37, 37, 37),
+                        Position = UDim2.new(0, 0, 0, 1),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = colorPicker
+                    })
+                    
+                    local iconGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = icon
+                    })
+
+                    local colorPickerIcon = utility.create("TextButton", {
+                        ZIndex = 3,
+                        Text = "",
+                        Size = UDim2.new(0, 22, 0, 14),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(1, -22, 0, 1),
+                        BackgroundColor3 = default,
+                        Parent = colorPicker
+                    })
+                    
+                    local colorPickerIconGradient = utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+                            ColorSequenceKeypoint.new(1, Color3.fromRGB(105, 105, 105))
+                        },
+                        Parent = colorPickerIcon
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        ZIndex = 3,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, 7, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        FontSize = Enum.FontSize.Size14,
+                        TextSize = 13,
+                        TextColor3 = selectedTheme.textSecondary,
+                        Text = name,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = icon
+                    })
+                    
+                    local picker = utility.create("Frame", {
+                        ZIndex = 12,
+                        Visible = false,
+                        Size = UDim2.new(1, -8, 0, 183),
+                        ClipsDescendants = true,
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 12, 1, 3),
+                        BackgroundColor3 = selectedTheme.picker,
+                        Parent = colorPicker
+                    })
+                    
+                    local saturationFrame = utility.create("ImageLabel", {
+                        ZIndex = 13,
+                        Size = UDim2.new(1, -29, 0, 130),
+                        BorderColor3 = selectedTheme.background,
+                        Position = UDim2.new(0, 5, 0, 5),
+                        BackgroundColor3 = Color3.fromRGB(255, 0, 4),
+                        Image = "http://www.roblox.com/asset/?id=8630797271",
+                        Parent = picker
+                    })
+                    
+                    local saturationPicker = utility.create("Frame", {
+                        ZIndex = 15,
+                        Size = UDim2.new(0, 4, 0, 4),
+                        Position = UDim2.new(0, 5, 0, 5),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                        BorderSizePixel = 1,
+                        Parent = saturationFrame
+                    })
+                    
+                    local hueFrame = utility.create("ImageLabel", {
+                        ZIndex = 13,
+                        Size = UDim2.new(0, 14, 0, 130),
+                        ClipsDescendants = true,
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(1, -19, 0, 5),
+                        BackgroundColor3 = Color3.fromRGB(255, 0, 4),
+                        ScaleType = Enum.ScaleType.Crop,
+                        Image = "http://www.roblox.com/asset/?id=8630799159",
+                        Parent = picker
+                    })
+                    
+                    local huePicker = utility.create("Frame", {
+                        ZIndex = 15,
+                        Size = UDim2.new(1, 0, 0, 2),
+                        Position = UDim2.new(0, 0, 0, 10),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                        BorderSizePixel = 1,
+                        Parent = hueFrame
+                    })
+                    
+                    local rgb = utility.create("TextBox", {
+                        ZIndex = 14,
+                        Size = UDim2.new(1, -10, 0, 16),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 5, 1, -42),
+                        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                        PlaceholderColor3 = selectedTheme.textSecondary,
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = table.concat({utility.get_rgb(default)}, ", "),
+                        ClearTextOnFocus = false,
+                        Font = Enum.Font.Gotham,
+                        PlaceholderText = "R,  G,  B",
+                        Parent = picker
+                    })
+                    
+                    local bg = utility.create("Frame", {
+                        ZIndex = 13,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = rgb
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = bg
+                    })
+                    
+                    local hex = utility.create("TextBox", {
+                        ZIndex = 14,
+                        Size = UDim2.new(1, -10, 0, 16),
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 5, 1, -21),
+                        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                        PlaceholderColor3 = selectedTheme.textSecondary,
+                        FontSize = Enum.FontSize.Size12,
+                        TextSize = 12,
+                        TextColor3 = selectedTheme.text,
+                        Text = utility.rgb_to_hex(default),
+                        ClearTextOnFocus = false,
+                        Font = Enum.Font.Gotham,
+                        PlaceholderText = utility.rgb_to_hex(default),
+                        Parent = picker
+                    })
+                    
+                    local bg = utility.create("Frame", {
+                        ZIndex = 13,
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BorderColor3 = selectedTheme.background,
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                        Parent = hex
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = bg
+                    })
+
+                    local function toggleToggle()
+                        toggled = not toggled
+
+                        if toggled then
+                            table.insert(coloredGradients, iconGradient)
+                        else
+                            table.remove(coloredGradients, table.find(coloredGradients, iconGradient))
+                        end
+
+                        local textColor = toggled and selectedTheme.text or selectedTheme.textSecondary
+                        local gradientColor
+                        if toggled then
+                            gradientColor = ColorSequence.new{
+                                ColorSequenceKeypoint.new(0, library.color), 
+                                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
+                            }
+                        else
+                            gradientColor = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2)
+                        end
+
+                        iconGradient.Color = gradientColor
+                        title.TextColor3 = textColor
+
+                        if toggleFlag then
+                            library.flags[toggleFlag] = toggled
+                        end
+
+                        toggleCallback(toggled)
+                    end
+
+                    colorPicker.MouseButton1Click:Connect(toggleToggle)
+
+                    local function openPicker()
+                        open = not open
+                        picker.Visible = open
+                        toggleColorPickerHolder.Size = UDim2.new(1, 0, 0, open and colorPicker.AbsoluteSize.Y + picker.AbsoluteSize.Y + 3 or 16)
+                    end
+                    
+                    colorPickerIcon.MouseButton1Click:connect(openPicker)
+                    
+                    local function updateHue(input)
+                        local sizeY = 1 - math.clamp((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y, 0, 1)
+                        local posY = math.clamp(((input.Position.Y - hueFrame.AbsolutePosition.Y) / hueFrame.AbsoluteSize.Y) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 2)
+                        huePicker.Position = UDim2.new(0, 0, 0, posY)
+                    
+                        hue = sizeY
+                    
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    
+                        hsv = Color3.fromHSV(hue, sat, val)
+                        saturationFrame.BackgroundColor3 = hsv
+                        colorPickerIcon.BackgroundColor3 = hsv
+                    
+                        if colorPickerFlag then 
+                            library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+                    
+                        colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+                    
+                    hueFrame.InputBegan:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingHue = true
+                            updateHue(input)
+                        end
+                    end)
+                    
+                    hueFrame.InputEnded:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingHue = false
+                        end
+                    end)
+                    
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                            if slidingHue then
+                                updateHue(input)
+                            end
+                        end
+                    end)
+                    
+                    local function updateSatVal(input)
+                        local sizeX = math.clamp((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X, 0, 1)
+                        local sizeY = 1 - math.clamp((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y, 0, 1)
+                        local posY = math.clamp(((input.Position.Y - saturationFrame.AbsolutePosition.Y) / saturationFrame.AbsoluteSize.Y) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)
+                        local posX = math.clamp(((input.Position.X - saturationFrame.AbsolutePosition.X) / saturationFrame.AbsoluteSize.X) * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)
+                    
+                        saturationPicker.Position = UDim2.new(0, posX, 0, posY)
+                    
+                        sat = sizeX
+                        val = sizeY
+                    
+                        hsv = Color3.fromHSV(hue, sat, val)
+                    
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    
+                        saturationFrame.BackgroundColor3 = hsv
+                        colorPickerIcon.BackgroundColor3 = hsv
+                    
+                        if colorPickerFlag then 
+                            library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+                    
+                        colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+                    
+                    saturationFrame.InputBegan:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingSaturation = true
+                            updateSatVal(input)
+                        end
+                    end)
+                    
+                    saturationFrame.InputEnded:Connect(function(input)
+                        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+                            slidingSaturation = false
+                        end
+                    end)
+                    
+                    inputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then   
+                            if slidingSaturation then
+                                updateSatVal(input)
+                            end
+                        end
+                    end)
+                    
+                    local toggleColorPickerTypes = utility.table()
+                    
+                    function toggleColorPickerTypes:Show()
+                        toggleColorPickerHolder.Visible = true
+                    end
+                    
+                    function toggleColorPickerTypes:Hide()
+                        toggleColorPickerHolder.Visible = false
+                    end
+                    
+                    function toggleColorPickerTypes:SetName(str)
+                        title.Text = str
+                    end
+
+                    function toggleColorPickerTypes:Toggle(bool)
+                        if toggled ~= bool then
+                            toggleToggle()
+                        end
+                    end
+                    
+                    function toggleColorPickerTypes:SetRGB(color)
+                        hue, sat, val = color:ToHSV()
+                        hsv = Color3.fromHSV(hue, sat, val)
+                    
+                        saturationFrame.BackgroundColor3 = hsv
+                        colorPickerIcon.BackgroundColor3 = hsv
+                        saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
+                        huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
+                    
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    
+                        if colorPickerFlag then 
+                            library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+                    
+                        colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+                    
+                    function toggleColorPickerTypes:SetHex(hexValue)
+                        color = utility.hex_to_rgb(hexValue)
+                        
+                        hue, sat, val = color:ToHSV()
+                        hsv = Color3.fromHSV(hue, sat, val)
+                    
+                        saturationFrame.BackgroundColor3 = hsv
+                        colorPickerIcon.BackgroundColor3 = hsv
+                        saturationPicker.Position = UDim2.new(0, (math.clamp(sat * saturationFrame.AbsoluteSize.X, 0, saturationFrame.AbsoluteSize.X - 4)), 0, (math.clamp((1 - val) * saturationFrame.AbsoluteSize.Y, 0, saturationFrame.AbsoluteSize.Y - 4)))
+                        huePicker.Position = UDim2.new(0, 0, 0, math.clamp((1 - hue) * hueFrame.AbsoluteSize.Y, 0, hueFrame.AbsoluteSize.Y - 4))
+                    
+                        rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    
+                        if colorPickerFlag then 
+                            library.flags[colorPickerFlag] = Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255)
+                        end
+                    
+                        colorPickerCallback(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                    end
+                    
+                    rgb.FocusLost:Connect(function()
+                        local _, amount = rgb.Text:gsub(", ", "")
+                        if amount == 2 then
+                            local values = rgb.Text:split(", ")
+                            local r, g, b = math.clamp(values[1], 0, 255), math.clamp(values[2], 0, 255), math.clamp(values[3], 0, 255)
+                            toggleColorPickerTypes:SetRGB(Color3.fromRGB(r, g, b))
+                        else
+                            rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
+                        end
+                    end
+                        
+                    hex.FocusLost:Connect(function()
+                        if hex.Text:find("#") and hex.Text:len() == 7 then
+                            toggleColorPickerTypes:SetHex(hex.Text)
+                        else
+                            hex.Text = utility.rgb_to_hex(Color3.fromRGB(hsv.r * 255, hsv.g * 255, hsv.b * 255))
+                        end
+                    end)
+                    
+                    hex:GetPropertyChangedSignal("Text"):Connect(function()
+                        if hex.Text == "" then
+                            hex.Text = "#"
+                        end
+                    end)
+                    
+                    if colorPickerFlag then
+                        flags.colorpickers[colorPickerFlag] = function(color)
+                            toggleColorPickerTypes:SetRGB(color)
+                        end
+                    end
+
+                    if toggleFlag then
+                        flags.toggles[toggleFlag] = function(bool)
+                            toggleColorPickerTypes:Toggle(bool)
+                        end
+                    end
+                    
+                    return toggleColorPickerTypes
+                end
+
+                return sectionTypes
+            end
+
+            return tabTypes
+        end
+
+        return windowTypes
+    end
+
+    return library
 end
---[[
--- ============================================================
--- ПРИМЕР ИСПОЛЬЗОВАНИЯ
--- ============================================================
-local win = Library:CreateWindow({
-    name = "ONIXAR",
-    width = 260,
-    height = 450
-})
-
-local combat = win:Tab("Combat")
-combat:Toggle({text = "KillAura", callback = function(v) print("KA:", v) end})
-combat:Slider({text = "Range", min = 3, max = 6, default = 4.2, suffix = "b", callback = function(v) print("Range:", v) end})
-combat:Dropdown({text = "Priority", items = {"Health", "Distance", "Angle"}, default = "Distance", callback = function(v) print("Priority:", v) end})
-
-local visuals = win:Tab("Visuals")
-visuals:Toggle({text = "ESP", callback = function(v) print("ESP:", v) end})
-visuals:Toggle({text = "Tracers", callback = function(v) print("Tracers:", v) end})
-visuals:Slider({text = "FOV", min = 0, max = 180, default = 90, suffix = "°", callback = function(v) print("FOV:", v) end})
-]]
-return Library

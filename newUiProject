@@ -4154,4 +4154,4 @@ function initLibrary()
     end
 
     return library
-end ь
+end

@@ -17,6 +17,9 @@ function initLibrary()
     local tweenService = game:GetService("TweenService")
     local runService = game:GetService("RunService")
     local coreGui = game:GetService("CoreGui")
+    local players = game:GetService("Players")
+    local localPlayer = players.LocalPlayer
+    local stats = game:GetService("Stats")
 
 
     local utility = {}
@@ -156,7 +159,8 @@ function initLibrary()
         color = Color3.fromRGB(255, 0, 0),
         keybind = Enum.KeyCode.RightShift, 
         dragSpeed = 0.25,
-        notifications = {}
+        watermarkFrame = nil,
+        watermarkUpdateConnection = nil
     }    
 
 
@@ -172,6 +176,18 @@ function initLibrary()
                     ColorSequenceKeypoint.new(0, library.color), 
                     ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
                 }
+            end
+        end
+        -- Обновляем цвета ватермарки
+        if library.watermarkFrame then
+            local border = library.watermarkFrame:FindFirstChild("Border")
+            if border then
+                border.BackgroundColor3 = library.color
+            end
+            for _, child in ipairs(library.watermarkFrame:GetDescendants()) do
+                if child:IsA("TextLabel") and child.Name == "Value" then
+                    child.TextColor3 = library.color
+                end
             end
         end
     end
@@ -332,110 +348,196 @@ function initLibrary()
         writefile(gameConfigFolder .. "/" .. name .. ".cfg", "return " .. configstr)
     end
 
-    -- Уведомления
-    function library:Notify(opts)
-        local options = utility.table(opts)
-        local title = options.title or "Notification"
-        local message = options.message or ""
-        local duration = options.duration or 3
+    -- WATERMARK
+    function library:CreateWatermark(elements, position)
+        if library.watermarkFrame then
+            library.watermarkFrame:Destroy()
+        end
+        if library.watermarkUpdateConnection then
+            library.watermarkUpdateConnection:Disconnect()
+        end
         
-        local notificationHolder = utility.create("Frame", {
-            Size = UDim2.new(0, 300, 0, 60),
-            Position = UDim2.new(1, -310, 0, 10 + (#library.notifications * 70)),
-            BackgroundTransparency = 1,
+        position = position or "top-left"
+        
+        local posX = 0
+        local posY = 0
+        local anchorX = 0
+        local anchorY = 0
+        
+        if position == "top-left" then
+            posX, posY = 10, 10
+            anchorX, anchorY = 0, 0
+        elseif position == "top-right" then
+            posX, posY = -10, 10
+            anchorX, anchorY = 1, 0
+        elseif position == "bottom-left" then
+            posX, posY = 10, -10
+            anchorX, anchorY = 0, 1
+        elseif position == "bottom-right" then
+            posX, posY = -10, -10
+            anchorX, anchorY = 1, 1
+        end
+        
+        library.watermarkFrame = utility.create("Frame", {
+            Name = "Watermark",
+            Size = UDim2.new(0, 220, 0, 80),
+            Position = UDim2.new(anchorX, posX, anchorY, posY),
+            BackgroundColor3 = Color3.fromRGB(22, 22, 22),
+            BorderSizePixel = 0,
+            BackgroundTransparency = 0.15,
             Parent = gui
         })
         
-        local notification = utility.create("Frame", {
-            Size = UDim2.new(1, 0, 1, 0),
-            BackgroundColor3 = Color3.fromRGB(32, 32, 32),
-            BorderColor3 = Color3.fromRGB(20, 20, 20),
-            Parent = notificationHolder
+        local border = utility.create("Frame", {
+            Name = "Border",
+            Size = UDim2.new(1, 0, 0, 2),
+            Position = UDim2.new(0, 0, 0, 0),
+            BackgroundColor3 = library.color,
+            BorderSizePixel = 0,
+            Parent = library.watermarkFrame
         })
         
-        utility.create("UIGradient", {
-            Rotation = 90,
-            Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, library.color), 
-                ColorSequenceKeypoint.new(1, utility.change_color(library.color, -47))
-            },
-            Parent = notification
-        })
-        
-        local titleLabel = utility.create("TextLabel", {
-            Size = UDim2.new(1, -10, 0, 20),
-            Position = UDim2.new(0, 5, 0, 5),
+        local title = utility.create("TextLabel", {
+            Name = "Title",
+            Size = UDim2.new(1, -10, 0, 18),
+            Position = UDim2.new(0, 5, 0, 2),
             BackgroundTransparency = 1,
-            Text = title,
+            Text = "Yun UI",
             TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextSize = 14,
+            TextSize = 12,
             Font = Enum.Font.GothamSemibold,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = notification
+            Parent = library.watermarkFrame
         })
         
-        local messageLabel = utility.create("TextLabel", {
-            Size = UDim2.new(1, -10, 0, 30),
-            Position = UDim2.new(0, 5, 0, 25),
+        local contentHolder = utility.create("Frame", {
+            Size = UDim2.new(1, -10, 1, -22),
+            Position = UDim2.new(0, 5, 0, 20),
             BackgroundTransparency = 1,
-            Text = message,
-            TextColor3 = Color3.fromRGB(200, 200, 200),
-            TextSize = 12,
-            Font = Enum.Font.Gotham,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextWrapped = true,
-            Parent = notification
+            Parent = library.watermarkFrame
         })
         
-        local closeButton = utility.create("TextButton", {
-            Size = UDim2.new(0, 20, 0, 20),
-            Position = UDim2.new(1, -25, 0, 5),
-            BackgroundTransparency = 1,
-            Text = "✕",
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextSize = 14,
-            Font = Enum.Font.Gotham,
-            Parent = notification
+        local contentList = utility.create("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 4),
+            Parent = contentHolder
         })
         
-        closeButton.MouseButton1Click:Connect(function()
-            notificationHolder:Destroy()
-        end)
+        local valueLabels = {}
         
-        table.insert(library.notifications, notificationHolder)
-        
-        notificationHolder.Position = UDim2.new(1, -10, 0, 10 + (#library.notifications * 70))
-        utility.tween(notificationHolder, {0.3}, {Position = UDim2.new(1, -310, 0, 10 + ((#library.notifications - 1) * 70))})
-        
-        spawn(function()
-            wait(duration)
-            if notificationHolder and notificationHolder.Parent then
-                utility.tween(notificationHolder, {0.3}, {Position = UDim2.new(1, -10, 0, 10 + (#library.notifications - 1) * 70)}, function()
-                    notificationHolder:Destroy()
-                end)
-            end
-        end)
-        
-        local function updateNotificationPositions()
-            local newList = {}
-            for i, notif in ipairs(library.notifications) do
-                if notif and notif.Parent then
-                    table.insert(newList, notif)
-                    utility.tween(notif, {0.2}, {Position = UDim2.new(1, -310, 0, 10 + (i-1) * 70)})
+        local function updateWatermark()
+            if not library.watermarkFrame then return end
+            
+            for _, child in ipairs(contentHolder:GetChildren()) do
+                if child:IsA("Frame") then
+                    child:Destroy()
                 end
             end
-            library.notifications = newList
+            
+            valueLabels = {}
+            
+            for _, element in ipairs(elements) do
+                local elementType = element.type or "text"
+                local label = element.label or ""
+                
+                local row = utility.create("Frame", {
+                    Size = UDim2.new(1, 0, 0, 16),
+                    BackgroundTransparency = 1,
+                    Parent = contentHolder
+                })
+                
+                local labelText = utility.create("TextLabel", {
+                    Size = UDim2.new(0.5, -2, 1, 0),
+                    BackgroundTransparency = 1,
+                    Text = label,
+                    TextColor3 = Color3.fromRGB(180, 180, 180),
+                    TextSize = 11,
+                    Font = Enum.Font.Gotham,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = row
+                })
+                
+                local valueText = utility.create("TextLabel", {
+                    Name = "Value",
+                    Size = UDim2.new(0.5, -2, 1, 0),
+                    Position = UDim2.new(0.5, 2, 0, 0),
+                    BackgroundTransparency = 1,
+                    Text = "",
+                    TextColor3 = library.color,
+                    TextSize = 11,
+                    Font = Enum.Font.GothamSemibold,
+                    TextXAlignment = Enum.TextXAlignment.Right,
+                    Parent = row
+                })
+                
+                table.insert(valueLabels, {type = elementType, label = valueText, row = row})
+            end
+            
+            local function updateValues()
+                for _, v in ipairs(valueLabels) do
+                    local value = ""
+                    if v.type == "time" then
+                        value = os.date("%H:%M:%S")
+                    elseif v.type == "date" then
+                        value = os.date("%d/%m/%Y")
+                    elseif v.type == "datetime" then
+                        value = os.date("%H:%M:%S %d/%m")
+                    elseif v.type == "fps" then
+                        local fps = math.floor(1 / runService.RenderStepped:Wait())
+                        value = fps .. " FPS"
+                    elseif v.type == "ping" then
+                        local ping = stats.Network:GetAveragePing()
+                        value = math.floor(ping) .. " ms"
+                    elseif v.type == "player_name" then
+                        value = localPlayer.Name
+                    elseif v.type == "player_display_name" then
+                        value = localPlayer.DisplayName
+                    elseif v.type == "player_id" then
+                        value = localPlayer.UserId
+                    elseif v.type == "memory" then
+                        local mem = stats.Memory:GetAverageMemoryUsageMb()
+                        value = math.floor(mem) .. " MB"
+                    elseif v.type == "uptime" then
+                        local uptime = os.clock()
+                        local hours = math.floor(uptime / 3600)
+                        local minutes = math.floor((uptime % 3600) / 60)
+                        local seconds = math.floor(uptime % 60)
+                        value = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+                    else
+                        value = element.value or ""
+                    end
+                    v.label.Text = value
+                end
+            end
+            
+            updateValues()
+            library.watermarkUpdateConnection = runService.RenderStepped:Connect(updateValues)
+            
+            local function updateSize()
+                local totalHeight = 22
+                for _, v in ipairs(valueLabels) do
+                    totalHeight = totalHeight + 20
+                end
+                library.watermarkFrame.Size = UDim2.new(0, 220, 0, totalHeight)
+            end
+            
+            updateSize()
         end
         
-        notificationHolder.Destroying:Connect(function()
-            updateNotificationPositions()
-        end)
+        updateWatermark()
         
-        return notificationHolder
+        return library.watermarkFrame
     end
     
-    function library:Toast(message, duration)
-        return library:Notify({title = "Toast", message = message, duration = duration or 2})
+    function library:RemoveWatermark()
+        if library.watermarkFrame then
+            library.watermarkFrame:Destroy()
+            library.watermarkFrame = nil
+        end
+        if library.watermarkUpdateConnection then
+            library.watermarkUpdateConnection:Disconnect()
+            library.watermarkUpdateConnection = nil
+        end
     end
 
     function library:Load(opts)
@@ -446,7 +548,6 @@ function initLibrary()
         local color = options.color or Color3.fromRGB(128, 128, 128)
         local dragSpeed = options.dragSpeed or 0
         local theme = options.theme or "dark"
-        local resizable = options.resizable or true
 
         local themeColors = {
             dark = Color3.fromRGB(128, 128, 128),      
@@ -612,63 +713,16 @@ function initLibrary()
         library.color = color
 
         -- Создание основного окна
-        local window = utility.create("Frame", {
+        local topbar = utility.create("Frame", {
             ZIndex = 2,
-            Size = UDim2.new(0, sizeX, 0, sizeY + 26),
-            Position = utility.get_center(sizeX, sizeY + 26),
+            Size = UDim2.new(0, sizeX, 0, 26),
+            Position = utility.get_center(sizeX, sizeY),
             BorderSizePixel = 0,
             BackgroundColor3 = selectedTheme.background,
             Parent = gui
         })
-        
-        local topbar = utility.create("Frame", {
-            ZIndex = 2,
-            Size = UDim2.new(1, 0, 0, 26),
-            BorderSizePixel = 0,
-            BackgroundColor3 = selectedTheme.background,
-            Parent = window
-        })
 
         utility.drag(topbar, dragSpeed)
-        
-        -- Уголок для изменения размера
-        local resizeHandle = nil
-        local isResizing = false
-        local startPos = nil
-        local startSize = nil
-        
-        if resizable then
-            resizeHandle = utility.create("Frame", {
-                ZIndex = 10,
-                Size = UDim2.new(0, 15, 0, 15),
-                Position = UDim2.new(1, -15, 1, -15),
-                BackgroundColor3 = selectedTheme.textSecondary,
-                BackgroundTransparency = 0.7,
-                Parent = window
-            })
-            
-            utility.create("ImageLabel", {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Image = "http://www.roblox.com/asset/?id=6031094642",
-                ImageColor3 = selectedTheme.text,
-                Parent = resizeHandle
-            })
-            
-            resizeHandle.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    isResizing = true
-                    startPos = input.Position
-                    startSize = {window.AbsoluteSize.X, window.AbsoluteSize.Y}
-                end
-            end)
-            
-            resizeHandle.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    isResizing = false
-                end
-            end)
-        end
 
         utility.create("TextLabel", {
             ZIndex = 3,
@@ -685,11 +739,10 @@ function initLibrary()
         })
         
         local main = utility.create("Frame", {
-            Size = UDim2.new(1, 0, 1, -26),
-            Position = UDim2.new(0, 0, 0, 26),
+            Size = UDim2.new(1, 0, 0, sizeY),
             BorderColor3 = selectedTheme.border,
             BackgroundColor3 = selectedTheme.secondary,
-            Parent = window
+            Parent = topbar
         })
 
         local tabs = utility.create("Frame", {
@@ -722,80 +775,17 @@ function initLibrary()
             Padding = UDim.new(0, 4),
             Parent = tabTogglesHolder
         })
-        
-        -- Поисковая строка
-        local searchBarHolder = utility.create("Frame", {
-            Size = UDim2.new(1, -8, 0, 28),
-            Position = UDim2.new(0, 4, 0, 28),
-            BackgroundTransparency = 1,
-            Parent = main
-        })
-        
-        local searchBox = utility.create("TextBox", {
-            Size = UDim2.new(1, 0, 1, 0),
-            BackgroundColor3 = selectedTheme.quaternary,
-            BorderColor3 = selectedTheme.border,
-            PlaceholderText = "🔍 Search elements...",
-            Text = "",
-            TextColor3 = selectedTheme.text,
-            Font = Enum.Font.Gotham,
-            TextSize = 12,
-            Parent = searchBarHolder
-        })
-        
-        utility.create("UIGradient", {
-            Rotation = 90,
-            Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
-            Parent = searchBox
-        })
-        
-        local function filterElements(searchText)
-            if not allSections then return end
-            
-            for _, sectionData in ipairs(allSections) do
-                local hasVisible = false
-                for _, elementData in ipairs(sectionData.elements) do
-                    if elementData.element and elementData.element.Parent then
-                        if searchText == "" then
-                            elementData.element.Visible = true
-                            hasVisible = true
-                        else
-                            local elementName = elementData.name and elementData.name:lower() or ""
-                            if elementName:find(searchText:lower()) then
-                                elementData.element.Visible = true
-                                hasVisible = true
-                            else
-                                elementData.element.Visible = false
-                            end
-                        end
-                    end
-                end
-                if sectionData.sectionHolder then
-                    sectionData.sectionHolder.Visible = hasVisible or searchText == ""
-                end
-            end
-        end
-        
-        searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-            filterElements(searchBox.Text)
-        end)
 
         local windowTypes = utility.table({count = 0})
         
-        -- Функция изменения размера окна
-        if resizable then
-            inputService.InputChanged:Connect(function(input)
-                if isResizing and resizeHandle and window then
-                    local delta = input.Position - startPos
-                    local newWidth = math.max(300, startSize[1] + delta.X)
-                    local newHeight = math.max(200, startSize[2] + delta.Y)
-                    
-                    window.Size = UDim2.new(0, newWidth, 0, newHeight)
-                    
-                    local currentPos = window.Position
-                    window.Position = UDim2.new(currentPos.X.Scale, currentPos.X.Offset, currentPos.Y.Scale, currentPos.Y.Offset)
-                end
-            end)
+        function windowTypes:SetSize(width, height)
+            topbar.Size = UDim2.new(0, width, 0, height)
+            main.Size = UDim2.new(1, 0, 0, height)
+            topbar.Position = utility.get_center(width, height)
+        end
+        
+        function windowTypes:SetPosition(x, y)
+            topbar.Position = UDim2.new(0, x, 0, y)
         end
 
         function windowTypes:Show()
@@ -804,26 +794,6 @@ function initLibrary()
 
         function windowTypes:Hide()
             gui.Enabled = false
-        end
-        
-        function windowTypes:SetSize(width, height)
-            if window then
-                window.Size = UDim2.new(0, width, 0, height)
-                window.Position = utility.get_center(width, height)
-            end
-        end
-        
-        function windowTypes:GetSize()
-            if window then
-                return window.AbsoluteSize.X, window.AbsoluteSize.Y
-            end
-            return 0, 0
-        end
-        
-        function windowTypes:SetPosition(x, y)
-            if window then
-                window.Position = UDim2.new(0, x, 0, y)
-            end
         end
 
         function windowTypes:Tab(name)
@@ -854,14 +824,7 @@ function initLibrary()
                 Parent = tabs
             })
             
-            -- Контейнер для сетки
-            local gridContainer = utility.create("Frame", {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Parent = tab
-            })
-            
-            -- Колонка 1 (верхняя левая)
+            -- КОЛОНКА 1 (верхняя левая)
             local column1 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0, 0),
@@ -869,20 +832,20 @@ function initLibrary()
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = tab
             })
-            
+
             local column1List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column1
             })
-            
+
             column1List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
             end)
-            
-            -- Колонка 2 (верхняя правая)
+
+            -- КОЛОНКА 2 (верхняя правая)
             local column2 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0, 0),
@@ -890,20 +853,20 @@ function initLibrary()
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = tab
             })
-            
+
             local column2List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column2
             })
-            
+
             column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
             end)
             
-            -- Колонка 3 (нижняя левая)
+            -- КОЛОНКА 3 (нижняя левая)
             local column3 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0, 0, 0.5, 2),
@@ -911,20 +874,20 @@ function initLibrary()
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = tab
             })
-            
+
             local column3List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column3
             })
-            
+
             column3List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
             end)
             
-            -- Колонка 4 (нижняя правая)
+            -- КОЛОНКА 4 (нижняя правая)
             local column4 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(0.5, -2, 0.5, -2),
                 Position = UDim2.new(0.5, 2, 0.5, 2),
@@ -932,15 +895,15 @@ function initLibrary()
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
-                Parent = gridContainer
+                Parent = tab
             })
-            
+
             local column4List = utility.create("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 6),
                 Parent = column4
             })
-            
+
             column4List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
             end)
@@ -959,32 +922,14 @@ function initLibrary()
                 end
 
                 tab.Visible = true
-                filterElements(searchBox.Text)
             end
 
             tabToggle.MouseButton1Click:Connect(openTab)
 
             local tabTypes = utility.table()
-            
+
             function tabTypes:Open()
                 openTab()
-            end
-            
-            function tabTypes:GetName()
-                return name
-            end
-            
-            function tabTypes:Rename(newName)
-                name = newName
-                tabToggle.Text = newName
-                tabToggle.Size = UDim2.new(0, tabToggle.TextBounds.X + 12, 1, 0)
-            end
-            
-            function tabTypes:SetVisible(bool)
-                tabToggle.Visible = bool
-                if bool and toggled then
-                    openTab()
-                end
             end
         
             function tabTypes:Section(opts)
@@ -1008,6 +953,7 @@ function initLibrary()
                 local sectionHolder = utility.create("Frame", {
                     Size = UDim2.new(1, 0, 0, 26),
                     BackgroundTransparency = 1,
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                     Parent = columnFrame
                 })
                 
@@ -1028,11 +974,12 @@ function initLibrary()
                     Parent = section
                 })
 
-                local sectionTitle = utility.create("TextLabel", {
+                utility.create("TextLabel", {
                     ZIndex = 3,
                     Size = UDim2.new(0, 0, 1, 0),
                     BackgroundTransparency = 1,
                     Position = UDim2.new(0, 8, 0, 0),
+                    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                     FontSize = Enum.FontSize.Size14,
                     TextSize = 13,
                     TextColor3 = selectedTheme.text,
@@ -1058,8 +1005,7 @@ function initLibrary()
                 sectionContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     sectionHolder.Size = UDim2.new(1, 0, 0, sectionContentList.AbsoluteContentSize.Y + 38)
                 end)
-                
-                -- Для поиска
+
                 local sectionData = {
                     sectionHolder = sectionHolder,
                     sectionContent = sectionContent,
@@ -1075,7 +1021,6 @@ function initLibrary()
                 
                 function sectionTypes:Rename(newName)
                     name = newName
-                    sectionTitle.Text = newName
                 end
                 
                 function sectionTypes:SetVisible(bool)
@@ -1101,11 +1046,14 @@ function initLibrary()
                     end
                 end
                 
+                -- LABEL
                 function sectionTypes:Label(text)
                     local label = utility.create("TextLabel", {
                         ZIndex = 3,
                         Size = UDim2.new(0, 0, 0, 14),
                         BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 8, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         FontSize = Enum.FontSize.Size14,
                         TextSize = 13,
                         Text = text,
@@ -1140,6 +1088,243 @@ function initLibrary()
                     return labelTypes
                 end
                 
+                -- TOOLTIP
+                function sectionTypes:Tooltip(text, hoverText)
+                    local tooltipHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 16),
+                        BackgroundTransparency = 1,
+                        Parent = sectionContent
+                    })
+                    
+                    local tooltipText = utility.create("TextLabel", {
+                        Size = UDim2.new(1, 0, 1, 0),
+                        BackgroundTransparency = 1,
+                        Text = text,
+                        TextColor3 = selectedTheme.text,
+                        TextSize = 13,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = tooltipHolder
+                    })
+                    
+                    local tooltipPopup = utility.create("Frame", {
+                        Size = UDim2.new(0, 200, 0, 30),
+                        Position = UDim2.new(0, 0, 1, 2),
+                        BackgroundColor3 = selectedTheme.secondary,
+                        BorderColor3 = selectedTheme.border,
+                        Visible = false,
+                        ZIndex = 10,
+                        Parent = tooltipHolder
+                    })
+                    
+                    local tooltipLabel = utility.create("TextLabel", {
+                        Size = UDim2.new(1, -8, 1, -4),
+                        Position = UDim2.new(0, 4, 0, 2),
+                        BackgroundTransparency = 1,
+                        Text = hoverText,
+                        TextColor3 = selectedTheme.text,
+                        TextSize = 11,
+                        Font = Enum.Font.Gotham,
+                        TextWrapped = true,
+                        Parent = tooltipPopup
+                    })
+                    
+                    tooltipText.MouseEnter:Connect(function()
+                        tooltipPopup.Visible = true
+                        local textSize = tooltipLabel.TextBounds.X + 16
+                        tooltipPopup.Size = UDim2.new(0, math.max(100, math.min(300, textSize)), 0, tooltipLabel.TextBounds.Y + 8)
+                    end)
+                    
+                    tooltipText.MouseLeave:Connect(function()
+                        tooltipPopup.Visible = false
+                    end)
+                    
+                    local tooltipTypes = utility.table()
+                    table.insert(sectionData.elements, {element = tooltipHolder, name = text})
+                    
+                    function tooltipTypes:Show()
+                        tooltipHolder.Visible = true
+                    end
+                    
+                    function tooltipTypes:Hide()
+                        tooltipHolder.Visible = false
+                    end
+                    
+                    function tooltipTypes:SetText(newText)
+                        tooltipText.Text = newText
+                        for _, elem in ipairs(sectionData.elements) do
+                            if elem.element == tooltipHolder then
+                                elem.name = newText
+                                break
+                            end
+                        end
+                    end
+                    
+                    function tooltipTypes:SetHoverText(newText)
+                        tooltipLabel.Text = newText
+                    end
+                    
+                    return tooltipTypes
+                end
+                
+                -- COUNTER
+                function sectionTypes:Counter(opts)
+                    local options = utility.table(opts)
+                    local name = options.name or "Counter"
+                    local min = options.min or 0
+                    local max = options.max or 100
+                    local default = options.default or 0
+                    local flag = options.flag
+                    local callback = options.callback or function() end
+                    
+                    default = math.clamp(default, min, max)
+                    
+                    if flag then
+                        library.flags[flag] = default
+                    end
+                    
+                    callback(default)
+                    
+                    local counterHolder = utility.create("Frame", {
+                        Size = UDim2.new(1, 0, 0, 28),
+                        BackgroundTransparency = 1,
+                        Parent = sectionContent
+                    })
+                    
+                    local title = utility.create("TextLabel", {
+                        Size = UDim2.new(0.6, -5, 1, 0),
+                        BackgroundTransparency = 1,
+                        Text = name,
+                        TextColor3 = selectedTheme.text,
+                        TextSize = 13,
+                        Font = Enum.Font.Gotham,
+                        TextXAlignment = Enum.TextXAlignment.Left,
+                        Parent = counterHolder
+                    })
+                    
+                    local controls = utility.create("Frame", {
+                        Size = UDim2.new(0.4, 0, 1, 0),
+                        Position = UDim2.new(0.6, 5, 0, 0),
+                        BackgroundTransparency = 1,
+                        Parent = counterHolder
+                    })
+                    
+                    local minusButton = utility.create("TextButton", {
+                        Size = UDim2.new(0.3, -2, 1, 0),
+                        BackgroundColor3 = selectedTheme.quaternary,
+                        BorderColor3 = selectedTheme.border,
+                        Text = "-",
+                        TextColor3 = selectedTheme.text,
+                        TextSize = 16,
+                        Font = Enum.Font.GothamBold,
+                        Parent = controls
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = minusButton
+                    })
+                    
+                    local valueLabel = utility.create("TextLabel", {
+                        Size = UDim2.new(0.4, 0, 1, 0),
+                        Position = UDim2.new(0.3, 2, 0, 0),
+                        BackgroundTransparency = 1,
+                        Text = tostring(default),
+                        TextColor3 = library.color,
+                        TextSize = 13,
+                        Font = Enum.Font.GothamSemibold,
+                        Parent = controls
+                    })
+                    
+                    local plusButton = utility.create("TextButton", {
+                        Size = UDim2.new(0.3, -2, 1, 0),
+                        Position = UDim2.new(0.7, 2, 0, 0),
+                        BackgroundColor3 = selectedTheme.quaternary,
+                        BorderColor3 = selectedTheme.border,
+                        Text = "+",
+                        TextColor3 = selectedTheme.text,
+                        TextSize = 16,
+                        Font = Enum.Font.GothamBold,
+                        Parent = controls
+                    })
+                    
+                    utility.create("UIGradient", {
+                        Rotation = 90,
+                        Color = ColorSequence.new(selectedTheme.gradient1, selectedTheme.gradient2),
+                        Parent = plusButton
+                    })
+                    
+                    local currentValue = default
+                    
+                    local function updateValue(newValue)
+                        currentValue = math.clamp(newValue, min, max)
+                        valueLabel.Text = tostring(currentValue)
+                        
+                        if flag then
+                            library.flags[flag] = currentValue
+                        end
+                        
+                        callback(currentValue)
+                    end
+                    
+                    minusButton.MouseButton1Click:Connect(function()
+                        updateValue(currentValue - 1)
+                    end)
+                    
+                    plusButton.MouseButton1Click:Connect(function()
+                        updateValue(currentValue + 1)
+                    end)
+                    
+                    local counterTypes = utility.table()
+                    table.insert(sectionData.elements, {element = counterHolder, name = name})
+                    
+                    function counterTypes:Show()
+                        counterHolder.Visible = true
+                    end
+                    
+                    function counterTypes:Hide()
+                        counterHolder.Visible = false
+                    end
+                    
+                    function counterTypes:SetName(str)
+                        title.Text = str
+                        for _, elem in ipairs(sectionData.elements) do
+                            if elem.element == counterHolder then
+                                elem.name = str
+                                break
+                            end
+                        end
+                    end
+                    
+                    function counterTypes:SetValue(value)
+                        updateValue(value)
+                    end
+                    
+                    function counterTypes:GetValue()
+                        return currentValue
+                    end
+                    
+                    function counterTypes:SetMin(newMin)
+                        min = newMin
+                        updateValue(currentValue)
+                    end
+                    
+                    function counterTypes:SetMax(newMax)
+                        max = newMax
+                        updateValue(currentValue)
+                    end
+                    
+                    if flag then
+                        flags.sliders[flag] = function(value)
+                            counterTypes:SetValue(value)
+                        end
+                    end
+                    
+                    return counterTypes
+                end
+                
+                -- IMAGE
                 function sectionTypes:Image(opts)
                     local options = utility.table(opts)
                     local imageUrl = options.url or ""
@@ -1179,6 +1364,7 @@ function initLibrary()
                     return imageTypes
                 end
                 
+                -- HYPERLINK
                 function sectionTypes:Hyperlink(opts)
                     local options = utility.table(opts)
                     local text = options.text or "Link"
@@ -1223,10 +1409,10 @@ function initLibrary()
                                 Url = url,
                                 Method = "GET"
                             })
-                        elseif game:GetService("Players").LocalPlayer then
+                        else
                             library:Notify({title = "Hyperlink", message = "Opening: " .. url, duration = 2})
                         end
-                    })
+                    end)
                     
                     function linkTypes:Show()
                         link.Visible = true
@@ -1260,6 +1446,8 @@ function initLibrary()
                         ZIndex = 5,
                         Size = UDim2.new(1, 0, 0, 14),
                         BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 8, 0, 0),
+                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         FontSize = Enum.FontSize.Size14,
                         TextSize = 13,
                         Text = text,

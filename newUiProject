@@ -539,13 +539,13 @@ function initLibrary()
             Parent = topbar
         })
         
-        -- ОСНОВНОЙ СКРОЛЛИНГ (скроллинг всего контента)
+        -- ГЛАВНЫЙ СКРОЛЛИНГ (для всего контента)
         local mainScrollingFrame = utility.create("ScrollingFrame", {
             Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
             Active = true,
             BorderSizePixel = 0,
-            ScrollBarThickness = 8,
+            ScrollBarThickness = 6,
             ScrollBarImageColor3 = library.color,
             ScrollBarImageTransparency = 0.5,
             CanvasSize = UDim2.new(0, 0, 0, 0),
@@ -584,21 +584,14 @@ function initLibrary()
 
         local windowTypes = utility.table({count = 0})
         
-        -- Функция обновления CanvasSize основного скролла
+        -- Функция обновления CanvasSize главного скролла
         local function updateMainCanvasSize()
             local contentHeight = tabs.AbsoluteSize.Y
             local viewHeight = mainScrollingFrame.AbsoluteSize.Y
             mainScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight, viewHeight))
-            
-            -- Ограничение скролла (нельзя прокрутить выше 0 и ниже максимума)
-            if mainScrollingFrame.CanvasPosition.Y < 0 then
-                mainScrollingFrame.CanvasPosition = Vector2.new(0, 0)
-            elseif mainScrollingFrame.CanvasPosition.Y > contentHeight - viewHeight then
-                mainScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, contentHeight - viewHeight))
-            end
         end
         
-        -- Сброс скролла при переключении таба
+        -- Сброс скролла
         local function resetScroll()
             mainScrollingFrame.CanvasPosition = Vector2.new(0, 0)
         end
@@ -666,10 +659,16 @@ function initLibrary()
                 Parent = columnsContainer
             })
             
-            -- КОЛОНКА 1 (верхняя левая)
-            local column1 = utility.create("Frame", {
+            -- КОЛОНКА 1 (верхняя левая) - со своим скроллингом
+            local column1 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                ScrollBarThickness = 4,
+                ScrollBarImageColor3 = library.color,
+                ScrollBarImageTransparency = 0.5,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
                 Parent = leftGroup
             })
 
@@ -679,11 +678,17 @@ function initLibrary()
                 Parent = column1
             })
             
-            -- КОЛОНКА 3 (нижняя левая)
-            local column3 = utility.create("Frame", {
+            -- КОЛОНКА 3 (нижняя левая) - со своим скроллингом
+            local column3 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                ScrollBarThickness = 4,
+                ScrollBarImageColor3 = library.color,
+                ScrollBarImageTransparency = 0.5,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
                 Parent = leftGroup
             })
 
@@ -693,10 +698,16 @@ function initLibrary()
                 Parent = column3
             })
             
-            -- КОЛОНКА 2 (верхняя правая)
-            local column2 = utility.create("Frame", {
+            -- КОЛОНКА 2 (верхняя правая) - со своим скроллингом
+            local column2 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                ScrollBarThickness = 4,
+                ScrollBarImageColor3 = library.color,
+                ScrollBarImageTransparency = 0.5,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
                 Parent = rightGroup
             })
 
@@ -706,11 +717,17 @@ function initLibrary()
                 Parent = column2
             })
             
-            -- КОЛОНКА 4 (нижняя правая)
-            local column4 = utility.create("Frame", {
+            -- КОЛОНКА 4 (нижняя правая) - со своим скроллингом
+            local column4 = utility.create("ScrollingFrame", {
                 Size = UDim2.new(1, 0, 0, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
+                Active = true,
+                BorderSizePixel = 0,
+                ScrollBarThickness = 4,
+                ScrollBarImageColor3 = library.color,
+                ScrollBarImageTransparency = 0.5,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
                 Parent = rightGroup
             })
 
@@ -720,55 +737,76 @@ function initLibrary()
                 Parent = column4
             })
             
-            -- Функция обновления динамических высот
+            -- Функция обновления высот колонок и CanvasSize
             local function updateColumnHeights()
                 local col1Height = column1List.AbsoluteContentSize.Y
                 local col3Height = column3List.AbsoluteContentSize.Y
                 local col2Height = column2List.AbsoluteContentSize.Y
                 local col4Height = column4List.AbsoluteContentSize.Y
                 
-                local leftTotal = col1Height + col3Height + 6
-                local rightTotal = col2Height + col4Height + 6
-                local maxHeight = math.max(leftTotal, rightTotal)
+                local maxHeight = math.max(col1Height, col3Height, col2Height, col4Height, 100)
                 
-                if leftTotal > 0 then
-                    if leftTotal >= maxHeight then
-                        local ratio1 = col1Height / leftTotal
-                        local ratio3 = col3Height / leftTotal
-                        column1.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio1))
-                        column3.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio3))
-                        column3.Position = UDim2.new(0, 0, 0, column1.Size.Y.Offset + 6)
-                    else
-                        column1.Size = UDim2.new(1, 0, 0, math.max(50, col1Height))
-                        column3.Size = UDim2.new(1, 0, 0, math.max(50, col3Height))
-                        column3.Position = UDim2.new(0, 0, 0, column1.Size.Y.Offset + 6)
-                    end
-                end
+                -- Устанавливаем высоту каждой колонки одинаковой (по максимальной)
+                column1.Size = UDim2.new(1, 0, 0, maxHeight)
+                column2.Size = UDim2.new(1, 0, 0, maxHeight)
+                column3.Size = UDim2.new(1, 0, 0, maxHeight)
+                column4.Size = UDim2.new(1, 0, 0, maxHeight)
                 
-                if rightTotal > 0 then
-                    if rightTotal >= maxHeight then
-                        local ratio2 = col2Height / rightTotal
-                        local ratio4 = col4Height / rightTotal
-                        column2.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio2))
-                        column4.Size = UDim2.new(1, 0, 0, math.max(50, (maxHeight - 6) * ratio4))
-                        column4.Position = UDim2.new(0, 0, 0, column2.Size.Y.Offset + 6)
-                    else
-                        column2.Size = UDim2.new(1, 0, 0, math.max(50, col2Height))
-                        column4.Size = UDim2.new(1, 0, 0, math.max(50, col4Height))
-                        column4.Position = UDim2.new(0, 0, 0, column2.Size.Y.Offset + 6)
-                    end
-                end
+                column3.Position = UDim2.new(0, 0, 0, maxHeight + 6)
+                column4.Position = UDim2.new(0, 0, 0, maxHeight + 6)
                 
-                local totalHeight = math.max(leftTotal, rightTotal)
-                leftGroup.Size = UDim2.new(0.5, -2, 0, totalHeight)
-                rightGroup.Size = UDim2.new(0.5, -2, 0, totalHeight)
-                columnsContainer.Size = UDim2.new(1, 0, 0, totalHeight)
-                tab.Size = UDim2.new(1, 0, 0, totalHeight)
+                -- Обновляем CanvasSize для скроллинга внутри колонок
+                column1.CanvasSize = UDim2.new(0, 0, 0, col1Height)
+                column2.CanvasSize = UDim2.new(0, 0, 0, col2Height)
+                column3.CanvasSize = UDim2.new(0, 0, 0, col3Height)
+                column4.CanvasSize = UDim2.new(0, 0, 0, col4Height)
+                
+                local leftGroupHeight = maxHeight * 2 + 6
+                local rightGroupHeight = maxHeight * 2 + 6
+                
+                leftGroup.Size = UDim2.new(0.5, -2, 0, leftGroupHeight)
+                rightGroup.Size = UDim2.new(0.5, -2, 0, rightGroupHeight)
+                columnsContainer.Size = UDim2.new(1, 0, 0, leftGroupHeight)
+                tab.Size = UDim2.new(1, 0, 0, leftGroupHeight)
                 
                 updateMainCanvasSize()
             end
             
-            -- Подключаем обновление
+            -- Функция для плавного скролла главного фрейма при достижении границ колонки
+            local function setupColumnScrollHandlers(scrollingFrame, mainFrame)
+                local lastWheelTime = 0
+                scrollingFrame.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseWheel then
+                        local currentTime = tick()
+                        if currentTime - lastWheelTime < 0.05 then return end
+                        lastWheelTime = currentTime
+                        
+                        local scrollDelta = input.Position.Z
+                        local currentPos = scrollingFrame.CanvasPosition.Y
+                        local maxPos = scrollingFrame.CanvasSize.Y.Offset - scrollingFrame.AbsoluteSize.Y
+                        
+                        -- Проверяем, достигнут ли предел скролла в колонке
+                        local atTop = currentPos <= 0 and scrollDelta > 0
+                        local atBottom = currentPos >= maxPos and scrollDelta < 0
+                        
+                        if atTop or atBottom then
+                            -- Если достигли предела, скроллим главный фрейм
+                            local newMainPos = mainFrame.CanvasPosition.Y + (scrollDelta * 30)
+                            local mainMaxPos = mainFrame.CanvasSize.Y.Offset - mainFrame.AbsoluteSize.Y
+                            newMainPos = math.clamp(newMainPos, 0, math.max(0, mainMaxPos))
+                            mainFrame.CanvasPosition = Vector2.new(0, newMainPos)
+                        end
+                    end
+                end)
+            end
+            
+            -- Подключаем обработчики для каждой колонки
+            setupColumnScrollHandlers(column1, mainScrollingFrame)
+            setupColumnScrollHandlers(column2, mainScrollingFrame)
+            setupColumnScrollHandlers(column3, mainScrollingFrame)
+            setupColumnScrollHandlers(column4, mainScrollingFrame)
+            
+            -- Подключаем обновление при изменении контента
             local function setupUpdater()
                 column1List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateColumnHeights)
                 column2List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateColumnHeights)

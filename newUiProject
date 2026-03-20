@@ -1,4 +1,4 @@
---[[фывфыфывфыв
+--[[секции
 Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
@@ -680,32 +680,76 @@ function initLibrary()
                 column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
             end)
             
-            -- Функция обновления размеров колонок
+                       -- Функция обновления размеров колонок
             local function updateColumnSizes()
-                local hasColumn3 = column3.Visible and #column3:GetChildren() > 0
-                local hasColumn4 = column4.Visible and #column4:GetChildren() > 0
+                -- Получаем количество секций в каждой колонке
+                local col1Count = #column1:GetChildren()
+                local col2Count = #column2:GetChildren()
+                local col3Count = #column3:GetChildren()
+                local col4Count = #column4:GetChildren()
+                
+                -- Проверяем, есть ли секции в колонках 3 и 4
+                local hasColumn3 = col3Count > 0
+                local hasColumn4 = col4Count > 0
                 
                 if hasColumn3 or hasColumn4 then
-                    -- Если есть колонки 3 и 4, распределяем высоту поровну
-                    column1.Size = UDim2.new(0.5, -2, 0.5, -2)
-                    column2.Size = UDim2.new(0.5, -2, 0.5, -2)
-                    column3.Size = UDim2.new(0.5, -2, 0.5, -2)
-                    column4.Size = UDim2.new(0.5, -2, 0.5, -2)
-                    column3.Position = UDim2.new(0, 0, 0.5, 2)
-                    column4.Position = UDim2.new(0.5, 2, 0.5, 2)
+                    -- Если есть колонки 3 или 4, то все 4 колонки должны быть одинаковой высоты
+                    -- Находим максимальную высоту среди всех колонок
+                    local maxHeight = math.max(
+                        column1List.AbsoluteContentSize.Y,
+                        column2List.AbsoluteContentSize.Y,
+                        column3List.AbsoluteContentSize.Y,
+                        column4List.AbsoluteContentSize.Y
+                    )
+                    
+                    -- Устанавливаем высоту каждой колонки на основе максимальной
+                    local columnHeight = math.max(100, maxHeight)
+                    
+                    column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
+                    column2.Size = UDim2.new(0.5, -2, 0, columnHeight)
+                    column3.Size = UDim2.new(0.5, -2, 0, columnHeight)
+                    column4.Size = UDim2.new(0.5, -2, 0, columnHeight)
+                    
+                    -- Позиционируем колонки
+                    column1.Position = UDim2.new(0, 0, 0, 0)
+                    column2.Position = UDim2.new(0.5, 2, 0, 0)
+                    column3.Position = UDim2.new(0, 0, 0, columnHeight + 6)
+                    column4.Position = UDim2.new(0.5, 2, 0, columnHeight + 6)
+                    
+                    -- Показываем колонки 3 и 4
                     column3.Visible = true
                     column4.Visible = true
+                    
+                    -- Общая высота контейнера
+                    local totalHeight = columnHeight * 2 + 6
+                    columnsContainer.Size = UDim2.new(1, 0, 0, totalHeight)
+                    tab.Size = UDim2.new(1, 0, 0, totalHeight)
                 else
                     -- Если колонок 3 и 4 нет, колонки 1 и 2 занимают всю высоту
-                    column1.Size = UDim2.new(0.5, -2, 1, 0)
-                    column2.Size = UDim2.new(0.5, -2, 1, 0)
+                    local maxHeight = math.max(
+                        column1List.AbsoluteContentSize.Y,
+                        column2List.AbsoluteContentSize.Y
+                    )
+                    
+                    local columnHeight = math.max(100, maxHeight)
+                    
+                    column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
+                    column2.Size = UDim2.new(0.5, -2, 0, columnHeight)
                     column3.Size = UDim2.new(0.5, -2, 0, 0)
                     column4.Size = UDim2.new(0.5, -2, 0, 0)
+                    
+                    column1.Position = UDim2.new(0, 0, 0, 0)
+                    column2.Position = UDim2.new(0.5, 2, 0, 0)
+                    
+                    -- Скрываем колонки 3 и 4
                     column3.Visible = false
                     column4.Visible = false
+                    
+                    columnsContainer.Size = UDim2.new(1, 0, 0, columnHeight)
+                    tab.Size = UDim2.new(1, 0, 0, columnHeight)
                 end
                 
-                -- Обновляем CanvasSize
+                -- Обновляем CanvasSize для скроллинга
                 column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
                 column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)

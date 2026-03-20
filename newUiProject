@@ -1,4 +1,4 @@
---[[секции2
+--[[секции3
 Yun Founders: flash#9999, loris#9547, worldwide#0001 , Saul Goodman#2345
 Yun Devs: zomb#7741, nives#0001, loot#1337
 Special Thanks To: Qw#1549
@@ -684,7 +684,7 @@ function initLibrary()
                 updateColumnSizes()
             end)
             
-                      -- Функция обновления размеров колонок
+                -- Функция обновления размеров колонок
             local function updateColumnSizes()
                 -- Получаем количество секций в каждой колонке
                 local col1Count = #column1:GetChildren()
@@ -695,13 +695,17 @@ function initLibrary()
                 -- Проверяем, есть ли секции в колонках 3 и 4
                 local hasBottomColumns = col3Count > 0 or col4Count > 0
                 
-                -- Получаем реальную высоту окна
-                local windowHeight = main.AbsoluteSize.Y
-                if windowHeight < 100 then windowHeight = sizeY end
+                -- Получаем высоту окна (topbar - это само окно)
+                local windowHeight = topbar.AbsoluteSize.Y
+                if windowHeight < 100 then windowHeight = sizeY + 26 end
+                
+                -- Высота для колонок = высота окна минус высота tabToggles и отступы
+                local availableHeight = windowHeight - 26 - 26 - 8 -- topbar (26) + tabToggles (26) + отступы
+                if availableHeight < 50 then availableHeight = 300 end
                 
                 if hasBottomColumns then
                     -- Если есть нижние колонки, делим высоту пополам
-                    local halfHeight = (windowHeight - 6) / 2
+                    local halfHeight = (availableHeight - 6) / 2
                     local columnHeight = math.max(50, halfHeight)
                     
                     column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
@@ -722,7 +726,7 @@ function initLibrary()
                     tab.Size = UDim2.new(1, 0, 0, totalHeight)
                 else
                     -- Если нет нижних колонок, занимаем всю высоту
-                    local columnHeight = math.max(50, windowHeight)
+                    local columnHeight = math.max(50, availableHeight)
                     
                     column1.Size = UDim2.new(0.5, -2, 0, columnHeight)
                     column2.Size = UDim2.new(0.5, -2, 0, columnHeight)

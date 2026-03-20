@@ -587,7 +587,7 @@ function initLibrary()
                 Parent = tabs
             })
             
-            -- КОНТЕЙНЕР ДЛЯ ВСЕХ КОЛОНОК (для правильного позиционирования)
+            -- Контейнер для колонок
             local columnsContainer = utility.create("Frame", {
                 Size = UDim2.new(1, 0, 1, 0),
                 BackgroundTransparency = 1,
@@ -596,7 +596,7 @@ function initLibrary()
             
             -- КОЛОНКА 1 (верхняя левая)
             local column1 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0, 0, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
@@ -617,7 +617,7 @@ function initLibrary()
 
             -- КОЛОНКА 2 (верхняя правая)
             local column2 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 1, 0),
                 Position = UDim2.new(0.5, 2, 0, 0),
                 BackgroundTransparency = 1,
                 Active = true,
@@ -636,14 +636,15 @@ function initLibrary()
                 column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
             end)
             
-            -- КОЛОНКА 3 (нижняя левая)
+            -- КОЛОНКА 3 (нижняя левая) - скрыта по умолчанию
             local column3 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 0, 0),
                 Position = UDim2.new(0, 0, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
+                Visible = false,
                 Parent = columnsContainer
             })
 
@@ -657,14 +658,15 @@ function initLibrary()
                 column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
             end)
             
-            -- КОЛОНКА 4 (нижняя правая)
+            -- КОЛОНКА 4 (нижняя правая) - скрыта по умолчанию
             local column4 = utility.create("ScrollingFrame", {
-                Size = UDim2.new(0.5, -2, 0.5, -2),
+                Size = UDim2.new(0.5, -2, 0, 0),
                 Position = UDim2.new(0.5, 2, 0.5, 2),
                 BackgroundTransparency = 1,
                 Active = true,
                 BorderSizePixel = 0,
                 ScrollBarThickness = 0,
+                Visible = false,
                 Parent = columnsContainer
             })
 
@@ -677,6 +679,43 @@ function initLibrary()
             column4List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
             end)
+            
+            -- Функция обновления размеров колонок
+            local function updateColumnSizes()
+                local hasColumn3 = column3.Visible and #column3:GetChildren() > 0
+                local hasColumn4 = column4.Visible and #column4:GetChildren() > 0
+                
+                if hasColumn3 or hasColumn4 then
+                    -- Если есть колонки 3 и 4, распределяем высоту поровну
+                    column1.Size = UDim2.new(0.5, -2, 0.5, -2)
+                    column2.Size = UDim2.new(0.5, -2, 0.5, -2)
+                    column3.Size = UDim2.new(0.5, -2, 0.5, -2)
+                    column4.Size = UDim2.new(0.5, -2, 0.5, -2)
+                    column3.Position = UDim2.new(0, 0, 0.5, 2)
+                    column4.Position = UDim2.new(0.5, 2, 0.5, 2)
+                    column3.Visible = true
+                    column4.Visible = true
+                else
+                    -- Если колонок 3 и 4 нет, колонки 1 и 2 занимают всю высоту
+                    column1.Size = UDim2.new(0.5, -2, 1, 0)
+                    column2.Size = UDim2.new(0.5, -2, 1, 0)
+                    column3.Size = UDim2.new(0.5, -2, 0, 0)
+                    column4.Size = UDim2.new(0.5, -2, 0, 0)
+                    column3.Visible = false
+                    column4.Visible = false
+                end
+                
+                -- Обновляем CanvasSize
+                column1.CanvasSize = UDim2.new(0, 0, 0, column1List.AbsoluteContentSize.Y)
+                column2.CanvasSize = UDim2.new(0, 0, 0, column2List.AbsoluteContentSize.Y)
+                column3.CanvasSize = UDim2.new(0, 0, 0, column3List.AbsoluteContentSize.Y)
+                column4.CanvasSize = UDim2.new(0, 0, 0, column4List.AbsoluteContentSize.Y)
+            end
+            
+            -- Отслеживаем добавление секций
+            local function onSectionAdded()
+                updateColumnSizes()
+            end
 
             local function openTab()
                 for _, obj in next, tabTogglesHolder:GetChildren() do
@@ -692,6 +731,8 @@ function initLibrary()
                 end
 
                 tab.Visible = true
+                wait(0.1)
+                updateColumnSizes()
             end
 
             tabToggle.MouseButton1Click:Connect(openTab)
@@ -700,6 +741,10 @@ function initLibrary()
 
             function tabTypes:Open()
                 openTab()
+            end
+            
+            function tabTypes:UpdateLayout()
+                updateColumnSizes()
             end
         
             function tabTypes:Section(opts)
@@ -774,6 +819,7 @@ function initLibrary()
 
                 sectionContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     sectionHolder.Size = UDim2.new(1, 0, 0, sectionContentList.AbsoluteContentSize.Y + 38)
+                    updateColumnSizes()
                 end)
 
                 local sectionTypes = utility.table()

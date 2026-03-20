@@ -3671,7 +3671,7 @@ function initLibrary()
                         else
                             rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         end
-                    end
+                    end)
                         
                     hex.FocusLost:Connect(function()
                         if hex.Text:find("#") and hex.Text:len() == 7 then
@@ -4113,7 +4113,7 @@ function initLibrary()
                         else
                             rgb.Text = math.floor((hsv.r * 255) + 0.5) .. ", " .. math.floor((hsv.g * 255) + 0.5) .. ", " .. math.floor((hsv.b * 255) + 0.5)
                         end
-                    end
+                    end)
                         
                     hex.FocusLost:Connect(function()
                         if hex.Text:find("#") and hex.Text:len() == 7 then
@@ -4154,4 +4154,4 @@ function initLibrary()
     end
 
     return library
-end
+end ь

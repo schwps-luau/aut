@@ -1,11 +1,13 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local localPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local highlights = {}
 local connections = {}
 local cache = {}
+local raycastParams = RaycastParams.new()
 
 local ESP = {
     Enabled = false,
@@ -23,6 +25,74 @@ local ESP = {
     HealthOutlineColor = Color3.fromRGB(0, 0, 0),
     NameColor = Color3.fromRGB(255, 255, 255)
 }
+
+local function UpdateRaycastIgnore()
+    local ignoreList = {localPlayer.Character, camera}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character ~= localPlayer.Character then
+            table.insert(ignoreList, player.Character)
+        end
+    end
+    raycastParams.FilterDescendantsInstances = ignoreList
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+end
+
+local visibleCache = {
+    player = nil,
+    visible = false,
+    timestamp = 0
+}
+
+local function IsPlayerVisible(player)
+    local currentTime = tick()
+    
+    if visibleCache.player == player and currentTime - visibleCache.timestamp < 0.1 then
+        return visibleCache.visible
+    end
+    
+    local character = player.Character
+    if not character then
+        visibleCache.player = player
+        visibleCache.visible = false
+        visibleCache.timestamp = currentTime
+        return false
+    end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+    if not rootPart then
+        visibleCache.player = player
+        visibleCache.visible = false
+        visibleCache.timestamp = currentTime
+        return false
+    end
+    
+    local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+    if not onScreen then
+        visibleCache.player = player
+        visibleCache.visible = false
+        visibleCache.timestamp = currentTime
+        return false
+    end
+    
+    local cameraPosition = camera.CFrame.Position
+    local direction = (rootPart.Position - cameraPosition).Unit * 1000
+    local rayResult = Workspace:Raycast(cameraPosition, direction, raycastParams)
+    
+    local visible = false
+    if rayResult then
+        local hitDistance = (rayResult.Position - cameraPosition).Magnitude
+        local targetDistance = (rootPart.Position - cameraPosition).Magnitude
+        visible = hitDistance >= targetDistance - 1
+    else
+        visible = true
+    end
+    
+    visibleCache.player = player
+    visibleCache.visible = visible
+    visibleCache.timestamp = currentTime
+    
+    return visible
+end
 
 local function createDrawing(class, properties)
     local drawing = Drawing.new(class)
@@ -55,34 +125,15 @@ local function createEsp(player)
     cache[player] = esp
 end
 
-local function isPlayerVisible(player)
-    local character = player.Character
-    if not character then return false end
-    
-    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-    if not rootPart then return false end
-    
-    local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-    if not onScreen then return false end
-    
-    local ray = Ray.new(camera.CFrame.Position, (rootPart.Position - camera.CFrame.Position).Unit * 1000)
-    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {localPlayer.Character})
-    
-    if not hit then return true end
-    if hit:IsDescendantOf(character) then return true end
-    
-    return false
-end
-
 local function getHighlightColor(player)
-    local isTeammate = not ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team
+    local isTeammate = ESP.TeamCheck and player.Team and localPlayer.Team and player.Team == localPlayer.Team
     
     if isTeammate then
         return ESP.TeammateColor
     end
     
     if ESP.VisibleCheck then
-        return isPlayerVisible(player) and ESP.VisibleColor or ESP.InvisibleColor
+        return IsPlayerVisible(player) and ESP.VisibleColor or ESP.InvisibleColor
     end
     
     return ESP.VisibleColor
@@ -100,7 +151,7 @@ local function shouldShowPlayer(player)
     end
     
     if ESP.WallCheck then
-        return isPlayerVisible(player)
+        return IsPlayerVisible(player)
     end
     
     return true
@@ -140,12 +191,12 @@ local function updateName(player)
         return
     end
     
-    if ESP.WallCheck and not isPlayerVisible(player) then
+    if ESP.WallCheck and not IsPlayerVisible(player) then
         esp.name.Visible = false
         return
     end
     
-    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
     if not rootPart then
         esp.name.Visible = false
         return
@@ -199,13 +250,13 @@ local function updateHealth(player)
         return
     end
     
-    if ESP.WallCheck and not isPlayerVisible(player) then
+    if ESP.WallCheck and not IsPlayerVisible(player) then
         esp.health.Visible = false
         esp.healthOutline.Visible = false
         return
     end
     
-    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
     if not rootPart then
         esp.health.Visible = false
         esp.healthOutline.Visible = false
@@ -226,12 +277,10 @@ local function updateHealth(player)
         
         local healthPercent = humanoid.Health / humanoid.MaxHealth
         
-        -- Черная обводка
         esp.healthOutline.From = Vector2.new(boxPosition.X - 7, boxPosition.Y + boxSize.Y)
         esp.healthOutline.To = Vector2.new(esp.healthOutline.From.X, esp.healthOutline.From.Y - boxSize.Y)
         esp.healthOutline.Visible = true
         
-        -- Цветная полоска здоровья
         esp.health.From = Vector2.new(boxPosition.X - 6, boxPosition.Y + boxSize.Y)
         esp.health.To = Vector2.new(esp.health.From.X, esp.health.From.Y - healthPercent * boxSize.Y)
         esp.health.Color = ESP.HealthLowColor:Lerp(ESP.HealthHighColor, healthPercent)
@@ -294,6 +343,23 @@ local function cleanupPlayer(player)
 end
 
 function ESP:Init()
+    UpdateRaycastIgnore()
+    
+    Players.PlayerAdded:Connect(function()
+        task.wait(0.5)
+        UpdateRaycastIgnore()
+    end)
+    
+    Players.PlayerRemoving:Connect(function()
+        task.wait(0.1)
+        UpdateRaycastIgnore()
+    end)
+    
+    localPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        UpdateRaycastIgnore()
+    end)
+    
     for _, player in ipairs(Players:GetPlayers()) do
         task.spawn(setupPlayer, player)
     end

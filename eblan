@@ -487,7 +487,7 @@ p1t1:Slider {
     callback = function(value)
         Settings.Combat.Aimbot.Smoothness = tonumber(value) / 10
     end
-}
+} 
 
 p1t1:dropdown {
     name = "part",
@@ -652,7 +652,7 @@ p3t1:Slider {
 p3t1:ColorPicker {
     Name = "color",
     flag = "fov_color",
-    Default = Color3.fromRGB(255, 255, 255),
+    Default = Library:GetColor(),
     callback = function(value)
         Settings.Combat.Aimlock.FOV.Color = value
         Settings.Combat.Aimbot.FOV.Color = value
@@ -662,7 +662,7 @@ p3t1:ColorPicker {
 p3t1:ColorPicker {
     Name = "locked color",
     flag = "fov_locked_color",
-    Default = Color3.fromRGB(255, 0, 0),
+    Default = Library:GetColor(),
     callback = function(value)
         Settings.Combat.Aimlock.FOV.LockedColor = value
         Settings.Combat.Aimbot.FOV.LockedColor = value
@@ -764,7 +764,7 @@ p1t2:Toggle {
 
 p1t2:ColorPicker {
     Name = "visible color",
-    Default = Color3.fromRGB(255, 255, 255),
+    Default = Library:GetColor(),
     Flag = "vis_color",
     callback = function(value)
        ESP.VisibleColor = value

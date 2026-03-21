@@ -1042,9 +1042,43 @@ p2t5:Button {
     end
 }
 
--- ============================================
--- ВСЕ ФУНКЦИИ В КОНЦЕ
--- ============================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 local raycastParams = RaycastParams.new()
 raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -1091,7 +1125,7 @@ local function GetBestVisiblePart(character, settings)
     end
     
     local settingsPart = settings.LockPart
-    local partsToCheck = {settingsPart, "Head", "UpperTorso", "HumanoidRootPart", "LowerTorso", "Torso"}
+    local partsToCheck = {settingsPart, "Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
     
     for _, partName in ipairs(partsToCheck) do
         local part = character:FindFirstChild(partName)
@@ -1189,9 +1223,8 @@ local function GetAllValidPlayers(settings, useFOV)
             local centerDistance = (Vector2.new(partPosition.X, partPosition.Y) - centerPosition).Magnitude
             
             local distanceToCheck = useFOV and centerDistance or cursorDistance
-            local fovValue = useFOV and settings.FOV.Value or 9999
             
-            if distanceToCheck <= fovValue then
+            if distanceToCheck <= settings.FOV.Value then
                 local humanoid = character:FindFirstChild("Humanoid")
                 local healthValue = humanoid and humanoid.Health or 100
                 local distanceToPlayer = 9999
@@ -1245,7 +1278,7 @@ local function GetClosestPlayerForAimlock()
     if not settings.Enabled then return nil end
     if settings.HoldCheck and not HasItemInHands() then return nil end
     
-    return GetBestPlayer(settings, false)
+    return GetBestPlayer(settings)
 end
 
 local function GetClosestPlayerForAimbot()
@@ -1253,7 +1286,7 @@ local function GetClosestPlayerForAimbot()
     if not settings.Enabled then return nil end
     if settings.HoldCheck and not HasItemInHands() then return nil end
     
-    return GetBestPlayer(settings, true)
+    return GetBestPlayer(settings)
 end
 
 local lastUpdateTime = 0

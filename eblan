@@ -16,6 +16,10 @@ local Settings = {
             Smoothness = 1.5,
             LockPart = "Head",
             DeathCooldown = 0.5,
+            Priority = {
+                Enabled = true,
+                Modes = {}
+            },
             FOV = {
                 Enabled = false,
                 Value = 90,
@@ -37,6 +41,10 @@ local Settings = {
             Prediction = 0,
             LockPart = "Head",
             Smoothness = 0,
+            Priority = {
+                Enabled = true,
+                Modes = {}
+            },
             FOV = {
                 Enabled = false,
                 Value = 90,
@@ -152,243 +160,7 @@ local LastDeathTime = 0
 local Typing = false
 local NoclipConnection = nil
 
-local function IsCharacterAlive(character)
-    if not character then return false end
-    local humanoid = character:FindFirstChild("Humanoid")
-    return humanoid and humanoid.Health > 0 and humanoid:GetState() ~= Enum.HumanoidStateType.Dead
-end
-
-local function HasItemInHands()
-    local character = LocalPlayer.Character
-    if not character then return false end
-    return character:FindFirstChildOfClass("Tool") ~= nil
-end
-
-local function IsTargetVisible(targetPosition, targetCharacter, settings)
-    if not settings.WallCheck then return true end
-    
-    local cameraPosition = Camera.CFrame.Position
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-    
-    local ignoreList = {LocalPlayer.Character, targetCharacter, Camera}
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character and player.Character ~= targetCharacter then
-            table.insert(ignoreList, player.Character)
-        end
-    end
-    raycastParams.FilterDescendantsInstances = ignoreList
-    
-    local direction = (targetPosition - cameraPosition).Unit * 1000
-    local rayResult = Workspace:Raycast(cameraPosition, direction, raycastParams)
-    
-    if rayResult then
-        local hitDistance = (rayResult.Position - cameraPosition).Magnitude
-        local targetDistance = (targetPosition - cameraPosition).Magnitude
-        return hitDistance >= targetDistance - 1
-    end
-    return true
-end
-
-local function ValidateTarget(target, settings)
-    if not target then return false end
-    
-    local character = target.Character
-    if not character then return false end
-    if settings.AliveCheck and not IsCharacterAlive(character) then
-        LastDeathTime = tick()
-        return false
-    end
-    if settings.HoldCheck and not HasItemInHands() then return false end
-    
-    local part = character:FindFirstChild(settings.LockPart)
-    if not part then return false end
-    if settings.TeamCheck and target.Team == LocalPlayer.Team then return false end
-    if not IsTargetVisible(part.Position, character, settings) then return false end
-    
-    return true
-end
-
-local function GetClosestPlayerForAimlock()
-    local settings = Settings.Combat.Aimlock
-    if not settings.Enabled then return nil end
-    if settings.HoldCheck and not HasItemInHands() then return nil end
-    
-    local closestPlayer = nil
-    local closestDistance = settings.FOV.Value
-    local mousePosition = UserInputService:GetMouseLocation()
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        
-        local character = player.Character
-        if not character then continue end
-        if settings.AliveCheck and not IsCharacterAlive(character) then continue end
-        
-        local part = character:FindFirstChild(settings.LockPart)
-        if not part then continue end
-        if settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
-        if not IsTargetVisible(part.Position, character, settings) then continue end
-        
-        local partPosition, onScreen = Camera:WorldToViewportPoint(part.Position)
-        if onScreen then
-            local distance = (Vector2.new(partPosition.X, partPosition.Y) - mousePosition).Magnitude
-            if distance < closestDistance then
-                closestDistance = distance
-                closestPlayer = player
-            end
-        end
-    end
-    
-    return closestPlayer
-end
-
-local function GetClosestPlayerForAimbot()
-    local settings = Settings.Combat.Aimbot
-    if not settings.Enabled then return nil end
-    if settings.HoldCheck and not HasItemInHands() then return nil end
-    
-    local closestPlayer = nil
-    local closestDistance = settings.FOV.Value
-    local viewportSize = Camera.ViewportSize
-    local centerPosition = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        
-        local character = player.Character
-        if not character then continue end
-        if settings.AliveCheck and not IsCharacterAlive(character) then continue end
-        
-        local part = character:FindFirstChild(settings.LockPart)
-        if not part then continue end
-        if settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
-        if not IsTargetVisible(part.Position, character, settings) then continue end
-        
-        local partPosition, onScreen = Camera:WorldToViewportPoint(part.Position)
-        if onScreen then
-            local distance = (Vector2.new(partPosition.X, partPosition.Y) - centerPosition).Magnitude
-            if distance < closestDistance then
-                closestDistance = distance
-                closestPlayer = player
-            end
-        end
-    end
-    
-    return closestPlayer
-end
-
-local function UpdateAimlock()
-    local settings = Settings.Combat.Aimlock
-    if not settings.Enabled then return end
-    
-    if not ValidateTarget(CurrentTarget, settings) then
-        CurrentTarget = GetClosestPlayerForAimlock()
-    end
-    
-    if not CurrentTarget or not RunningAimlock then return end
-    
-    local character = CurrentTarget.Character
-    if not character then return end
-    
-    local part = character:FindFirstChild(settings.LockPart)
-    if not part then return end
-    
-    local success, partPosition = pcall(function()
-        return Camera:WorldToViewportPoint(part.Position)
-    end)
-    
-    if not success then return end
-    
-    local mousePosition = UserInputService:GetMouseLocation()
-    local deltaX = (partPosition.X - mousePosition.X) / settings.Smoothness
-    local deltaY = (partPosition.Y - mousePosition.Y) / settings.Smoothness
-    local maxDelta = 200 / settings.Smoothness
-    
-    deltaX = math.clamp(deltaX, -maxDelta, maxDelta)
-    deltaY = math.clamp(deltaY, -maxDelta, maxDelta)
-    
-    if math.abs(deltaX) > 0.5 or math.abs(deltaY) > 0.5 then
-        pcall(mousemoverel, deltaX, deltaY)
-    end
-    
-    FOVAimlock.Color = settings.FOV.LockedColor
-end
-
-local function UpdateAimbot()
-    local settings = Settings.Combat.Aimbot
-    if not settings.Enabled then return end
-    
-    if not ValidateTarget(CurrentTarget, settings) then
-        CurrentTarget = GetClosestPlayerForAimbot()
-    end
-    
-    if not CurrentTarget or not RunningAimbot then return end
-    
-    local character = CurrentTarget.Character
-    if not character then return end
-    
-    local part = character:FindFirstChild(settings.LockPart)
-    if not part then return end
-    
-    local targetPos = part.Position
-    if settings.AimingMethod == "velocity" then
-        targetPos = targetPos + (part.Velocity * settings.Prediction)
-    elseif settings.AimingMethod == "movedirection" then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            targetPos = targetPos + (humanoid.MoveDirection * settings.Prediction)
-        end
-    end
-    
-    if settings.Smoothness > 0 then
-        local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-        local newCFrame = Camera.CFrame:Lerp(targetCFrame, 1 / (settings.Smoothness * 10))
-        pcall(function()
-            Camera.CFrame = newCFrame
-        end)
-    else
-        pcall(function()
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-        end)
-    end
-    
-    FOVAimbot.Color = settings.FOV.LockedColor
-end
-
-local function UpdateFOVCircles()
-    local aimlockSettings = Settings.Combat.Aimlock
-    local aimbotSettings = Settings.Combat.Aimbot
-    
-    if aimlockSettings.Enabled and aimlockSettings.FOV.Enabled then
-        FOVAimlock.Visible = true
-        FOVAimlock.Position = UserInputService:GetMouseLocation()
-        FOVAimlock.Radius = aimlockSettings.FOV.Value
-        FOVAimlock.Color = aimlockSettings.FOV.Color
-        FOVAimlock.Filled = aimlockSettings.FOV.Filled
-        FOVAimlock.Transparency = aimlockSettings.FOV.Transparency
-    else
-        FOVAimlock.Visible = false
-    end
-    
-    if aimbotSettings.Enabled and aimbotSettings.FOV.Enabled then
-        FOVAimbot.Visible = true
-        local viewportSize = Camera.ViewportSize
-        FOVAimbot.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
-        FOVAimbot.Radius = aimbotSettings.FOV.Value
-        FOVAimbot.Color = aimbotSettings.FOV.Color
-        FOVAimbot.Filled = aimbotSettings.FOV.Filled
-        FOVAimbot.Transparency = aimbotSettings.FOV.Transparency
-    else
-        FOVAimbot.Visible = false
-    end
-end
-
-local function ResetTarget()
-    CurrentTarget = nil
-    FOVAimlock.Color = Settings.Combat.Aimlock.FOV.Color
-    FOVAimbot.Color = Settings.Combat.Aimbot.FOV.Color
-end
+local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/newesp"))(); ESP:Init()
 
 local Library = initLibrary()
 local Window = Library:Load({
@@ -508,6 +280,16 @@ p1t1:dropdown {
     end
 }
 
+p1t1:dropdown {
+    name = "priority modes",
+    flag = "aimbot_priority_modes",
+    content = {"health", "distance"},
+    multichoice = true,
+    callback = function(value)
+        Settings.Combat.Aimbot.Priority.Modes = value
+    end
+}
+
 p1t1:Keybind {
     Name = "keybind",
     flag = "aimbot_keybind",
@@ -592,6 +374,16 @@ p2t1:dropdown {
     multichoice = false,
     callback = function(value)
         Settings.Combat.Aimlock.LockPart = value
+    end
+}
+
+p2t1:dropdown {
+    name = "priority modes",
+    flag = "aimlock_priority_modes",
+    content = {"health", "distance"},
+    multichoice = true,
+    callback = function(value)
+        Settings.Combat.Aimlock.Priority.Modes = value
     end
 }
 
@@ -705,7 +497,6 @@ p4t1:Slider {
     end
 }
 
-local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/newesp"))(); ESP:Init()
 p1t2:Toggle {
     Name = "enabled",
     Flag = "enabled_esp",
@@ -779,7 +570,6 @@ p1t2:ColorPicker {
         ESP.InvisibleColor = value
     end
 }
-
 
 p1t3:Toggle {
     Name = "enabled",
@@ -922,7 +712,6 @@ targetselect = p1t4:Box {
         end
     end
 }
-Settings.Target.Selected = nil
 
 p1t4:Toggle {
     Name = "spectate",
@@ -1253,83 +1042,365 @@ p2t5:Button {
     end
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- ============================================
+-- ВСЕ ФУНКЦИИ В КОНЦЕ
+-- ============================================
+
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+local function UpdateRaycastIgnore()
+    local ignoreList = {LocalPlayer.Character, Camera}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character ~= LocalPlayer.Character then
+            table.insert(ignoreList, player.Character)
+        end
+    end
+    raycastParams.FilterDescendantsInstances = ignoreList
+end
+
+local function IsPartVisible(part)
+    if not part or not part:IsA("BasePart") then return false end
+    
+    local cameraPosition = Camera.CFrame.Position
+    local direction = (part.Position - cameraPosition).Unit * 1000
+    local rayResult = Workspace:Raycast(cameraPosition, direction, raycastParams)
+    
+    if rayResult then
+        local hitDistance = (rayResult.Position - cameraPosition).Magnitude
+        local targetDistance = (part.Position - cameraPosition).Magnitude
+        return hitDistance >= targetDistance - 1
+    end
+    
+    return true
+end
+
+local visibleCache = {
+    target = nil,
+    part = nil,
+    timestamp = 0
+}
+
+local function GetBestVisiblePart(character, settings)
+    if not character then return nil end
+    
+    local currentTime = tick()
+    
+    if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
+        return visibleCache.part
+    end
+    
+    local settingsPart = settings.LockPart
+    local partsToCheck = {settingsPart, "Head", "UpperTorso", "HumanoidRootPart", "LowerTorso", "Torso"}
+    
+    for _, partName in ipairs(partsToCheck) do
+        local part = character:FindFirstChild(partName)
+        if part and part:IsA("BasePart") then
+            if IsPartVisible(part) then
+                visibleCache.target = character
+                visibleCache.part = part
+                visibleCache.timestamp = currentTime
+                return part
+            end
+        end
+    end
+    
+    local defaultPart = character:FindFirstChild(settingsPart)
+    visibleCache.target = character
+    visibleCache.part = defaultPart
+    visibleCache.timestamp = currentTime
+    return defaultPart
+end
+
+local function IsCharacterAlive(character)
+    if not character then return false end
+    local humanoid = character:FindFirstChild("Humanoid")
+    return humanoid and humanoid.Health > 0 and humanoid:GetState() ~= Enum.HumanoidStateType.Dead
+end
+
+local function HasItemInHands()
+    local character = LocalPlayer.Character
+    if not character then return false end
+    return character:FindFirstChildOfClass("Tool") ~= nil
+end
+
+local function ValidateTarget(target, settings)
+    if not target then return false end
+    
+    local character = target.Character
+    if not character then return false end
+    if settings.AliveCheck and not IsCharacterAlive(character) then
+        LastDeathTime = tick()
+        return false
+    end
+    if settings.HoldCheck and not HasItemInHands() then return false end
+    if settings.TeamCheck and target.Team == LocalPlayer.Team then return false end
+    
+    if settings.WallCheck then
+        local part = GetBestVisiblePart(character, settings)
+        if not part then return false end
+        if not IsPartVisible(part) then return false end
+    end
+    
+    return true
+end
+
+local function GetPlayerScore(player, settings, cursorDistance, healthValue, distanceToPlayer)
+    local modes = settings.Priority.Modes
+    local score = 0
+    
+    if #modes == 0 then
+        return -cursorDistance
+    end
+    
+    if table.find(modes, "health") then
+        score = score + (100 - healthValue) * 10000
+    end
+    
+    if table.find(modes, "distance") then
+        score = score + (1000 - math.min(distanceToPlayer, 1000))
+    end
+    
+    return score
+end
+
+local function GetAllValidPlayers(settings, useFOV)
+    local validPlayers = {}
+    local mousePosition = UserInputService:GetMouseLocation()
+    local viewportSize = Camera.ViewportSize
+    local centerPosition = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        
+        local character = player.Character
+        if not character then continue end
+        if settings.AliveCheck and not IsCharacterAlive(character) then continue end
+        if settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
+        
+        local part = GetBestVisiblePart(character, settings)
+        if not part then continue end
+        
+        if settings.WallCheck and not IsPartVisible(part) then continue end
+        
+        local partPosition, onScreen = Camera:WorldToViewportPoint(part.Position)
+        if onScreen then
+            local cursorDistance = (Vector2.new(partPosition.X, partPosition.Y) - mousePosition).Magnitude
+            local centerDistance = (Vector2.new(partPosition.X, partPosition.Y) - centerPosition).Magnitude
+            
+            local distanceToCheck = useFOV and centerDistance or cursorDistance
+            local fovValue = useFOV and settings.FOV.Value or 9999
+            
+            if distanceToCheck <= fovValue then
+                local humanoid = character:FindFirstChild("Humanoid")
+                local healthValue = humanoid and humanoid.Health or 100
+                local distanceToPlayer = 9999
+                
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    distanceToPlayer = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                end
+                
+                table.insert(validPlayers, {
+                    player = player,
+                    cursorDistance = cursorDistance,
+                    centerDistance = centerDistance,
+                    health = healthValue,
+                    distance = distanceToPlayer,
+                    part = part
+                })
+            end
+        end
+    end
+    
+    return validPlayers
+end
+
+local function GetBestPlayer(settings, useFOV)
+    local validPlayers = GetAllValidPlayers(settings, useFOV)
+    if #validPlayers == 0 then return nil end
+    
+    if not settings.Priority.Enabled or #settings.Priority.Modes == 0 then
+        table.sort(validPlayers, function(a, b)
+            return a.cursorDistance < b.cursorDistance
+        end)
+        return validPlayers[1].player
+    end
+    
+    for _, playerData in ipairs(validPlayers) do
+        playerData.score = GetPlayerScore(playerData.player, settings, playerData.cursorDistance, playerData.health, playerData.distance)
+    end
+    
+    table.sort(validPlayers, function(a, b)
+        if a.score == b.score then
+            return a.cursorDistance < b.cursorDistance
+        end
+        return a.score > b.score
+    end)
+    
+    return validPlayers[1].player
+end
+
+local function GetClosestPlayerForAimlock()
+    local settings = Settings.Combat.Aimlock
+    if not settings.Enabled then return nil end
+    if settings.HoldCheck and not HasItemInHands() then return nil end
+    
+    return GetBestPlayer(settings, false)
+end
+
+local function GetClosestPlayerForAimbot()
+    local settings = Settings.Combat.Aimbot
+    if not settings.Enabled then return nil end
+    if settings.HoldCheck and not HasItemInHands() then return nil end
+    
+    return GetBestPlayer(settings, true)
+end
+
+local lastUpdateTime = 0
+local updateInterval = 0.05
+
+local function UpdateAimlock()
+    local settings = Settings.Combat.Aimlock
+    if not settings.Enabled or not RunningAimlock then return end
+    
+    local currentTime = tick()
+    
+    if currentTime - lastUpdateTime >= updateInterval then
+        if not ValidateTarget(CurrentTarget, settings) then
+            CurrentTarget = GetClosestPlayerForAimlock()
+        end
+        lastUpdateTime = currentTime
+    end
+    
+    if not CurrentTarget then return end
+    
+    local character = CurrentTarget.Character
+    if not character then return end
+    
+    local part = GetBestVisiblePart(character, settings)
+    if not part then return end
+    
+    if settings.WallCheck and not IsPartVisible(part) then return end
+    
+    local success, partPosition = pcall(function()
+        return Camera:WorldToViewportPoint(part.Position)
+    end)
+    
+    if not success then return end
+    
+    local mousePosition = UserInputService:GetMouseLocation()
+    local deltaX = (partPosition.X - mousePosition.X) / settings.Smoothness
+    local deltaY = (partPosition.Y - mousePosition.Y) / settings.Smoothness
+    local maxDelta = 200 / settings.Smoothness
+    
+    deltaX = math.clamp(deltaX, -maxDelta, maxDelta)
+    deltaY = math.clamp(deltaY, -maxDelta, maxDelta)
+    
+    if math.abs(deltaX) > 0.5 or math.abs(deltaY) > 0.5 then
+        pcall(mousemoverel, deltaX, deltaY)
+    end
+    
+    FOVAimlock.Color = settings.FOV.LockedColor
+end
+
+local function UpdateAimbot()
+    local settings = Settings.Combat.Aimbot
+    if not settings.Enabled or not RunningAimbot then return end
+    
+    local currentTime = tick()
+    
+    if currentTime - lastUpdateTime >= updateInterval then
+        if not ValidateTarget(CurrentTarget, settings) then
+            CurrentTarget = GetClosestPlayerForAimbot()
+        end
+        lastUpdateTime = currentTime
+    end
+    
+    if not CurrentTarget then return end
+    
+    local character = CurrentTarget.Character
+    if not character then return end
+    
+    local part = GetBestVisiblePart(character, settings)
+    if not part then return end
+    
+    if settings.WallCheck and not IsPartVisible(part) then return end
+    
+    local targetPos = part.Position
+    if settings.AimingMethod == "velocity" then
+        targetPos = targetPos + (part.Velocity * settings.Prediction)
+    elseif settings.AimingMethod == "movedirection" then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            targetPos = targetPos + (humanoid.MoveDirection * settings.Prediction)
+        end
+    end
+    
+    if settings.Smoothness > 0 then
+        local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+        local newCFrame = Camera.CFrame:Lerp(targetCFrame, 1 / (settings.Smoothness * 10))
+        pcall(function()
+            Camera.CFrame = newCFrame
+        end)
+    else
+        pcall(function()
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+        end)
+    end
+    
+    FOVAimbot.Color = settings.FOV.LockedColor
+end
+
+local function UpdateFOVCircles()
+    local aimlockSettings = Settings.Combat.Aimlock
+    local aimbotSettings = Settings.Combat.Aimbot
+    
+    if aimlockSettings.Enabled and aimlockSettings.FOV.Enabled then
+        FOVAimlock.Visible = true
+        FOVAimlock.Position = UserInputService:GetMouseLocation()
+        FOVAimlock.Radius = aimlockSettings.FOV.Value
+        FOVAimlock.Color = aimlockSettings.FOV.Color
+        FOVAimlock.Filled = aimlockSettings.FOV.Filled
+        FOVAimlock.Transparency = aimlockSettings.FOV.Transparency
+    else
+        FOVAimlock.Visible = false
+    end
+    
+    if aimbotSettings.Enabled and aimbotSettings.FOV.Enabled then
+        FOVAimbot.Visible = true
+        local viewportSize = Camera.ViewportSize
+        FOVAimbot.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+        FOVAimbot.Radius = aimbotSettings.FOV.Value
+        FOVAimbot.Color = aimbotSettings.FOV.Color
+        FOVAimbot.Filled = aimbotSettings.FOV.Filled
+        FOVAimbot.Transparency = aimbotSettings.FOV.Transparency
+    else
+        FOVAimbot.Visible = false
+    end
+end
+
+local function ResetTarget()
+    CurrentTarget = nil
+    FOVAimlock.Color = Settings.Combat.Aimlock.FOV.Color
+    FOVAimbot.Color = Settings.Combat.Aimbot.FOV.Color
+end
+
+UpdateRaycastIgnore()
+
+Players.PlayerAdded:Connect(function()
+    task.wait(0.5)
+    UpdateRaycastIgnore()
+end)
+
+Players.PlayerRemoving:Connect(function()
+    task.wait(0.1)
+    UpdateRaycastIgnore()
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    UpdateRaycastIgnore()
+end)
 
 UserInputService.InputBegan:Connect(function(Input)
     if Typing then return end
@@ -1402,14 +1473,8 @@ end
 
 RunService.RenderStepped:Connect(function()
     UpdateFOVCircles()
-    
-    if RunningAimlock and Settings.Combat.Aimlock.Enabled then
-        UpdateAimlock()
-    end
-    
-    if RunningAimbot and Settings.Combat.Aimbot.Enabled then
-        UpdateAimbot()
-    end
+    UpdateAimlock()
+    UpdateAimbot()
 end)
 
 local function getTargetUnderMouse()

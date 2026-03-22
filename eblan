@@ -14,6 +14,7 @@ local Settings = {
             Toggle = false,
             RotateTo = false,
             Smoothness = 1.5,
+            ClosestPart = false,
             LockPart = "Head",
             DeathCooldown = 0.5,
             Priority = {
@@ -40,6 +41,7 @@ local Settings = {
             Toggle = false,
             Prediction = 0,
             LockPart = "Head",
+            ClosestPart = false,
             Smoothness = 0,
             Priority = {
                 Enabled = true,
@@ -168,7 +170,9 @@ local Window = Library:Load({
     sizeX = 350, 
     sizeY = 350, 
     theme = "light",
-})   
+})
+
+Library:SetWatermarkVisibility(true)
 
 local Tab1 = Window:Tab("combat")
 local p1t1 = Tab1:Section{name = "aimbot", column = 1}
@@ -191,6 +195,7 @@ local p2t4 = Tab4:Section{name = "functions", column = 2}
 local Tab5 = Window:Tab("other")
 local p1t5 = Tab5:Section{name = "config", column = 1}
 local p2t5 = Tab5:Section{name = "other", column = 2}
+local p3t5 = Tab5:Section{name = "functions", column = 3, size = "half"}
 
 p1t1:Toggle {
     Name = "enabled",
@@ -237,6 +242,14 @@ p1t1:Toggle {
     flag = "aimbot_holdcheck",
     callback = function(value)
         Settings.Combat.Aimbot.HoldCheck = value
+    end
+}
+
+p1t1:Toggle {
+    Name = "closest part",
+    flag = "aimbot_closest_part",
+    callback = function(value)
+        Settings.Combat.Aimbot.ClosestPart = value
     end
 }
 
@@ -293,6 +306,7 @@ p1t1:dropdown {
 p1t1:Keybind {
     Name = "keybind",
     flag = "aimbot_keybind",
+    visibilityFlag = "aimbot_enabled",
     Default = Enum.KeyCode.Q,
     callback = function(value)
         Settings.Combat.Aimbot.TriggerKey = value
@@ -348,12 +362,22 @@ p2t1:Toggle {
 }
 
 p2t1:Toggle {
+    Name = "closest part",
+    flag = "aimlock_closest_part",
+    callback = function(value)
+        Settings.Combat.Aimlock.ClosestPart = value
+    end
+}
+
+p2t1:Toggle {
     Name = "rotateto",
     flag = "aimlock_rotateto",
     callback = function(value)
         Settings.Combat.Aimlock.RotateTo = value
     end
 }
+
+
 
 p2t1:Slider {
     Name = "smoothness",
@@ -389,6 +413,7 @@ p2t1:dropdown {
 
 p2t1:Keybind {
     Name = "keybind",
+    visibilityFlag = "aimlock_enabled",
     flag = "aimlock_keybind",
     Default = Enum.KeyCode.Q,
     callback = function(value)
@@ -604,6 +629,7 @@ p1t3:Slider {
 p1t3:Keybind {
     Default = Enum.KeyCode.F,
     Name = "keybind",
+    visibilityFlag = "fly_enabled",
     flag = "fly_keybind",
     callback = function(value)
         Settings.Player.Flight.Keybind = value
@@ -651,6 +677,7 @@ p2t3:Slider {
 p2t3:Keybind {
     Default = Enum.KeyCode.LeftShift,
     Name = "keybind",
+    visibilityFlag = "speed_enabled",
     flag = "speed_keybind",
     callback = function(value)
         Settings.Player.Speed.Keybind = value
@@ -1146,6 +1173,67 @@ local function GetBestVisiblePart(character, settings)
     return defaultPart
 end
 
+-- ========== НОВЫЕ ФУНКЦИИ ВСТАВЬ СЮДА ==========
+local function GetClosestPartToCursor(character, settings)
+    if not character or not settings.ClosestPart then 
+        return GetBestVisiblePart(character, settings)
+    end
+    
+    local mousePosition = UserInputService:GetMouseLocation()
+    local bestPart = nil
+    local bestDistance = math.huge
+    local defaultPart = nil
+    local settingsPart = character:FindFirstChild(settings.LockPart)
+    
+    local partsToCheck = {
+        "Head", 
+        "HumanoidRootPart", 
+    }
+    
+    for _, partName in ipairs(partsToCheck) do
+        local part = character:FindFirstChild(partName)
+        if part and part:IsA("BasePart") then
+            if IsPartVisible(part) then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                if onScreen then
+                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePosition).Magnitude
+                    local fovRadius = settings.FOV.Value
+                    
+                    if distance <= fovRadius then
+                        if distance < bestDistance then
+                            bestDistance = distance
+                            bestPart = part
+                        end
+                    end
+                end
+            end
+            
+            if part == settingsPart and not defaultPart then
+                defaultPart = part
+            end
+        end
+    end
+    
+    if bestPart then
+        return bestPart
+    end
+    
+    if defaultPart and IsPartVisible(defaultPart) then
+        return defaultPart
+    end
+    
+    return GetBestVisiblePart(character, settings)
+end
+
+local function GetTargetPart(character, settings, useClosestPart)
+    if useClosestPart and settings.ClosestPart then
+        return GetClosestPartToCursor(character, settings)
+    else
+        return GetBestVisiblePart(character, settings)
+    end
+end
+-- ========== КОНЕЦ НОВЫХ ФУНКЦИЙ ==========
+
 local function IsCharacterAlive(character)
     if not character then return false end
     local humanoid = character:FindFirstChild("Humanoid")
@@ -1171,7 +1259,7 @@ local function ValidateTarget(target, settings)
     if settings.TeamCheck and target.Team == LocalPlayer.Team then return false end
     
     if settings.WallCheck then
-        local part = GetBestVisiblePart(character, settings)
+        local part = GetTargetPart(character, settings, false)
         if not part then return false end
         if not IsPartVisible(part) then return false end
     end
@@ -1212,9 +1300,13 @@ local function GetAllValidPlayers(settings, useFOV)
         if settings.AliveCheck and not IsCharacterAlive(character) then continue end
         if settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
         
-        local part = GetBestVisiblePart(character, settings)
+        -- Используем GetBestVisiblePart для получения лучшей видимой части
+        -- Эта функция сама ищет сначала выбранный парт, потом другие, если выбранный не виден
+        local part = GetTargetPart(character, settings, false)
         if not part then continue end
         
+        -- Проверяем видимость через Raycast (GetBestVisiblePart уже проверил видимость,
+        -- но для WallCheck нужна дополнительная проверка)
         if settings.WallCheck and not IsPartVisible(part) then continue end
         
         local partPosition, onScreen = Camera:WorldToViewportPoint(part.Position)
@@ -1273,6 +1365,48 @@ local function GetBestPlayer(settings, useFOV)
     return validPlayers[1].player
 end
 
+local function GetBestVisiblePart(character, settings)
+    if not character then return nil end
+    
+    local currentTime = tick()
+    
+    if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
+        return visibleCache.part
+    end
+    
+    local settingsPart = settings.LockPart
+    -- Сначала проверяем выбранный пользователем парт
+    local defaultPart = character:FindFirstChild(settingsPart)
+    if defaultPart and defaultPart:IsA("BasePart") and IsPartVisible(defaultPart) then
+        visibleCache.target = character
+        visibleCache.part = defaultPart
+        visibleCache.timestamp = currentTime
+        return defaultPart
+    end
+    
+    -- Если выбранный парт не виден, ищем любой другой видимый
+    local partsToCheck = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
+    
+    for _, partName in ipairs(partsToCheck) do
+        local part = character:FindFirstChild(partName)
+        if part and part:IsA("BasePart") and IsPartVisible(part) then
+            visibleCache.target = character
+            visibleCache.part = part
+            visibleCache.timestamp = currentTime
+            return part
+        end
+    end
+    
+    -- Если ничего не нашли, возвращаем дефолтный парт (хоть что-то)
+    visibleCache.target = character
+    visibleCache.part = defaultPart
+    visibleCache.timestamp = currentTime
+    return defaultPart
+end
+
+
+
+
 local function GetClosestPlayerForAimlock()
     local settings = Settings.Combat.Aimlock
     if not settings.Enabled then return nil end
@@ -1310,7 +1444,7 @@ local function UpdateAimlock()
     local character = CurrentTarget.Character
     if not character then return end
     
-    local part = GetBestVisiblePart(character, settings)
+    local part = GetTargetPart(character, settings, true)
     if not part then return end
     
     if settings.WallCheck and not IsPartVisible(part) then return end
@@ -1354,7 +1488,7 @@ local function UpdateAimbot()
     local character = CurrentTarget.Character
     if not character then return end
     
-    local part = GetBestVisiblePart(character, settings)
+    local part = GetTargetPart(character, settings, true)
     if not part then return end
     
     if settings.WallCheck and not IsPartVisible(part) then return end

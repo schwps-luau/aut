@@ -669,7 +669,7 @@ p1t3:Slider {
 
 p1t3:Keybind {
     Default = Enum.KeyCode.F,
-    Name = "keybind",
+    name = "keybind",
     flag = "fly_keybind",
     callback = function(value)
         Settings.Player.Flight.Keybind = value
@@ -677,7 +677,7 @@ p1t3:Keybind {
 }
 
 p2t3:Toggle {
-    Name = "enabled",
+    name = "enabled",
     flag = "speed_enabled",
     callback = function(value)
         Settings.Player.Speed.Enabled = value
@@ -685,7 +685,7 @@ p2t3:Toggle {
 }
 
 p2t3:Toggle {
-    Name = "toggle",
+    name = "toggle",
     flag = "speed_toggle",
     callback = function(value)
         Settings.Player.Speed.Toggle = value
@@ -1212,37 +1212,6 @@ local visibleCache = {
     part = nil,
     timestamp = 0
 }
-
-local function GetBestVisiblePart(character, settings)
-    if not character then return nil end
-    
-    local currentTime = tick()
-    
-    if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
-        return visibleCache.part
-    end
-    
-    local settingsPart = settings.LockPart
-    local partsToCheck = {settingsPart, "Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
-    
-    for _, partName in ipairs(partsToCheck) do
-        local part = character:FindFirstChild(partName)
-        if part and part:IsA("BasePart") then
-            if IsPartVisible(part) then
-                visibleCache.target = character
-                visibleCache.part = part
-                visibleCache.timestamp = currentTime
-                return part
-            end
-        end
-    end
-    
-    local defaultPart = character:FindFirstChild(settingsPart)
-    visibleCache.target = character
-    visibleCache.part = defaultPart
-    visibleCache.timestamp = currentTime
-    return defaultPart
-end
 
 -- ========== НОВЫЕ ФУНКЦИИ ВСТАВЬ СЮДА ==========
 local function GetClosestPartToCursor(character, settings)

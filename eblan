@@ -128,9 +128,8 @@ local Settings = {
         InstantTurn = false,
         FallenParts = workspace.FallenPartsDestroyHeight,
         OldPosiiton = nil,
-        LowGFX = false,
         FieldOfView = {
-            Enabled = true,
+            Enabled = false,
             Value = workspace.Camera.FieldOfView,
         },
         AKA = false,
@@ -138,6 +137,9 @@ local Settings = {
         Config = {
             Input = nil
         }
+    },
+    Visual = {
+        LowGFX = false
     }
 }
 
@@ -182,20 +184,23 @@ local p4t1 = Tab1:Section{name = "triggerbot", column = 4}
 
 local Tab2 = Window:Tab("visual")
 local p1t2 = Tab2:Section{name = "esp", column = 1}
+local p2t2 = Tab2:Section{name = "world", column = 2}
 
 local Tab3 = Window:Tab("player")
 local p1t3 = Tab3:Section{name = "flight", column = 1}
-local p2t3 = Tab3:Section{name = "speed", column = 2, size = "full"}
-local p3t3 = Tab3:Section{name = "desync", column = 3, size = "half"}
+local p2t3 = Tab3:Section{name = "speed", column = 2}
+local p3t3 = Tab3:Section{name = "desync", column = 3}
 
 local Tab4 = Window:Tab("target")
 local p1t4 = Tab4:Section{name = "enemy", column = 1}
 local p2t4 = Tab4:Section{name = "functions", column = 2}
 
-local Tab5 = Window:Tab("other")
-local p1t5 = Tab5:Section{name = "config", column = 1}
-local p2t5 = Tab5:Section{name = "other", column = 2}
-local p3t5 = Tab5:Section{name = "functions", column = 3, size = "half"}
+local Tab5 = Window:Tab("misc")
+local p1t5 = Tab5:Section{name = "functions", column = 1}
+
+local SetTab = Window:Tab("⚙️")
+local p1SetTab = SetTab:Section{name = "config", column = 1}
+local p2SetTab = SetTab:Section{name = "gui", column = 2}
 
 p1t1:Toggle {
     Name = "enabled",
@@ -594,6 +599,44 @@ p1t2:ColorPicker {
     end
 }
 
+p2t2:Toggle {
+    Name = "low gfx",
+    Flag = "low_gfx",
+    callback = function(value)
+        Settings.Visual.LowGFX = value
+        if Settings.Visual.LowGFX == true then
+            for _, Parts in pairs(workspace:GetDescendants()) do
+                if Parts:IsA("Part")
+                    or Parts:IsA("SpawnLocation")
+                    or Parts:IsA("WedgePart")
+                    or Parts:IsA("Terrain")
+                    or Parts:IsA("MeshPart") then
+                
+                    if not Parts:FindFirstChild("SurfaceType") then
+                        local SurfaceType = Instance.new("StringValue", Parts)
+                        SurfaceType.Name = "SurfaceType"
+                        SurfaceType.Value = tostring(Parts.Material)
+                    end
+                    Parts.Material = "SmoothPlastic"
+                end
+            end
+        elseif Settings.Visual.LowGFX == false then
+            for _, Parts in pairs(workspace:GetDescendants()) do
+                if (Parts:IsA("Part")
+                    or Parts:IsA("SpawnLocation")
+                    or Parts:IsA("WedgePart")
+                    or Parts:IsA("Terrain")
+                    or Parts:IsA("MeshPart"))
+                    and Parts:FindFirstChild("SurfaceType") then
+                
+                    local surfaceTypeValue = Parts.SurfaceType.Value
+                    Parts.Material = string.sub(surfaceTypeValue, 15)
+                end
+            end
+        end
+    end
+}
+
 p1t3:Toggle {
     Name = "enabled",
     flag = "fly_enabled",
@@ -958,29 +1001,7 @@ p2t4:Button {
     end
 }
 
-p1t5:Box {
-    Name = "config",
-    Default = "nil",
-    callback = function(value)
-        Settings.Other.Config.Input = value
-    end
-}
-
-p1t5:Button {
-    Name = "save",
-    callback = function()
-        Library:SaveConfig(Settings.Other.Config.Input)
-    end
-}
-
-p1t5:Button {
-    Name = "load",
-    callback = function()
-        Library:LoadConfig(Settings.Other.Config.Input)
-    end
-}
-
-p2t5:Toggle {
+p1t5:Toggle {
     Name = "instant turn",
     flag = "instant_turn",
     callback = function(value)
@@ -988,15 +1009,15 @@ p2t5:Toggle {
     end
 }
 
-p2t5:Toggle {
-    Name = "auto ka",
+p1t5:Toggle {
+    Name = "auto kill attached",
     flag = "Auto_KA",
     callback = function(value)
         Settings.Other.AKA = value
     end
 }
 
-p2t5:Toggle {
+p1t5:Toggle {
     Name = "noclip",
     callback = function(value)
     if value then
@@ -1026,7 +1047,7 @@ p2t5:Toggle {
     end
 }
 
-p2t5:Toggle {
+p1t5:Toggle {
     Name = "bunny hop",
     flag = "bunny_hop",
     callback = function(value)
@@ -1034,57 +1055,24 @@ p2t5:Toggle {
     end
 }
 
-p2t5:Toggle {
-    Name = "low gfx",
-    flag = "Low_GFX",
-    callback = function(value)
-        Settings.Other.LowGFX = value
-        if Settings.Other.LowGFX == true then
-            for _, Parts in pairs(workspace:GetDescendants()) do
-                if Parts:IsA("Part")
-                    or Parts:IsA("SpawnLocation")
-                    or Parts:IsA("WedgePart")
-                    or Parts:IsA("Terrain")
-                    or Parts:IsA("MeshPart") then
-                
-                    if not Parts:FindFirstChild("SurfaceType") then
-                        local SurfaceType = Instance.new("StringValue", Parts)
-                        SurfaceType.Name = "SurfaceType"
-                        SurfaceType.Value = tostring(Parts.Material)
-                    end
-                    Parts.Material = "SmoothPlastic"
-                end
-            end
-        elseif Settings.Other.LowGFX == false then
-            for _, Parts in pairs(workspace:GetDescendants()) do
-                if (Parts:IsA("Part")
-                    or Parts:IsA("SpawnLocation")
-                    or Parts:IsA("WedgePart")
-                    or Parts:IsA("Terrain")
-                    or Parts:IsA("MeshPart"))
-                    and Parts:FindFirstChild("SurfaceType") then
-                
-                    local surfaceTypeValue = Parts.SurfaceType.Value
-                    Parts.Material = string.sub(surfaceTypeValue, 15)
-                end
-            end
-        end
-    end
-}
 
-p2t5:Slider {
+p1t5:ToggleSlider {
     Name = "field of view",
-    flag = "field_of_view",
+    toggleFlag = "field_of_view_enabled",
+    sliderFlag = "field_of_view_value",
     Default = workspace.Camera.FieldOfView,
     Min = 70,
     Max = 120,
     valueText = "fov - [VALUE]",
-    callback = function(value)
+    toggleCallback = function(value) 
+        Settings.Other.FieldOfView.Enabled = value
+    end,
+    sliderCallback = function(value) 
         Settings.Other.FieldOfView.Value = value
     end
 }
 
-p2t5:Button {
+p1t5:Button {
     Name = "kill attached",
     callback = function()
         Settings.Other.OldPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -1096,14 +1084,36 @@ p2t5:Button {
     end
 }
 
-p2t5:Button {
+p1t5:Button {
     Name = "rejoin",
     callback = function()
         game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
     end
 }
 
-p3t5:Keybind {
+p1SetTab:Box {
+    Name = "config",
+    Default = "nil",
+    callback = function(value)
+        Settings.Other.Config.Input = value
+    end
+}
+
+p1SetTab:Button {
+    Name = "save",
+    callback = function()
+        Library:SaveConfig(Settings.Other.Config.Input)
+    end
+}
+
+p1SetTab:Button {
+    Name = "load",
+    callback = function()
+        Library:LoadConfig(Settings.Other.Config.Input)
+    end
+}
+
+p2SetTab:Keybind {
     Name = "keybind",
     flag = "gui_keybind",
     Default = Enum.KeyCode.RightShift,
@@ -1111,8 +1121,9 @@ p3t5:Keybind {
         Library:SetKey(value)
     end
 }
-
-p3t5:Toggle {
+local function getFPS() return 0 end
+local function getPing() return 0 end
+p2SetTab:Toggle {
     Name = "watermark",
     flag = "water_mark",
     callback = function(value)
@@ -1123,9 +1134,7 @@ p3t5:Toggle {
             watermarkrs = game:GetService("RunService").RenderStepped:Connect(function(dt)
                 local currentTime = tick()
                 if currentTime - lastUpdate >= updateInterval then
-                    local fps = math.floor(1 / dt)
-                    local ping = math.round(game.Players.LocalPlayer:GetNetworkPing() * 2000)
-                    Library:SetWatermark(string.format("FPS: %d | Ping: %d", fps, ping))
+                    Library:SetWatermark(Library:GetMenuName() .. " | " .. game.Players.LocalPlayer.DisplayName .. " | FPS: " .. getFPS() .. " | Ping: " .. getPing())
                     lastUpdate = currentTime
                 end
             end)
@@ -2390,3 +2399,23 @@ RunService.RenderStepped:Connect(function()
    end
    rootPart.CFrame = rootPart.CFrame + humanoid.MoveDirection * (Settings.Player.Speed.Value / 10)
 end)
+
+getPing = function()
+    local network = game.Stats.Network
+    if network and network.ServerStatsItem and network.ServerStatsItem["Data Ping"] then
+        return math.floor(network.ServerStatsItem["Data Ping"]:GetValue())
+    end
+    return 0
+end
+
+local fpsValues = {}
+getFPS = function()
+    local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+    table.insert(fpsValues, fps)
+    if #fpsValues > 10 then table.remove(fpsValues, 1) end
+    local sum = 0
+    for _, v in ipairs(fpsValues) do sum = sum + v end
+    return math.floor(sum / #fpsValues)
+end
+
+

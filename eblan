@@ -1214,6 +1214,46 @@ local visibleCache = {
 }
 
 -- ========== НОВЫЕ ФУНКЦИИ ВСТАВЬ СЮДА ==========
+
+local function GetBestVisiblePart(character, settings)
+    if not character then return nil end
+    
+    local currentTime = tick()
+    
+    if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
+        return visibleCache.part
+    end
+    
+    local settingsPart = settings.LockPart
+    -- Сначала проверяем выбранный пользователем парт
+    local defaultPart = character:FindFirstChild(settingsPart)
+    if defaultPart and defaultPart:IsA("BasePart") and IsPartVisible(defaultPart) then
+        visibleCache.target = character
+        visibleCache.part = defaultPart
+        visibleCache.timestamp = currentTime
+        return defaultPart
+    end
+    
+    -- Если выбранный парт не виден, ищем любой другой видимый
+    local partsToCheck = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
+    
+    for _, partName in ipairs(partsToCheck) do
+        local part = character:FindFirstChild(partName)
+        if part and part:IsA("BasePart") and IsPartVisible(part) then
+            visibleCache.target = character
+            visibleCache.part = part
+            visibleCache.timestamp = currentTime
+            return part
+        end
+    end
+    
+    -- Если ничего не нашли, возвращаем дефолтный парт (хоть что-то)
+    visibleCache.target = character
+    visibleCache.part = defaultPart
+    visibleCache.timestamp = currentTime
+    return defaultPart
+end
+
 local function GetClosestPartToCursor(character, settings)
     if not character or not settings.ClosestPart then 
         return GetBestVisiblePart(character, settings)
@@ -1405,44 +1445,7 @@ local function GetBestPlayer(settings, useFOV)
     return validPlayers[1].player
 end
 
-local function GetBestVisiblePart(character, settings)
-    if not character then return nil end
-    
-    local currentTime = tick()
-    
-    if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
-        return visibleCache.part
-    end
-    
-    local settingsPart = settings.LockPart
-    -- Сначала проверяем выбранный пользователем парт
-    local defaultPart = character:FindFirstChild(settingsPart)
-    if defaultPart and defaultPart:IsA("BasePart") and IsPartVisible(defaultPart) then
-        visibleCache.target = character
-        visibleCache.part = defaultPart
-        visibleCache.timestamp = currentTime
-        return defaultPart
-    end
-    
-    -- Если выбранный парт не виден, ищем любой другой видимый
-    local partsToCheck = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
-    
-    for _, partName in ipairs(partsToCheck) do
-        local part = character:FindFirstChild(partName)
-        if part and part:IsA("BasePart") and IsPartVisible(part) then
-            visibleCache.target = character
-            visibleCache.part = part
-            visibleCache.timestamp = currentTime
-            return part
-        end
-    end
-    
-    -- Если ничего не нашли, возвращаем дефолтный парт (хоть что-то)
-    visibleCache.target = character
-    visibleCache.part = defaultPart
-    visibleCache.timestamp = currentTime
-    return defaultPart
-end
+
 
 
 

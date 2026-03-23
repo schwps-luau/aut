@@ -1919,7 +1919,7 @@ function Fly(type)
             if humanoid then
                 local move = humanoid.MoveDirection * (Settings.Player.Flight.Value / 10)
                 if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Flight.Value / 10, 0) end
-                if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move = move + Vector3.new(0, -Settings.Player.Flight.Value / 10, 0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -Settings.Player.Flight.Value / 10, 0) end
                 if move.Magnitude > 0 then Settings.Player.Flight.TargetPos = Settings.Player.Flight.TargetPos + move end
             end
         end))
@@ -1936,7 +1936,7 @@ function Fly(type)
             local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if root and humanoid and humanoid.Health > 0 and Settings.Player.Flight.Part then
                 root.CFrame = CFrame.new(Settings.Player.Flight.Part.Position)
-                root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+                root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), math.random(300,600))
             end
         end))
 
@@ -1967,13 +1967,16 @@ function Unfly(type)
     elseif type == "velocity" then
         if Settings.Player.Flight.Active then
             Settings.Player.Flight.Active = false
+            if root then root.Velocity = Vector3.new(0, 0, 0) end
             for _, c in pairs(Settings.Player.Flight.Connections.Velocity) do 
                 pcall(function() c:Disconnect() end)
             end
+            if root then root.Velocity = Vector3.new(0, 0, 0) end
             Settings.Player.Flight.Connections.Velocity = {}
             if game.Players.LocalPlayer.Character then
                 workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
             end
+            if root then root.Velocity = Vector3.new(0, 0, 0) end
             workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
             if Settings.Player.Flight.Part then Settings.Player.Flight.Part:Destroy() Settings.Player.Flight.Part = nil end
             local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1985,13 +1988,16 @@ end
 function StopAntiAim()
     if Settings.Player.Antiaim.Active then
         Settings.Player.Antiaim.Active = false
+        if root then root.Velocity = Vector3.new(0, 0, 0) end
         for _, c in pairs(Settings.Player.Antiaim.Connections) do 
             pcall(function() c:Disconnect() end)
         end
+        if root then root.Velocity = Vector3.new(0, 0, 0) end
         Settings.Player.Antiaim.Connections = {}
         if game.Players.LocalPlayer.Character then
             workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
         end
+        if root then root.Velocity = Vector3.new(0, 0, 0) end
         workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
         if Settings.Player.Antiaim.Part then Settings.Player.Antiaim.Part:Destroy() Settings.Player.Antiaim.Part = nil end
         local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -2025,7 +2031,7 @@ function StartAntiAim()
         if humanoid then
             local move = humanoid.MoveDirection * (Settings.Player.Antiaim.Speed / 10)
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Antiaim.Speed / 10, 0) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move = move + Vector3.new(0, -Settings.Player.Antiaim.Speed / 10, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -Settings.Player.Antiaim.Speed / 10, 0) end
             if move.Magnitude > 0 then Settings.Player.Antiaim.TargetPos = Settings.Player.Antiaim.TargetPos + move end
         end
     end))
@@ -2051,7 +2057,7 @@ function StartAntiAim()
             if moveDirection.Magnitude > 0 then
                 root.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(moveDirection.X, 0, moveDirection.Z))
             end
-            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), -math.random(300,600))
+            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), math.random(300,600))
         end
     end))
 

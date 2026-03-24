@@ -1,2220 +1,2304 @@
-loadstring(game:HttpGet('https://raw.githubusercontent.com/schwps-luau/rework/refs/heads/main/YunLib'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/schwps-luau/rework/refs/heads/main/YunLib'))()
 
-local NotificationLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/IceMinisterq/Notification-Library/Main/Library.lua"))()
-
-local Settings = {
-    Combat = {
-        Aimlock = {
-            Enabled = false,
-            TeamCheck = false,
-            AliveCheck = false,
-            WallCheck = false,
-            HoldCheck = false,
-            TriggerKey = Enum.KeyCode.Q,
-            Toggle = false,
-            RotateTo = false,
-            Smoothness = 1.5,
-            ClosestPart = false,
-            LockPart = "Head",
-            DeathCooldown = 0.5,
-            Priority = {
-                Enabled = true,
-                Modes = {}
-            },
-            FOV = {
+    local Settings = {
+        Combat = {
+            Aimlock = {
                 Enabled = false,
-                Value = 90,
-                Color = Color3.fromRGB(255, 255, 255),
-                LockedColor = Color3.fromRGB(255, 0, 0),
-                Transparency = 1,
-                Filled = false
+                TeamCheck = false,
+                AliveCheck = false,
+                WallCheck = false,
+                HoldCheck = false,
+                TriggerKey = Enum.KeyCode.Q,
+                Toggle = false,
+                RotateTo = false,
+                Smoothness = 1.5,
+                ClosestPart = false,
+                LockPart = "Head",
+                DeathCooldown = 0.5,
+                Priority = {
+                    Enabled = true,
+                    Modes = {}
+                },
+                FOV = {
+                    Enabled = false,
+                    Value = 90,
+                    Color = Color3.fromRGB(255, 255, 255),
+                    LockedColor = Color3.fromRGB(255, 0, 0),
+                    Transparency = 1,
+                    Filled = false
+                }
+            },
+            Aimbot = {
+                Enabled = false,
+                AimingMethod = "velocity",
+                TeamCheck = false,
+                AliveCheck = false,
+                WallCheck = false,
+                HoldCheck = false,
+                TriggerKey = Enum.KeyCode.Q,
+                Toggle = false,
+                Prediction = 0,
+                LockPart = "Head",
+                ClosestPart = false,
+                Smoothness = 0,
+                Priority = {
+                    Enabled = true,
+                    Modes = {}
+                },
+                FOV = {
+                    Enabled = false,
+                    Value = 90,
+                    Color = Color3.fromRGB(255, 255, 255),
+                    LockedColor = Color3.fromRGB(255, 0, 0),
+                    Transparency = 1,
+                    Filled = false
+                }
+            },
+            Triggerbot = {
+                Enabled = false,
+                Cooldown = 50,
+                Toggle = false,
+                TeamCheck = false,
+                Holding = false,
+                HoldstartAA = nil,
+                LastShot = 0,
+            },
+        },
+        Player = {
+            Speed = {
+                Enabled = false,
+                Value = 1,
+                Type = "cframe",
+                Toggle = false,
+                Keybind = Enum.KeyCode.LeftShift,
+                Active = false,
+            },
+            Flight = {
+                Enabled = false,
+                Value = 1,
+                Type = "cframe",
+                Keybind = Enum.KeyCode.F,
+                TargetPos = Vector3.new(),
+                SmoothPos = Vector3.new(),
+                Active = false,
+                Connections = {
+                    CFrame = nil,
+                    Vehicle = nil,
+                    Velocity = {},
+                },
+            },
+            Antiaim = {
+                Enabled = false,
+                Active = false,
+                Connections = {},
+                Part = nil,
+                TargetPos = Vector3.new(),
+                SmoothPos = Vector3.new(),
+                Speed = 10,
+                Power = 1
             }
         },
-        Aimbot = {
-            Enabled = false,
-            AimingMethod = "velocity",
-            TeamCheck = false,
-            AliveCheck = false,
-            WallCheck = false,
-            HoldCheck = false,
-            TriggerKey = Enum.KeyCode.Q,
-            Toggle = false,
-            Prediction = 0,
-            LockPart = "Head",
-            ClosestPart = false,
-            Smoothness = 0,
-            Priority = {
-                Enabled = true,
-                Modes = {}
-            },
-            FOV = {
+        Target = {
+            Selected = nil, 
+            TargetPicker = false, 
+            Aimlock = false,         
+            Spectate = false,  
+            Attach = {
                 Enabled = false,
-                Value = 90,
-                Color = Color3.fromRGB(255, 255, 255),
-                LockedColor = Color3.fromRGB(255, 0, 0),
-                Transparency = 1,
-                Filled = false
+                Loop = nil
+            },
+            Orbit = {
+                Enabled = false,  
+                Speed = 0.2,
+                Distance = 6,       
+                Connections = {}   
+            },
+            Fling = {
+                Enabled = false,
+                OldPos = nil,
+                FallenParts = workspace.FallenPartsDestroyHeight,
+                BodyVelocity = nil
+            },
+            UseTool = {
+                oldPlrCFrame = nil,
+                oldCamCFrame = nil,
+                Cycle = nil
             }
         },
-        Triggerbot = {
-            Enabled = false,
-            Cooldown = 50,
-            Toggle = false,
-            TeamCheck = false,
-            Holding = false,
-            HoldstartAA = nil,
-            LastShot = 0,
-        },
-    },
-    Player = {
-        Speed = {
-            Enabled = false,
-            Value = 1,
-            Type = "cframe",
-            Toggle = false,
-            Keybind = Enum.KeyCode.LeftShift,
-            Active = false,
-        },
-        Flight = {
-            Enabled = false,
-            Value = 1,
-            Type = "cframe",
-            Keybind = Enum.KeyCode.F,
-            TargetPos = Vector3.new(),
-            SmoothPos = Vector3.new(),
-            Active = false,
-            Connections = {
-                CFrame = nil,
-                Vehicle = nil,
-                Velocity = {},
-            },
-        },
-        Antiaim = {
-            Enabled = false,
-            Active = false,
-            Connections = {},
-            Part = nil,
-            TargetPos = Vector3.new(),
-            SmoothPos = Vector3.new(),
-            Speed = 10,
-            Power = 1
-        }
-    },
-    Target = {
-        Selected = nil, 
-        TargetPicker = false, 
-        Aimlock = false,         
-        Spectate = false,  
-        Attach = false,    
-        Orbit = {
-            Enabled = false,  
-            Speed = 0.2,
-            Distance = 6,       
-            Connections = {}   
-        },
-        Fling = {
-            Enabled = false,
-            OldPos = nil,
+        Other = {
+            InstantTurn = false,
             FallenParts = workspace.FallenPartsDestroyHeight,
-            BodyVelocity = nil
+            OldPosiiton = nil,
+            AKA = false,
+            BunnyHop = false,
+            Config = {
+                Input = nil
+            }
         },
-        UseTool = {
-            oldPlrCFrame = nil,
-            oldCamCFrame = nil,
-            Cycle = nil
+        Visual = {
+            World = {
+                LowGFX = false
+            },
+            Camera = {
+                Stretch = {
+                    Enabled = false,
+                    Value = 1,
+                },
+                FieldOfView = {
+                    Enabled = false,
+                    Value = workspace.Camera.FieldOfView,
+                }
+            }
         }
-    },
-    Other = {
-        InstantTurn = false,
-        FallenParts = workspace.FallenPartsDestroyHeight,
-        OldPosiiton = nil,
-        FieldOfView = {
-            Enabled = false,
-            Value = workspace.Camera.FieldOfView,
-        },
-        AKA = false,
-        BunnyHop = false,
-        Config = {
-            Input = nil
-        }
-    },
-    Visual = {
-        LowGFX = false
     }
-}
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local Workspace = game:GetService("Workspace")
+    local UserInputService = game:GetService("UserInputService")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = Workspace.CurrentCamera
 
-local FOVAimlock = Drawing.new("Circle")
-FOVAimlock.Thickness = 1
-FOVAimlock.NumSides = 60
+    local FOVAimlock = Drawing.new("Circle")
+    FOVAimlock.Thickness = 1
+    FOVAimlock.NumSides = 60
 
-local FOVAimbot = Drawing.new("Circle")
-FOVAimbot.Thickness = 1
-FOVAimbot.NumSides = 60
+    local FOVAimbot = Drawing.new("Circle")
+    FOVAimbot.Thickness = 1
+    FOVAimbot.NumSides = 60
 
-local RunningAimlock = false
-local RunningAimbot = false
-local CurrentTarget = nil
-local LastDeathTime = 0
-local Typing = false
-local NoclipConnection = nil
+    local RunningAimlock = false
+    local RunningAimbot = false
+    local CurrentTarget = nil
+    local LastDeathTime = 0
+    local Typing = false
+    local NoclipConnection = nil
 
-local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/newesp"))(); ESP:Init()
+    local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/schwps-luau/aut/refs/heads/main/newesp"))(); ESP:Init()
 
-local Library = initLibrary()
-local Window = Library:Load({
-    name = "epstein.island", 
-    sizeX = 350, 
-    sizeY = 350, 
-    theme = "light",
-})
+    local Library = initLibrary()
 
-
-local Tab1 = Window:Tab("combat")
-local p1t1 = Tab1:Section{name = "aimbot", column = 1}
-local p2t1 = Tab1:Section{name = "aimlock", column = 2}
-local p3t1 = Tab1:Section{name = "fov settings", column = 3}
-local p4t1 = Tab1:Section{name = "triggerbot", column = 4}
-
-local Tab2 = Window:Tab("visual")
-local p1t2 = Tab2:Section{name = "esp", column = 1}
-local p2t2 = Tab2:Section{name = "world", column = 2}
-
-local Tab3 = Window:Tab("player")
-local p1t3 = Tab3:Section{name = "flight", column = 1}
-local p2t3 = Tab3:Section{name = "speed", column = 2}
-local p3t3 = Tab3:Section{name = "desync", column = 3}
-
-local Tab4 = Window:Tab("target")
-local p1t4 = Tab4:Section{name = "enemy", column = 1}
-local p2t4 = Tab4:Section{name = "functions", column = 2}
-
-local Tab5 = Window:Tab("misc")
-local p1t5 = Tab5:Section{name = "functions", column = 1}
-
-local SetTab = Window:Tab("⚙️")
-local p1SetTab = SetTab:Section{name = "config", column = 1}
-local p2SetTab = SetTab:Section{name = "gui", column = 2}
-
-p1t1:Toggle {
-    Name = "enabled",
-    flag = "aimbot_enabled",
-    callback = function(value)
-        Settings.Combat.Aimbot.Enabled = value
-    end
-}
-
-p1t1:Toggle {
-    Name = "toggle",
-    flag = "aimbot_toggle",
-    callback = function(value)
-        Settings.Combat.Aimbot.Toggle = value
-    end
-}
-
-p1t1:Toggle {
-    Name = "teamcheck",
-    flag = "aimbot_teamcheck",
-    callback = function(value)
-        Settings.Combat.Aimbot.TeamCheck = value
-    end
-}
-
-p1t1:Toggle {
-    Name = "wallcheck",
-    flag = "aimbot_wallcheck",
-    callback = function(value)
-        Settings.Combat.Aimbot.WallCheck = value
-    end
-}
-
-p1t1:Toggle {
-    Name = "alivecheck",
-    flag = "aimbot_alivecheck",
-    callback = function(value)
-        Settings.Combat.Aimbot.AliveCheck = value
-    end
-}
-
-p1t1:Toggle {
-    Name = "holdcheck",
-    flag = "aimbot_holdcheck",
-    callback = function(value)
-        Settings.Combat.Aimbot.HoldCheck = value
-    end
-}
-
-p1t1:Toggle {
-    Name = "closest part",
-    flag = "aimbot_closest_part",
-    callback = function(value)
-        Settings.Combat.Aimbot.ClosestPart = value
-    end
-}
-
-p1t1:Box {
-    Name = "prediction",
-    flag = "aimbot_prediction",
-    Default = nil,
-    callback = function(value)
-        Settings.Combat.Aimbot.Prediction = tonumber(value)
-    end
-}
-
-p1t1:Slider {
-    Name = "smoothness",
-    flag = "aimbot_smoothness",
-    Default = 0,
-    Min = 0,
-    Max = 10,
-    valueText = "smooth - [VALUE]",
-    callback = function(value)
-        Settings.Combat.Aimbot.Smoothness = tonumber(value) / 10
-    end
-} 
-
-p1t1:dropdown {
-    name = "part",
-    flag = "aimbot_lock_part",
-    content = {"Head","HumanoidRootPart","UpperTorso","LowerTorso"},
-    multichoice = false,
-    callback = function(value)
-        Settings.Combat.Aimbot.LockPart = value
-    end
-}
-
-p1t1:dropdown {
-    name = "aiming method",
-    flag = "aiming_method",
-    content = {"velocity","movedirection"},
-    callback = function(value)
-        Settings.Combat.Aimbot.AimingMethod = value
-    end
-}
-
-p1t1:dropdown {
-    name = "priority modes",
-    flag = "aimbot_priority_modes",
-    content = {"health", "distance"},
-    multichoice = true,
-    callback = function(value)
-        Settings.Combat.Aimbot.Priority.Modes = value
-    end
-}
-
-p1t1:Keybind {
-    Name = "keybind",
-    flag = "aimbot_keybind",
-    Default = Enum.KeyCode.Q,
-    callback = function(value)
-        Settings.Combat.Aimbot.TriggerKey = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "enabled",
-    flag = "aimlock_enabled",
-    callback = function(value)
-        Settings.Combat.Aimlock.Enabled = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "toggle",
-    flag = "aimlock_toggle",
-    callback = function(value)
-        Settings.Combat.Aimlock.Toggle = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "teamcheck",
-    flag = "aimlock_teamcheck",
-    callback = function(value)
-        Settings.Combat.Aimlock.TeamCheck = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "wallcheck",
-    flag = "aimlock_wallcheck",
-    callback = function(value)
-        Settings.Combat.Aimlock.WallCheck = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "alivecheck",
-    flag = "aimlock_alivecheck",
-    callback = function(value)
-        Settings.Combat.Aimlock.AliveCheck = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "holdcheck",
-    flag = "aimlock_holdcheck",
-    callback = function(value)
-        Settings.Combat.Aimlock.HoldCheck = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "closest part",
-    flag = "aimlock_closest_part",
-    callback = function(value)
-        Settings.Combat.Aimlock.ClosestPart = value
-    end
-}
-
-p2t1:Toggle {
-    Name = "rotateto",
-    flag = "aimlock_rotateto",
-    callback = function(value)
-        Settings.Combat.Aimlock.RotateTo = value
-    end
-}
+    local Window = Library:Load({
+        name = "epstein.island", 
+        sizeX = 350, 
+        sizeY = 350, 
+        theme = "light",
+    })
 
 
+    local Tab1 = Window:Tab("combat")
+    local p1t1 = Tab1:Section{name = "aimbot", column = 1}
+    local p2t1 = Tab1:Section{name = "aimlock", column = 2}
+    local p3t1 = Tab1:Section{name = "fov settings", column = 3}
+    local p4t1 = Tab1:Section{name = "triggerbot", column = 4}
 
-p2t1:Slider {
-    Name = "smoothness",
-    flag = "aimlock_smoothness",
-    Default = 1.5,
-    Min = 0,
-    Max = 10,
-    valueText = "smooth - [VALUE]",
-    callback = function(value)
-        Settings.Combat.Aimlock.Smoothness = tonumber(value)
-    end
-}
+    local Tab2 = Window:Tab("visual")
+    local p1t2 = Tab2:Section{name = "esp", column = 1}
+    local p2t2 = Tab2:Section{name = "world", column = 2}
+    local p3t2 = Tab2:Section{name = "camera", column = 2}
 
-p2t1:dropdown {
-    name = "part",
-    flag = "aimlock_lock_part",
-    content = {"Head","HumanoidRootPart","UpperTorso","LowerTorso"},
-    multichoice = false,
-    callback = function(value)
-        Settings.Combat.Aimlock.LockPart = value
-    end
-}
+    local Tab3 = Window:Tab("player")
+    local p1t3 = Tab3:Section{name = "flight", column = 1}
+    local p2t3 = Tab3:Section{name = "speed", column = 2}
+    local p3t3 = Tab3:Section{name = "desync", column = 3}
 
-p2t1:dropdown {
-    name = "priority modes",
-    flag = "aimlock_priority_modes",
-    content = {"health", "distance"},
-    multichoice = true,
-    callback = function(value)
-        Settings.Combat.Aimlock.Priority.Modes = value
-    end
-}
+    local Tab4 = Window:Tab("target")
+    local p1t4 = Tab4:Section{name = "enemy", column = 1}
+    local p2t4 = Tab4:Section{name = "functions", column = 2}
 
-p2t1:Keybind {
-    Name = "keybind",
-    flag = "aimlock_keybind",
-    Default = Enum.KeyCode.Q,
-    callback = function(value)
-        Settings.Combat.Aimlock.TriggerKey = value
-    end
-}
+    local Tab5 = Window:Tab("misc")
+    local p1t5 = Tab5:Section{name = "functions", column = 1}
 
-p3t1:Toggle {
-    Name = "enabled",
-    flag = "aimlock_fov_enabled",
-    callback = function(value)
-        Settings.Combat.Aimlock.FOV.Enabled = value
-        Settings.Combat.Aimbot.FOV.Enabled = value
-    end
-}
+    local SetTab = Window:Tab("⚙️")
+    local p1SetTab = SetTab:Section{name = "config", column = 1}
+    local p2SetTab = SetTab:Section{name = "gui", column = 2}
 
-p3t1:Toggle {
-    Name = "filled",
-    flag = "fov_filled",
-    callback = function(value)
-        Settings.Combat.Aimlock.FOV.Filled = value
-        Settings.Combat.Aimbot.FOV.Filled = value
-    end
-}
+    p1t1:Toggle {
+        Name = "enabled",
+        flag = "aimbot_enabled",
+        callback = function(value)
+            Settings.Combat.Aimbot.Enabled = value
+        end
+    }
 
-p3t1:Slider {
-    Name = "size",
-    flag = "fov_size",
-    Default = 90,
-    Min = 30,
-    Max = 360,
-    valueText = "fov - [VALUE]",
-    callback = function(value)
-        Settings.Combat.Aimlock.FOV.Value = value
-        Settings.Combat.Aimbot.FOV.Value = value
-    end
-}
+    p1t1:Toggle {
+        Name = "toggle",
+        flag = "aimbot_toggle",
+        callback = function(value)
+            Settings.Combat.Aimbot.Toggle = value
+        end
+    }
 
-p3t1:Slider {
-    Name = "transparency",
-    flag = "fov_transparency",
-    Default = 10,
-    Min = 1,
-    Max = 10,
-    valueText = "transp - 0.[VALUE]",
-    callback = function(value)
-        local transp = tonumber(value) / 10
-        Settings.Combat.Aimlock.FOV.Transparency = transp
-        Settings.Combat.Aimbot.FOV.Transparency = transp
-    end
-}
+    p1t1:Toggle {
+        Name = "teamcheck",
+        flag = "aimbot_teamcheck",
+        callback = function(value)
+            Settings.Combat.Aimbot.TeamCheck = value
+        end
+    }
 
-p3t1:ColorPicker {
-    Name = "color",
-    flag = "fov_color",
-    Default = Library:GetColor(),
-    callback = function(value)
-        Settings.Combat.Aimlock.FOV.Color = value
-        Settings.Combat.Aimbot.FOV.Color = value
-    end
-}
+    p1t1:Toggle {
+        Name = "wallcheck",
+        flag = "aimbot_wallcheck",
+        callback = function(value)
+            Settings.Combat.Aimbot.WallCheck = value
+        end
+    }
 
-p3t1:ColorPicker {
-    Name = "locked color",
-    flag = "fov_locked_color",
-    Default = Library:GetColor(),
-    callback = function(value)
-        Settings.Combat.Aimlock.FOV.LockedColor = value
-        Settings.Combat.Aimbot.FOV.LockedColor = value
-    end
-}
+    p1t1:Toggle {
+        Name = "alivecheck",
+        flag = "aimbot_alivecheck",
+        callback = function(value)
+            Settings.Combat.Aimbot.AliveCheck = value
+        end
+    }
 
-p4t1:Toggle {
-    Name = "triggerbot",
-    flag = "triggerbot_enabled",
-    callback = function(value)
-        Settings.Combat.Triggerbot.Enabled = value
-    end
-}
+    p1t1:Toggle {
+        Name = "holdcheck",
+        flag = "aimbot_holdcheck",
+        callback = function(value)
+            Settings.Combat.Aimbot.HoldCheck = value
+        end
+    }
 
-p4t1:Toggle {
-    Name = "team check",
-    flag = "triggerbot_teamcheck",
-    callback = function(value)
-        Settings.Combat.Triggerbot.TeamCheck = value
-    end
-}
+    p1t1:Toggle {
+        Name = "closest part",
+        flag = "aimbot_closest_part",
+        callback = function(value)
+            Settings.Combat.Aimbot.ClosestPart = value
+        end
+    }
 
-p4t1:Toggle {
-    Name = "toggle",
-    flag = "triggerbot_toggle",
-    callback = function(value)
-        Settings.Combat.Triggerbot.Toggle = value
-    end
-}   
+    p1t1:Box {
+        Name = "prediction",
+        flag = "aimbot_prediction",
+        Default = nil,
+        callback = function(value)
+            Settings.Combat.Aimbot.Prediction = tonumber(value)
+        end
+    }
 
-p4t1:Slider {
-    Name = "shot delay (ms)",
-    flag = "triggerbot_cooldown",
-    Default = 150,
-    Min = 50,
-    Max = 500,
-    valueText = "[VALUE] ms",
-    callback = function(value)
-        Settings.Combat.Triggerbot.Cooldown = value
-    end
-}
+    p1t1:Slider {
+        Name = "smoothness",
+        flag = "aimbot_smoothness",
+        Decimals = 1,
+        Default = 0,
+        Min = 0,
+        Max = 1,
+        valueText = "smooth - [VALUE]",
+        callback = function(value)
+            Settings.Combat.Aimbot.Smoothness = tonumber(value)
+        end
+    } 
 
-p1t2:Toggle {
-    Name = "enabled",
-    Flag = "enabled_esp",
-    callback = function(value)
-       ESP.Enabled = value
-    end
-}
+    p1t1:dropdown {
+        name = "part",
+        flag = "aimbot_lock_part",
+        content = {"Head","HumanoidRootPart","UpperTorso","LowerTorso"},
+        multichoice = false,
+        callback = function(value)
+            Settings.Combat.Aimbot.LockPart = value
+        end
+    }
 
-p1t2:Toggle {
-    Name = "team check",
-    Flag = "team_check",
-    callback = function(value)
-       ESP.TeamCheck = value
-    end
-}
+    p1t1:dropdown {
+        name = "aiming method",
+        flag = "aiming_method",
+        content = {"velocity","movedirection"},
+        callback = function(value)
+            Settings.Combat.Aimbot.AimingMethod = value
+        end
+    }
 
-p1t2:Toggle {
-    Name = "visible check",
-    Flag = "vis_check",
-    callback = function(value)
-       ESP.VisibleCheck = value
-    end
-}
+    p1t1:dropdown {
+        name = "priority modes",
+        flag = "aimbot_priority_modes",
+        content = {"health", "distance"},
+        multichoice = true,
+        callback = function(value)
+            Settings.Combat.Aimbot.Priority.Modes = value
+        end
+    }
 
-p1t2:Toggle {
-    Name = "wall check",
-    Flag = "wall_check",
-    callback = function(value)
-       ESP.WallCheck = value
-    end
-}
+    p1t1:Keybind {
+        Name = "keybind",
+        flag = "aimbot_keybind",
+        Default = Enum.KeyCode.Q,
+        callback = function(value)
+            Settings.Combat.Aimbot.TriggerKey = value
+        end
+    }
 
-p1t2:Toggle {
-    Name = "name",
-    Flag = "show_name",
-    callback = function(value)
-       ESP.ShowName = value
-    end
-}
+    p2t1:Toggle {
+        Name = "enabled",
+        flag = "aimlock_enabled",
+        callback = function(value)
+            Settings.Combat.Aimlock.Enabled = value
+        end
+    }
 
-p1t2:Toggle {
-    Name = "displayname",
-    Flag = "display_name",
-    callback = function(value)
-       ESP.UseDisplayName = value
-    end
-}
+    p2t1:Toggle {
+        Name = "toggle",
+        flag = "aimlock_toggle",
+        callback = function(value)
+            Settings.Combat.Aimlock.Toggle = value
+        end
+    }
 
-p1t2:Toggle {
-    Name = "health",
-    Flag = "show_health",
-    callback = function(value)
-       ESP.ShowHealth = value
-    end
-}
+    p2t1:Toggle {
+        Name = "teamcheck",
+        flag = "aimlock_teamcheck",
+        callback = function(value)
+            Settings.Combat.Aimlock.TeamCheck = value
+        end
+    }
 
-p1t2:ColorPicker {
-    Name = "visible color",
-    Default = Library:GetColor(),
-    Flag = "vis_color",
-    callback = function(value)
-       ESP.VisibleColor = value
-    end
-}
+    p2t1:Toggle {
+        Name = "wallcheck",
+        flag = "aimlock_wallcheck",
+        callback = function(value)
+            Settings.Combat.Aimlock.WallCheck = value
+        end
+    }
 
-p1t2:ColorPicker {
-    Name = "invisible color",
-    Default = Color3.fromRGB(0, 0, 0),
-    Flag = "invis_color",
-    callback = function(value)
-        ESP.InvisibleColor = value
-    end
-}
+    p2t1:Toggle {
+        Name = "alivecheck",
+        flag = "aimlock_alivecheck",
+        callback = function(value)
+            Settings.Combat.Aimlock.AliveCheck = value
+        end
+    }
 
-p2t2:Toggle {
-    Name = "low gfx",
-    Flag = "low_gfx",
-    callback = function(value)
-        Settings.Visual.LowGFX = value
-        if Settings.Visual.LowGFX == true then
-            for _, Parts in pairs(workspace:GetDescendants()) do
-                if Parts:IsA("Part")
-                    or Parts:IsA("SpawnLocation")
-                    or Parts:IsA("WedgePart")
-                    or Parts:IsA("Terrain")
-                    or Parts:IsA("MeshPart") then
-                
-                    if not Parts:FindFirstChild("SurfaceType") then
-                        local SurfaceType = Instance.new("StringValue", Parts)
-                        SurfaceType.Name = "SurfaceType"
-                        SurfaceType.Value = tostring(Parts.Material)
+    p2t1:Toggle {
+        Name = "holdcheck",
+        flag = "aimlock_holdcheck",
+        callback = function(value)
+            Settings.Combat.Aimlock.HoldCheck = value
+        end
+    }
+
+    p2t1:Toggle {
+        Name = "closest part",
+        flag = "aimlock_closest_part",
+        callback = function(value)
+            Settings.Combat.Aimlock.ClosestPart = value
+        end
+    }
+
+    p2t1:Toggle {
+        Name = "rotateto",
+        flag = "aimlock_rotateto",
+        callback = function(value)
+            Settings.Combat.Aimlock.RotateTo = value
+        end
+    }
+
+
+
+    p2t1:Slider {
+        Name = "smoothness",
+        flag = "aimlock_smoothness",
+        Decimals = 1,
+        Default = 1.5,
+        Min = 0,
+        Max = 5,
+        valueText = "smooth - [VALUE]",
+        callback = function(value)
+            Settings.Combat.Aimlock.Smoothness = tonumber(value)
+        end
+    }
+
+    p2t1:Dropdown {
+        name = "part",
+        flag = "aimlock_lock_part",
+        content = {"Head","HumanoidRootPart","UpperTorso","LowerTorso"},
+        multichoice = false,
+        Callback = function(value)
+            Settings.Combat.Aimlock.LockPart = value
+        end
+    }
+
+    p2t1:dropdown {
+        name = "priority modes",
+        flag = "aimlock_priority_modes",
+        content = {"health", "distance"},
+        multichoice = true,
+        callback = function(value)
+            Settings.Combat.Aimlock.Priority.Modes = value
+        end
+    }
+
+    p2t1:Keybind {
+        Name = "keybind",
+        flag = "aimlock_keybind",
+        Default = Enum.KeyCode.Q,
+        callback = function(value)
+            Settings.Combat.Aimlock.TriggerKey = value
+        end
+    }
+
+    p3t1:Toggle {
+        Name = "enabled",
+        flag = "aimlock_fov_enabled",
+        callback = function(value)
+            Settings.Combat.Aimlock.FOV.Enabled = value
+            Settings.Combat.Aimbot.FOV.Enabled = value
+        end
+    }
+
+    p3t1:Toggle {
+        Name = "filled",
+        flag = "fov_filled",
+        callback = function(value)
+            Settings.Combat.Aimlock.FOV.Filled = value
+            Settings.Combat.Aimbot.FOV.Filled = value
+        end
+    }
+
+    p3t1:Slider {
+        Name = "size",
+        flag = "fov_size",
+        Default = 90,
+        Min = 30,
+        Max = 360,
+        valueText = "fov - [VALUE]",
+        callback = function(value)
+            Settings.Combat.Aimlock.FOV.Value = value
+            Settings.Combat.Aimbot.FOV.Value = value
+        end
+    }
+
+    p3t1:Slider {
+        Name = "transparency",
+        flag = "fov_transparency",
+        Default = 10,
+        Min = 1,
+        Max = 10,
+        valueText = "transp - 0.[VALUE]",
+        callback = function(value)
+            local transp = tonumber(value) / 10
+            Settings.Combat.Aimlock.FOV.Transparency = transp
+            Settings.Combat.Aimbot.FOV.Transparency = transp
+        end
+    }
+
+    p3t1:ColorPicker {
+        Name = "color",
+        flag = "fov_color",
+        Default = Library:GetColor(),
+        callback = function(value)
+            Settings.Combat.Aimlock.FOV.Color = value
+            Settings.Combat.Aimbot.FOV.Color = value
+        end
+    }
+
+    p3t1:ColorPicker {
+        Name = "locked color",
+        flag = "fov_locked_color",
+        Default = Library:GetColor(),
+        callback = function(value)
+            Settings.Combat.Aimlock.FOV.LockedColor = value
+            Settings.Combat.Aimbot.FOV.LockedColor = value
+        end
+    }
+
+    p4t1:Toggle {
+        Name = "triggerbot",
+        flag = "triggerbot_enabled",
+        callback = function(value)
+            Settings.Combat.Triggerbot.Enabled = value
+        end
+    }
+
+    p4t1:Toggle {
+        Name = "team check",
+        flag = "triggerbot_teamcheck",
+        callback = function(value)
+            Settings.Combat.Triggerbot.TeamCheck = value
+        end
+    }
+
+    p4t1:Toggle {
+        Name = "toggle",
+        flag = "triggerbot_toggle",
+        callback = function(value)
+            Settings.Combat.Triggerbot.Toggle = value
+        end
+    }   
+
+    p4t1:Slider {
+        Name = "shot delay (ms)",
+        flag = "triggerbot_cooldown",
+        Default = 150,
+        Min = 50,
+        Max = 500,
+        valueText = "[VALUE] ms",
+        callback = function(value)
+            Settings.Combat.Triggerbot.Cooldown = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "enabled",
+        Flag = "enabled_esp",
+        callback = function(value)
+        ESP.Enabled = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "team check",
+        Flag = "team_check",
+        callback = function(value)
+        ESP.TeamCheck = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "visible check",
+        Flag = "vis_check",
+        callback = function(value)
+        ESP.VisibleCheck = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "wall check",
+        Flag = "wall_check",
+        callback = function(value)
+        ESP.WallCheck = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "name",
+        Flag = "show_name",
+        callback = function(value)
+        ESP.ShowName = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "displayname",
+        Flag = "display_name",
+        callback = function(value)
+        ESP.UseDisplayName = value
+        end
+    }
+
+    p1t2:Toggle {
+        Name = "health",
+        Flag = "show_health",
+        callback = function(value)
+        ESP.ShowHealth = value
+        end
+    }
+
+    p1t2:ColorPicker {
+        Name = "visible color",
+        Default = Library:GetColor(),
+        Flag = "vis_color",
+        callback = function(value)
+        ESP.VisibleColor = value
+        end
+    }
+
+    p1t2:ColorPicker {
+        Name = "invisible color",
+        Default = Color3.fromRGB(0, 0, 0),
+        Flag = "invis_color",
+        callback = function(value)
+            ESP.InvisibleColor = value
+        end
+    }
+
+    p2t2:Toggle {
+        Name = "low gfx",
+        Flag = "low_gfx",
+        callback = function(value)
+            Settings.Visual.LowGFX = value
+            if Settings.Visual.LowGFX == true then
+                for _, Parts in pairs(workspace:GetDescendants()) do
+                    if Parts:IsA("Part")
+                        or Parts:IsA("SpawnLocation")
+                        or Parts:IsA("WedgePart")
+                        or Parts:IsA("Terrain")
+                        or Parts:IsA("MeshPart") then
+                    
+                        if not Parts:FindFirstChild("SurfaceType") then
+                            local SurfaceType = Instance.new("StringValue", Parts)
+                            SurfaceType.Name = "SurfaceType"
+                            SurfaceType.Value = tostring(Parts.Material)
+                        end
+                        Parts.Material = "SmoothPlastic"
                     end
-                    Parts.Material = "SmoothPlastic"
                 end
-            end
-        elseif Settings.Visual.LowGFX == false then
-            for _, Parts in pairs(workspace:GetDescendants()) do
-                if (Parts:IsA("Part")
-                    or Parts:IsA("SpawnLocation")
-                    or Parts:IsA("WedgePart")
-                    or Parts:IsA("Terrain")
-                    or Parts:IsA("MeshPart"))
-                    and Parts:FindFirstChild("SurfaceType") then
-                
-                    local surfaceTypeValue = Parts.SurfaceType.Value
-                    Parts.Material = string.sub(surfaceTypeValue, 15)
-                end
-            end
-        end
-    end
-}
-
-p1t3:Toggle {
-    Name = "enabled",
-    flag = "fly_enabled",
-    callback = function(value)
-        Settings.Player.Flight.Enabled = value
-    end
-}
-
-p1t3:dropdown {
-    name = "type",
-    flag = "fly_type",
-    content = {"vehicle","cframe","velocity"},
-    multichoice = false,
-    callback = function(value)
-        Settings.Player.Flight.Type = value
-    end
-}
-
-p1t3:Slider {
-    Name = "speed",
-    flag = "fly_speed",
-    Default = 1,
-    Min = 1,
-    Max = 50,
-    valueText = "speed - [VALUE]",
-    callback = function(value)
-        Settings.Player.Flight.Value = value
-    end
-}
-
-p1t3:Keybind {
-    Default = Enum.KeyCode.F,
-    name = "keybind",
-    flag = "fly_keybind",
-    callback = function(value)
-        Settings.Player.Flight.Keybind = value
-    end
-}
-
-p2t3:Toggle {
-    name = "enabled",
-    flag = "speed_enabled",
-    callback = function(value)
-        Settings.Player.Speed.Enabled = value
-    end
-}
-
-p2t3:Toggle {
-    name = "toggle",
-    flag = "speed_toggle",
-    callback = function(value)
-        Settings.Player.Speed.Toggle = value
-    end
-}
-
-p2t3:dropdown {
-    name = "type",
-    flag = "speed_type",
-    content = {"velocity","cframe"},
-    multichoice = false,
-    callback = function(value)
-        Settings.Player.Speed.Type = value
-    end
-}
-
-p2t3:Slider {
-    Name = "speed",
-    flag = "speed_value",
-    Default = 1,
-    Min = 1,
-    Max = 50,
-    valueText = "speed - [VALUE]",
-    callback = function(value)
-        Settings.Player.Speed.Value = value
-    end
-}
-
-p2t3:Keybind {
-    Default = Enum.KeyCode.LeftShift,
-    Name = "keybind",
-    flag = "speed_keybind",
-    callback = function(value)
-        Settings.Player.Speed.Keybind = value
-    end
-}
-
-p3t3:Toggle {
-    Name = "enabled",
-    callback = function(value)
-        Settings.Player.Antiaim.Enabled = value
-    end
-}
-
-p3t3:Slider {
-    Name = "speed",
-    flag = "antiaim_speed",
-    Default = 10,
-    Min = 1,
-    Max = 50,
-    valueText = "speed - [VALUE]",
-    callback = function(value)
-        Settings.Player.Antiaim.Speed = value
-    end
-}
-
-p3t3:Slider {
-    Name = "power",
-    flag = "antiaim_power",
-    Default = 5,
-    Min = 1,
-    Max = 20,
-    valueText = "power - [VALUE]",
-    callback = function(value)
-        Settings.Player.Antiaim.Power = value
-    end
-}
-
-targetselect = p1t4:Box {
-    Name = "target",
-    Default = "nil",
-    callback = function(value)
-        local searchString = string.lower(tostring(value))
-        Settings.Target.Selected = nil
-
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer then
-                if string.lower(player.Name):find(searchString, 1, true) or 
-                   string.lower(player.DisplayName):find(searchString, 1, true) then
-                    Settings.Target.Selected = player.Name
-                    break
+            elseif Settings.Visual.LowGFX == false then
+                for _, Parts in pairs(workspace:GetDescendants()) do
+                    if (Parts:IsA("Part")
+                        or Parts:IsA("SpawnLocation")
+                        or Parts:IsA("WedgePart")
+                        or Parts:IsA("Terrain")
+                        or Parts:IsA("MeshPart"))
+                        and Parts:FindFirstChild("SurfaceType") then
+                    
+                        local surfaceTypeValue = Parts.SurfaceType.Value
+                        Parts.Material = string.sub(surfaceTypeValue, 15)
+                    end
                 end
             end
         end
+    }
 
-        if Settings.Target.Selected ~= nil then
-            NotificationLibrary:SendNotification("Success", "Selected player: " .. Settings.Target.Selected, 3)
-        else
-            NotificationLibrary:SendNotification("Error", "Can't find player", 3)
+    p3t2:ToggleSlider {
+        Name = "field of view",
+        toggleFlag = "field_of_view_enabled",
+        sliderFlag = "field_of_view_value",
+        Default = workspace.Camera.FieldOfView,
+        Min = 70,
+        Max = 120,
+        valueText = "value - [VALUE]",
+        toggleCallback = function(value) 
+            Settings.Visual.Camera.FieldOfView.Enabled = value
+        end,
+        sliderCallback = function(value) 
+            Settings.Visual.Camera.FieldOfView.Value = value
         end
-    end
-}
+    }
 
-p1t4:Toggle {
-    Name = "spectate",
-    callback = function(value)
-        Settings.Target.Spectate = value
-        if not value then
-            workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    p3t2:ToggleSlider {
+        Name = "stretch",
+        toggleFlag = "stretch_enabled",
+        sliderFlag = "stretch_value",
+        Default = 1,
+        Decimals = 1,
+        Min = 0.5,
+        Max = 1,
+        valueText = "value - [VALUE]",
+        toggleCallback = function(value) 
+            Settings.Visual.Camera.Stretch.Enabled = value
+        end,
+        sliderCallback = function(value) 
+            Settings.Visual.Camera.Stretch.Value = value
         end
-    end
-}
+    }
 
-p1t4:Toggle {
-    Name = "aimlock",
-    callback = function(value)
-        Settings.Target.Aimlock = value
-    end
-}
-
-p1t4:Toggle {
-    Name = "fling",
-    callback = function(value)
-        if Settings.Target.Selected ~= nil then
-            Settings.Target.Fling.Enabled = value
+    p1t3:Toggle {
+        Name = "enabled",
+        flag = "fly_enabled",
+        callback = function(value)
+            Settings.Player.Flight.Enabled = value
         end
-    end
-}
+    }
 
-p1t4:Toggle {
-    Name = "attach",
-    callback = function(value)
-    Settings.Target.Attach = value
-    end
-}
+    p1t3:dropdown {
+        name = "type",
+        flag = "fly_type",
+        content = {"vehicle","cframe","velocity"},
+        multichoice = false,
+        callback = function(value)
+            Settings.Player.Flight.Type = value
+        end
+    }
 
-p1t4:Toggle {
-    Name = "orbit",
-    callback = function(value)
-        if value then
-            if not Settings.Target.Selected then
-                NotificationLibrary:SendNotification("Error", "Select a player first!", 3)
-                return
+    p1t3:Slider {
+        Name = "speed",
+        flag = "fly_speed",
+        Default = 1,
+        Min = 1,
+        Max = 50,
+        valueText = "speed - [VALUE]",
+        callback = function(value)
+            Settings.Player.Flight.Value = value
+        end
+    }
+
+    p1t3:Keybind {
+        Default = Enum.KeyCode.F,
+        name = "keybind",
+        flag = "fly_keybind",
+        callback = function(value)
+            Settings.Player.Flight.Keybind = value
+        end
+    }
+
+    p2t3:Toggle {
+        name = "enabled",
+        flag = "speed_enabled",
+        callback = function(value)
+            Settings.Player.Speed.Enabled = value
+        end
+    }
+
+    p2t3:Toggle {
+        name = "toggle",
+        flag = "speed_toggle",
+        callback = function(value)
+            Settings.Player.Speed.Toggle = value
+        end
+    }
+
+    p2t3:dropdown {
+        name = "type",
+        flag = "speed_type",
+        content = {"velocity","cframe"},
+        multichoice = false,
+        callback = function(value)
+            Settings.Player.Speed.Type = value
+        end
+    }
+
+    p2t3:Slider {
+        Name = "speed",
+        flag = "speed_value",
+        Default = 1,
+        Min = 1,
+        Max = 50,
+        valueText = "speed - [VALUE]",
+        callback = function(value)
+            Settings.Player.Speed.Value = value
+        end
+    }
+
+    p2t3:Keybind {
+        Default = Enum.KeyCode.LeftShift,
+        Name = "keybind",
+        flag = "speed_keybind",
+        callback = function(value)
+            Settings.Player.Speed.Keybind = value
+        end
+    }
+
+    p3t3:Toggle {
+        Name = "enabled",
+        callback = function(value)
+            Settings.Player.Antiaim.Enabled = value
+        end
+    }
+
+    p3t3:Slider {
+        Name = "speed",
+        flag = "antiaim_speed",
+        Default = 10,
+        Min = 1,
+        Max = 50,
+        valueText = "speed - [VALUE]",
+        callback = function(value)
+            Settings.Player.Antiaim.Speed = value
+        end
+    }
+
+    p3t3:Slider {
+        Name = "power",
+        flag = "antiaim_power",
+        Default = 5,
+        Min = 1,
+        Max = 20,
+        valueText = "power - [VALUE]",
+        callback = function(value)
+            Settings.Player.Antiaim.Power = value
+        end
+    }
+
+    targetselect = p1t4:Box {
+        Name = "target",
+        Default = "nil",
+        callback = function(value)
+            local searchString = string.lower(tostring(value))
+            Settings.Target.Selected = nil
+
+            for _, player in pairs(game.Players:GetPlayers()) do
+                if player ~= game.Players.LocalPlayer then
+                    if string.lower(player.Name):find(searchString, 1, true) or 
+                    string.lower(player.DisplayName):find(searchString, 1, true) then
+                        Settings.Target.Selected = player.Name
+                        break
+                    end
+                end
             end
 
-            local target = game.Players[Settings.Target.Selected]
-            if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
-                NotificationLibrary:SendNotification("Error", "Target player not found or has no HumanoidRootPart", 3)
-                return
+            if Settings.Target.Selected ~= nil then
+                Library:Notify({mode = "error", text = "Selected player: " .. Settings.Target.Selected, duration = 2})
+            else
+                Library:Notify({mode = "error", text = "Can`t find player", duration = 2})
             end
-            
-            local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        end
+    }
 
-            if not root or not humanoid then
-                NotificationLibrary:SendNotification("Error", "Your character is not valid", 3)
-                return
+    p1t4:Toggle {
+        Name = "spectate",
+        callback = function(value)
+            Settings.Target.Spectate = value
+            if not value then
+                workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             end
-                     
-            local rotation = 0
+        end
+    }
 
-            for _, connection in pairs(Settings.Target.Orbit.Connections) do
-                if connection then pcall(function() connection:Disconnect() end) end
+    p1t4:Toggle {
+        Name = "aimlock",
+        callback = function(value)
+            Settings.Target.Aimlock = value
+        end
+    }
+
+    p1t4:Toggle {
+        Name = "fling",
+        callback = function(value)
+            if Settings.Target.Selected ~= nil then
+                Settings.Target.Fling.Enabled = value
             end
-            Settings.Target.Orbit.Connections = {}
+        end
+    }
 
-            table.insert(Settings.Target.Orbit.Connections, game:GetService("RunService").Heartbeat:Connect(function()
-                pcall(function()
-                    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and root then
-                        rotation = rotation + Settings.Target.Orbit.Speed
-                        root.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(Settings.Target.Orbit.Distance, 0, 0)
+    p1t4:Toggle {
+        Name = "attach",
+        callback = function(value)
+            Settings.Target.Attach.Enabled = value
+            if value then
+                Settings.Target.Attach.Loop = game:GetService("RunService").RenderStepped:Connect(function()
+                    if Settings.Target.Attach.Enabled and Settings.Target.Selected ~= nil then
+                        local targetPlayer = game.Players[Settings.Target.Selected]
+                        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local targetPos = targetPlayer.Character.HumanoidRootPart.Position
+                        
+                            local radius = 15
+                            local randomX = targetPos.X + (math.random() - 0.5) * radius * 2
+                            local randomZ = targetPos.Z + (math.random() - 0.5) * radius * 2
+                            local randomY = targetPos.Y + (math.random() - 0.5) * radius * 2
+                        
+                            local angleX = math.rad(math.random(0, 360))
+                            local angleY = math.rad(math.random(0, 360)) 
+                            local angleZ = math.rad(math.random(0, 360)) 
+                        
+                            local teleportPos = Vector3.new(randomX, randomY, randomZ)
+                        
+                            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(teleportPos) * CFrame.Angles(angleX, angleY, angleZ)
+                            end
+                        end
                     end
                 end)
-            end))
+            else
+                if Settings.Target.Attach.Loop then
+                    Settings.Target.Attach.Loop:Disconnect()
+                end
+            end
+        end
+    }
 
-            table.insert(Settings.Target.Orbit.Connections, game:GetService("RunService").RenderStepped:Connect(function()
-                pcall(function()
-                    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and root then
-                        root.CFrame = CFrame.new(root.Position, target.Character.HumanoidRootPart.Position)
-                    end
-                end)
-            end))
+    p1t4:Toggle {
+        Name = "orbit",
+        callback = function(value)
+            if value then
+                if not Settings.Target.Selected then
+                    Library:Notify({mode = "error", text = "Select a player first", duration = 1})
+                    return
+                end
 
-            table.insert(Settings.Target.Orbit.Connections, humanoid.Died:Connect(function()
+                local target = game.Players[Settings.Target.Selected]
+                if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+                    Library:Notify({mode = "error", text = "Target Player not found or has no HumanoidRootPart", duration = 2})
+                    return
+                end
+                
+                local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+                if not root or not humanoid then
+                    Library:Notify({mode = "error", text = "Your character is not valid", duration = 2})
+                    return
+                end
+                        
+                local rotation = 0
+
                 for _, connection in pairs(Settings.Target.Orbit.Connections) do
                     if connection then pcall(function() connection:Disconnect() end) end
                 end
                 Settings.Target.Orbit.Connections = {}
-            end))
 
-            table.insert(Settings.Target.Orbit.Connections, humanoid.Seated:Connect(function(isSeated)
-                if isSeated then
+                table.insert(Settings.Target.Orbit.Connections, game:GetService("RunService").Heartbeat:Connect(function()
+                    pcall(function()
+                        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and root then
+                            rotation = rotation + Settings.Target.Orbit.Speed
+                            root.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position) * CFrame.Angles(0, math.rad(rotation), 0) * CFrame.new(Settings.Target.Orbit.Distance, 0, 0)
+                        end
+                    end)
+                end))
+
+                table.insert(Settings.Target.Orbit.Connections, game:GetService("RunService").RenderStepped:Connect(function()
+                    pcall(function()
+                        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and root then
+                            root.CFrame = CFrame.new(root.Position, target.Character.HumanoidRootPart.Position)
+                        end
+                    end)
+                end))
+
+                table.insert(Settings.Target.Orbit.Connections, humanoid.Died:Connect(function()
                     for _, connection in pairs(Settings.Target.Orbit.Connections) do
                         if connection then pcall(function() connection:Disconnect() end) end
                     end
                     Settings.Target.Orbit.Connections = {}
-                end
-            end))
+                end))
 
-            table.insert(Settings.Target.Orbit.Connections, target.CharacterAdded:Connect(function()
+                table.insert(Settings.Target.Orbit.Connections, humanoid.Seated:Connect(function(isSeated)
+                    if isSeated then
+                        for _, connection in pairs(Settings.Target.Orbit.Connections) do
+                            if connection then pcall(function() connection:Disconnect() end) end
+                        end
+                        Settings.Target.Orbit.Connections = {}
+                    end
+                end))
+
+                table.insert(Settings.Target.Orbit.Connections, target.CharacterAdded:Connect(function()
+                    for _, connection in pairs(Settings.Target.Orbit.Connections) do
+                        if connection then pcall(function() connection:Disconnect() end) end
+                    end
+                    Settings.Target.Orbit.Connections = {}
+                end))
+            else
                 for _, connection in pairs(Settings.Target.Orbit.Connections) do
                     if connection then pcall(function() connection:Disconnect() end) end
                 end
                 Settings.Target.Orbit.Connections = {}
-            end))
-        else
-            for _, connection in pairs(Settings.Target.Orbit.Connections) do
-                if connection then pcall(function() connection:Disconnect() end) end
             end
-            Settings.Target.Orbit.Connections = {}
         end
-    end
-}
+    }
 
-p1t4:Slider {
-    Name = "orbit speed",
-    flag = "orbit_speed",
-    Default = 1,
-    Min = 1,
-    Max = 1500,
-    valueText = "speed - [VALUE]",
-    callback = function(value)
-        Settings.Target.Orbit.Speed = value / 25
-    end
-}
+    p1t4:Slider {
+        Name = "orbit speed",
+        flag = "orbit_speed",
+        Default = 1,
+        Min = 1,
+        Max = 1500,
+        valueText = "speed - [VALUE]",
+        callback = function(value)
+            Settings.Target.Orbit.Speed = value / 25
+        end
+    }
 
-p1t4:Slider {
-    Name = "orbit distance",
-    flag = "orbit_distance",
-    Default = 5,
-    Min = 1,
-    Max = 50,
-    valueText = "distance - [VALUE]",
-    callback = function(value)
-        Settings.Target.Orbit.Distance = value
-    end
-}
+    p1t4:Slider {
+        Name = "orbit distance",
+        flag = "orbit_distance",
+        Default = 5,
+        Min = 1,
+        Max = 50,
+        valueText = "distance - [VALUE]",
+        callback = function(value)
+            Settings.Target.Orbit.Distance = value
+        end
+    }
 
-p2t4:Button {
-    Name = "target picker",
-    callback = function()
-        Settings.Target.TargetPicker = true
-        local connection
-        connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
-            if Settings.Target.TargetPicker and input.UserInputType == Enum.UserInputType.MouseButton1 then
-                local closestPlayer = nil
-                local closestDistance = 100
-                local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-                local camera = workspace.CurrentCamera
-                
-                for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-                    if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        local rootPart = player.Character.HumanoidRootPart
-                        local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-                        
-                        if onScreen then
-                            local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                            if distance < closestDistance then
-                                closestDistance = distance
-                                closestPlayer = player
+    p2t4:Button {
+        Name = "target picker",
+        callback = function()
+            Settings.Target.TargetPicker = true
+            local connection
+            connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+                if Settings.Target.TargetPicker and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local closestPlayer = nil
+                    local closestDistance = 100
+                    local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+                    local camera = workspace.CurrentCamera
+                    
+                    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+                        if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local rootPart = player.Character.HumanoidRootPart
+                            local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+                            
+                            if onScreen then
+                                local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                                if distance < closestDistance then
+                                    closestDistance = distance
+                                    closestPlayer = player
+                                end
                             end
                         end
                     end
-                end
-                
-                if closestPlayer then
-                    Settings.Target.Selected = closestPlayer.Name
-                    targetselect:Set(closestPlayer.DisplayName)
-                end
-                
-                Settings.Target.TargetPicker = false
-                connection:Disconnect()
-            end
-        end)
-    end
-}
-
-p2t4:Button {
-    Name = "teleport to",
-    callback = function()
-        if Settings.Target.Selected ~= nil then
-            if game.Players.LocalPlayer.Character ~= nil then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0,5,0)
-            end
-        end
-    end
-}
-
-p2t4:Button {
-    Name = "use tool",
-    callback = function()
-        if Settings.Target.Selected ~= nil and game.Players[Settings.Target.Selected].Character and game.Players[Settings.Target.Selected].Character:FindFirstChild("HumanoidRootPart") then
-            Settings.Target.UseTool.oldPlrCFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-            Settings.Target.UseTool.oldCamCFrame = workspace.Camera.CFrame
-            local omaxz = game.Players.LocalPlayer.CameraMaxZoomDistance
-            local ominz = game.Players.LocalPlayer.CameraMinZoomDistance
-            game.Players.LocalPlayer.CameraMaxZoomDistance = 0
-            game.Players.LocalPlayer.CameraMinZoomDistance = 5
-            Settings.Target.UseTool.Cycle = game:GetService("RunService").RenderStepped:Connect(function()
-                if game.Players[Settings.Target.Selected] and 
-                   game.Players[Settings.Target.Selected].Character and 
-                   game.Players[Settings.Target.Selected].Character:FindFirstChild("HumanoidRootPart") then
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = 
-                    game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
-                    workspace.Camera.CFrame = CFrame.new(
-                        workspace.Camera.CFrame.Position, 
-                        game.Players[Settings.Target.Selected].Character.HumanoidRootPart.Position
-                    )
-                    mouse1press()
-                    task.wait(0.1)
-                    mouse1release()
+                    
+                    if closestPlayer then
+                        Settings.Target.Selected = closestPlayer.Name
+                        targetselect:Set(closestPlayer.DisplayName)
+                    end
+                    
+                    Settings.Target.TargetPicker = false
+                    connection:Disconnect()
                 end
             end)
-            
+        end
+    }
+
+    p2t4:Button {
+        Name = "teleport to",
+        callback = function()
+            if Settings.Target.Selected ~= nil then
+                if game.Players.LocalPlayer.Character ~= nil then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0,5,0)
+                end
+            end
+        end
+    }
+
+    p2t4:Button {
+        Name = "use tool",
+        callback = function()
+            if Settings.Target.Selected ~= nil and game.Players[Settings.Target.Selected].Character and game.Players[Settings.Target.Selected].Character:FindFirstChild("HumanoidRootPart") then
+                Settings.Target.UseTool.oldPlrCFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+                Settings.Target.UseTool.oldCamCFrame = workspace.Camera.CFrame
+                local omaxz = game.Players.LocalPlayer.CameraMaxZoomDistance
+                local ominz = game.Players.LocalPlayer.CameraMinZoomDistance
+                game.Players.LocalPlayer.CameraMaxZoomDistance = 0
+                game.Players.LocalPlayer.CameraMinZoomDistance = 5
+                Settings.Target.UseTool.Cycle = game:GetService("RunService").RenderStepped:Connect(function()
+                    if game.Players[Settings.Target.Selected] and 
+                    game.Players[Settings.Target.Selected].Character and 
+                    game.Players[Settings.Target.Selected].Character:FindFirstChild("HumanoidRootPart") then
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = 
+                        game.Players[Settings.Target.Selected].Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+                        workspace.Camera.CFrame = CFrame.new(
+                            workspace.Camera.CFrame.Position, 
+                            game.Players[Settings.Target.Selected].Character.HumanoidRootPart.Position
+                        )
+                        mouse1press()
+                        task.wait(0.1)
+                        mouse1release()
+                    end
+                end)
+                
+                task.wait(1)
+                
+                Settings.Target.UseTool.Cycle:Disconnect()
+                game.Players.LocalPlayer.CameraMaxZoomDistance = omaxz
+                game.Players.LocalPlayer.CameraMinZoomDistance = ominz
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Target.UseTool.oldPlrCFrame
+                workspace.Camera.CFrame = Settings.Target.UseTool.oldCamCFrame
+            end
+        end
+    }
+
+    p1t5:Toggle {
+        Name = "instant turn",
+        flag = "instant_turn",
+        callback = function(value)
+            Settings.Other.InstantTurn = value
+        end
+    }
+
+    p1t5:Toggle {
+        Name = "noclip",
+        callback = function(value)
+        if value then
+            NoclipConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                local character = game.Players.LocalPlayer.Character
+                if character then
+                    for _, v in pairs(character:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide == true then
+                            v.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            if NoclipConnection then
+                NoclipConnection:Disconnect()
+                local character = game.Players.LocalPlayer.Character
+                if character then
+                    for _, v in pairs(character:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide == false then
+                            v.CanCollide = true
+                        end
+                    end
+                end
+            end
+        end
+        end
+    }
+
+    p1t5:Toggle {
+        Name = "bunny hop",
+        flag = "bunny_hop",
+        callback = function(value)
+            Settings.Other.BunnyHop = value
+        end
+    }
+
+    p1t5:Button {
+        Name = "kill attached",
+        callback = function()
+            Settings.Other.OldPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+            workspace.FallenPartsDestroyHeight = 0/1/0
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, Settings.Other.FallenParts - 250, 0))
             task.wait(1)
-            
-            Settings.Target.UseTool.Cycle:Disconnect()
-            game.Players.LocalPlayer.CameraMaxZoomDistance = omaxz
-            game.Players.LocalPlayer.CameraMinZoomDistance = ominz
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Target.UseTool.oldPlrCFrame
-            workspace.Camera.CFrame = Settings.Target.UseTool.oldCamCFrame
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Other.OldPosition
+            workspace.FallenPartsDestroyHeight = Settings.Other.FallenParts
         end
-    end
-}
+    }
 
-p1t5:Toggle {
-    Name = "instant turn",
-    flag = "instant_turn",
-    callback = function(value)
-        Settings.Other.InstantTurn = value
-    end
-}
+    p1t5:Button {
+        Name = "rejoin",
+        callback = function()
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
+        end
+    }
 
-p1t5:Toggle {
-    Name = "auto kill attached",
-    flag = "Auto_KA",
-    callback = function(value)
-        Settings.Other.AKA = value
-    end
-}
+    p1SetTab:Box {
+        Name = "config",
+        Default = "nil",
+        callback = function(value)
+            Settings.Other.Config.Input = value
+        end
+    }
 
-p1t5:Toggle {
-    Name = "noclip",
-    callback = function(value)
-    if value then
-        NoclipConnection = game:GetService("RunService").Heartbeat:Connect(function()
-            local character = game.Players.LocalPlayer.Character
-            if character then
-                for _, v in pairs(character:GetDescendants()) do
-                    if v:IsA("BasePart") and v.CanCollide == true then
-                        v.CanCollide = false
+    p1SetTab:Button {
+        Name = "save",
+        callback = function()
+            Library:SaveConfig(Settings.Other.Config.Input)
+        end
+    }
+
+    p1SetTab:Button {
+        Name = "load",
+        callback = function()
+            Library:LoadConfig(Settings.Other.Config.Input)
+        end
+    }
+
+    p2SetTab:Keybind {
+        Name = "keybind",
+        flag = "gui_keybind",
+        Default = Enum.KeyCode.RightShift,
+        callback = function(value)
+            Library:SetKey(value)
+        end
+    }
+    local function getFPS() return 0 end
+    local function getPing() return 0 end
+    p2SetTab:Toggle {
+        Name = "watermark",
+        flag = "water_mark",
+        callback = function(value)
+            Library:SetWatermarkVisibility(value)
+            if value == true then
+                local lastUpdate = 0
+                local updateInterval = 0.5
+                watermarkrs = game:GetService("RunService").RenderStepped:Connect(function(dt)
+                    local currentTime = tick()
+                    if currentTime - lastUpdate >= updateInterval then
+                        Library:SetWatermark(Library:GetMenuName() .. " | " .. game.Players.LocalPlayer.DisplayName .. " | FPS: " .. getFPS() .. " | Ping: " .. getPing())
+                        lastUpdate = currentTime
                     end
-                end
-            end
-        end)
-    else
-        if NoclipConnection then
-            NoclipConnection:Disconnect()
-            local character = game.Players.LocalPlayer.Character
-            if character then
-                for _, v in pairs(character:GetDescendants()) do
-                    if v:IsA("BasePart") and v.CanCollide == false then
-                        v.CanCollide = true
-                    end
-                end
+                end)
+            elseif value == false then
+                if watermarkrs then watermarkrs:Disconnect() end
             end
         end
-    end
-    end
-}
-
-p1t5:Toggle {
-    Name = "bunny hop",
-    flag = "bunny_hop",
-    callback = function(value)
-        Settings.Other.BunnyHop = value
-    end
-}
+    }
 
 
-p1t5:ToggleSlider {
-    Name = "field of view",
-    toggleFlag = "field_of_view_enabled",
-    sliderFlag = "field_of_view_value",
-    Default = workspace.Camera.FieldOfView,
-    Min = 70,
-    Max = 120,
-    valueText = "fov - [VALUE]",
-    toggleCallback = function(value) 
-        Settings.Other.FieldOfView.Enabled = value
-    end,
-    sliderCallback = function(value) 
-        Settings.Other.FieldOfView.Value = value
-    end
-}
 
-p1t5:Button {
-    Name = "kill attached",
-    callback = function()
-        Settings.Other.OldPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-        workspace.FallenPartsDestroyHeight = 0/1/0
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, Settings.Other.FallenParts - 250, 0))
-        task.wait(1)
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Other.OldPosition
-        workspace.FallenPartsDestroyHeight = Settings.Other.FallenParts
-    end
-}
 
-p1t5:Button {
-    Name = "rejoin",
-    callback = function()
-        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
-    end
-}
 
-p1SetTab:Box {
-    Name = "config",
-    Default = "nil",
-    callback = function(value)
-        Settings.Other.Config.Input = value
-    end
-}
 
-p1SetTab:Button {
-    Name = "save",
-    callback = function()
-        Library:SaveConfig(Settings.Other.Config.Input)
-    end
-}
 
-p1SetTab:Button {
-    Name = "load",
-    callback = function()
-        Library:LoadConfig(Settings.Other.Config.Input)
-    end
-}
 
-p2SetTab:Keybind {
-    Name = "keybind",
-    flag = "gui_keybind",
-    Default = Enum.KeyCode.RightShift,
-    callback = function(value)
-        Library:SetKey(value)
-    end
-}
-local function getFPS() return 0 end
-local function getPing() return 0 end
-p2SetTab:Toggle {
-    Name = "watermark",
-    flag = "water_mark",
-    callback = function(value)
-        Library:SetWatermarkVisibility(value)
-        if value == true then
-            local lastUpdate = 0
-            local updateInterval = 0.5
-            watermarkrs = game:GetService("RunService").RenderStepped:Connect(function(dt)
-                local currentTime = tick()
-                if currentTime - lastUpdate >= updateInterval then
-                    Library:SetWatermark(Library:GetMenuName() .. " | " .. game.Players.LocalPlayer.DisplayName .. " | FPS: " .. getFPS() .. " | Ping: " .. getPing())
-                    lastUpdate = currentTime
-                end
-            end)
-        elseif value == false then
-            if watermarkrs then watermarkrs:Disconnect() end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local function UpdateRaycastIgnore()
+        local ignoreList = {LocalPlayer.Character, Camera}
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character and player.Character ~= LocalPlayer.Character then
+                table.insert(ignoreList, player.Character)
+            end
         end
+        raycastParams.FilterDescendantsInstances = ignoreList
     end
-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local raycastParams = RaycastParams.new()
-raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-local function UpdateRaycastIgnore()
-    local ignoreList = {LocalPlayer.Character, Camera}
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character and player.Character ~= LocalPlayer.Character then
-            table.insert(ignoreList, player.Character)
+    local function IsPartVisible(part)
+        if not part or not part:IsA("BasePart") then return false end
+        
+        local cameraPosition = Camera.CFrame.Position
+        local direction = (part.Position - cameraPosition).Unit * 1000
+        local rayResult = Workspace:Raycast(cameraPosition, direction, raycastParams)
+        
+        if rayResult then
+            local hitDistance = (rayResult.Position - cameraPosition).Magnitude
+            local targetDistance = (part.Position - cameraPosition).Magnitude
+            return hitDistance >= targetDistance - 1
         end
+        
+        return true
     end
-    raycastParams.FilterDescendantsInstances = ignoreList
-end
 
-local function IsPartVisible(part)
-    if not part or not part:IsA("BasePart") then return false end
-    
-    local cameraPosition = Camera.CFrame.Position
-    local direction = (part.Position - cameraPosition).Unit * 1000
-    local rayResult = Workspace:Raycast(cameraPosition, direction, raycastParams)
-    
-    if rayResult then
-        local hitDistance = (rayResult.Position - cameraPosition).Magnitude
-        local targetDistance = (part.Position - cameraPosition).Magnitude
-        return hitDistance >= targetDistance - 1
-    end
-    
-    return true
-end
+    local visibleCache = {
+        target = nil,
+        part = nil,
+        timestamp = 0
+    }
 
-local visibleCache = {
-    target = nil,
-    part = nil,
-    timestamp = 0
-}
+    -- ========== НОВЫЕ ФУНКЦИИ ВСТАВЬ СЮДА ==========
 
--- ========== НОВЫЕ ФУНКЦИИ ВСТАВЬ СЮДА ==========
-
-local function GetBestVisiblePart(character, settings)
-    if not character then return nil end
-    
-    local currentTime = tick()
-    
-    if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
-        return visibleCache.part
-    end
-    
-    local settingsPart = settings.LockPart
-    -- Сначала проверяем выбранный пользователем парт
-    local defaultPart = character:FindFirstChild(settingsPart)
-    if defaultPart and defaultPart:IsA("BasePart") and IsPartVisible(defaultPart) then
+    local function GetBestVisiblePart(character, settings)
+        if not character then return nil end
+        
+        local currentTime = tick()
+        
+        if visibleCache.target == character and currentTime - visibleCache.timestamp < 0.1 then
+            return visibleCache.part
+        end
+        
+        local settingsPart = settings.LockPart
+        -- Сначала проверяем выбранный пользователем парт
+        local defaultPart = character:FindFirstChild(settingsPart)
+        if defaultPart and defaultPart:IsA("BasePart") and IsPartVisible(defaultPart) then
+            visibleCache.target = character
+            visibleCache.part = defaultPart
+            visibleCache.timestamp = currentTime
+            return defaultPart
+        end
+        
+        -- Если выбранный парт не виден, ищем любой другой видимый
+        local partsToCheck = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
+        
+        for _, partName in ipairs(partsToCheck) do
+            local part = character:FindFirstChild(partName)
+            if part and part:IsA("BasePart") and IsPartVisible(part) then
+                visibleCache.target = character
+                visibleCache.part = part
+                visibleCache.timestamp = currentTime
+                return part
+            end
+        end
+        
+        -- Если ничего не нашли, возвращаем дефолтный парт (хоть что-то)
         visibleCache.target = character
         visibleCache.part = defaultPart
         visibleCache.timestamp = currentTime
         return defaultPart
     end
-    
-    -- Если выбранный парт не виден, ищем любой другой видимый
-    local partsToCheck = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
-    
-    for _, partName in ipairs(partsToCheck) do
-        local part = character:FindFirstChild(partName)
-        if part and part:IsA("BasePart") and IsPartVisible(part) then
-            visibleCache.target = character
-            visibleCache.part = part
-            visibleCache.timestamp = currentTime
-            return part
-        end
-    end
-    
-    -- Если ничего не нашли, возвращаем дефолтный парт (хоть что-то)
-    visibleCache.target = character
-    visibleCache.part = defaultPart
-    visibleCache.timestamp = currentTime
-    return defaultPart
-end
 
-local function GetClosestPartToCursor(character, settings)
-if Settings.Combat.Aimlock.ClosestPart == true or Settings.Combat.Aimbot.ClosestPart == true then else return end
-    if not character or not settings.ClosestPart then 
-        return GetBestVisiblePart(character, settings)
-    end
-    
-    local mousePosition = UserInputService:GetMouseLocation()
-    local bestPart = nil
-    local bestDistance = math.huge
-    local defaultPart = nil
-    local settingsPart = character:FindFirstChild(settings.LockPart)
-    
-    local partsToCheck = {
-        "Head", 
-        "HumanoidRootPart", 
-    }
-    
-    for _, partName in ipairs(partsToCheck) do
-        local part = character:FindFirstChild(partName)
-        if part and part:IsA("BasePart") then
-            if IsPartVisible(part) then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-                if onScreen then
-                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePosition).Magnitude
-                    local fovRadius = settings.FOV.Value
-                    
-                    if distance <= fovRadius then
-                        if distance < bestDistance then
-                            bestDistance = distance
-                            bestPart = part
+    local function GetClosestPartToCursor(character, settings)
+    if Settings.Combat.Aimlock.ClosestPart == true or Settings.Combat.Aimbot.ClosestPart == true then else return end
+        if not character or not settings.ClosestPart then 
+            return GetBestVisiblePart(character, settings)
+        end
+        
+        local mousePosition = UserInputService:GetMouseLocation()
+        local bestPart = nil
+        local bestDistance = math.huge
+        local defaultPart = nil
+        local settingsPart = character:FindFirstChild(settings.LockPart)
+        
+        local partsToCheck = {
+            "Head", 
+            "HumanoidRootPart", 
+        }
+        
+        for _, partName in ipairs(partsToCheck) do
+            local part = character:FindFirstChild(partName)
+            if part and part:IsA("BasePart") then
+                if IsPartVisible(part) then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                    if onScreen then
+                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePosition).Magnitude
+                        local fovRadius = settings.FOV.Value
+                        
+                        if distance <= fovRadius then
+                            if distance < bestDistance then
+                                bestDistance = distance
+                                bestPart = part
+                            end
                         end
                     end
                 end
-            end
-            
-            if part == settingsPart and not defaultPart then
-                defaultPart = part
+                
+                if part == settingsPart and not defaultPart then
+                    defaultPart = part
+                end
             end
         end
-    end
-    
-    if bestPart then
-        return bestPart
-    end
-    
-    if defaultPart and IsPartVisible(defaultPart) then
-        return defaultPart
-    end
-    
-    return GetBestVisiblePart(character, settings)
-end
-
-local function GetTargetPart(character, settings, useClosestPart)
-    if useClosestPart and settings.ClosestPart then
-        return GetClosestPartToCursor(character, settings)
-    else
+        
+        if bestPart then
+            return bestPart
+        end
+        
+        if defaultPart and IsPartVisible(defaultPart) then
+            return defaultPart
+        end
+        
         return GetBestVisiblePart(character, settings)
     end
-end
--- ========== КОНЕЦ НОВЫХ ФУНКЦИЙ ==========
 
-local function IsCharacterAlive(character)
-    if not character then return false end
-    local humanoid = character:FindFirstChild("Humanoid")
-    return humanoid and humanoid.Health > 0 and humanoid:GetState() ~= Enum.HumanoidStateType.Dead
-end
-
-local function HasItemInHands()
-    local character = LocalPlayer.Character
-    if not character then return false end
-    return character:FindFirstChildOfClass("Tool") ~= nil
-end
-
-local function ValidateTarget(target, settings)
-    if not target then return false end
-    
-    local character = target.Character
-    if not character then return false end
-    if settings.AliveCheck and not IsCharacterAlive(character) then
-        LastDeathTime = tick()
-        return false
-    end
-    if settings.HoldCheck and not HasItemInHands() then return false end
-    if settings.TeamCheck and target.Team == LocalPlayer.Team then return false end
-    
-    if settings.WallCheck then
-        local part = GetTargetPart(character, settings, false)
-        if not part then return false end
-        if not IsPartVisible(part) then return false end
-    end
-    
-    return true
-end
-
-local function GetPlayerScore(player, settings, cursorDistance, healthValue, distanceToPlayer)
-    local modes = settings.Priority.Modes
-    local score = 0
-    
-    if #modes == 0 then
-        return -cursorDistance
-    end
-    
-    if table.find(modes, "health") then
-        score = score + (100 - healthValue) * 10000
-    end
-    
-    if table.find(modes, "distance") then
-        score = score + (1000 - math.min(distanceToPlayer, 1000))
-    end
-    
-    return score
-end
-
-local function GetAllValidPlayers(settings, useFOV)
-    local validPlayers = {}
-    local mousePosition = UserInputService:GetMouseLocation()
-    local viewportSize = Camera.ViewportSize
-    local centerPosition = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        
-        local character = player.Character
-        if not character then continue end
-        if settings.AliveCheck and not IsCharacterAlive(character) then continue end
-        if settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
-        
-        -- Используем GetBestVisiblePart для получения лучшей видимой части
-        -- Эта функция сама ищет сначала выбранный парт, потом другие, если выбранный не виден
-        local part = GetTargetPart(character, settings, false)
-        if not part then continue end
-        
-        -- Проверяем видимость через Raycast (GetBestVisiblePart уже проверил видимость,
-        -- но для WallCheck нужна дополнительная проверка)
-        if settings.WallCheck and not IsPartVisible(part) then continue end
-        
-        local partPosition, onScreen = Camera:WorldToViewportPoint(part.Position)
-        if onScreen then
-            local cursorDistance = (Vector2.new(partPosition.X, partPosition.Y) - mousePosition).Magnitude
-            local centerDistance = (Vector2.new(partPosition.X, partPosition.Y) - centerPosition).Magnitude
-            
-            local distanceToCheck = useFOV and centerDistance or cursorDistance
-            
-            if distanceToCheck <= settings.FOV.Value then
-                local humanoid = character:FindFirstChild("Humanoid")
-                local healthValue = humanoid and humanoid.Health or 100
-                local distanceToPlayer = 9999
-                
-                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    distanceToPlayer = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                end
-                
-                table.insert(validPlayers, {
-                    player = player,
-                    cursorDistance = cursorDistance,
-                    centerDistance = centerDistance,
-                    health = healthValue,
-                    distance = distanceToPlayer,
-                    part = part
-                })
-            end
+    local function GetTargetPart(character, settings, useClosestPart)
+        if useClosestPart and settings.ClosestPart then
+            return GetClosestPartToCursor(character, settings)
+        else
+            return GetBestVisiblePart(character, settings)
         end
     end
-    
-    return validPlayers
-end
+    -- ========== КОНЕЦ НОВЫХ ФУНКЦИЙ ==========
 
-local function GetBestPlayer(settings, useFOV)
-    local validPlayers = GetAllValidPlayers(settings, useFOV)
-    if #validPlayers == 0 then return nil end
-    
-    if not settings.Priority.Enabled or #settings.Priority.Modes == 0 then
+    local function IsCharacterAlive(character)
+        if not character then return false end
+        local humanoid = character:FindFirstChild("Humanoid")
+        return humanoid and humanoid.Health > 0 and humanoid:GetState() ~= Enum.HumanoidStateType.Dead
+    end
+
+    local function HasItemInHands()
+        local character = LocalPlayer.Character
+        if not character then return false end
+        return character:FindFirstChildOfClass("Tool") ~= nil
+    end
+
+    local function ValidateTarget(target, settings)
+        if not target then return false end
+        
+        local character = target.Character
+        if not character then return false end
+        if settings.AliveCheck and not IsCharacterAlive(character) then
+            LastDeathTime = tick()
+            return false
+        end
+        if settings.HoldCheck and not HasItemInHands() then return false end
+        if settings.TeamCheck and target.Team == LocalPlayer.Team then return false end
+        
+        if settings.WallCheck then
+            local part = GetTargetPart(character, settings, false)
+            if not part then return false end
+            if not IsPartVisible(part) then return false end
+        end
+        
+        return true
+    end
+
+    local function GetPlayerScore(player, settings, cursorDistance, healthValue, distanceToPlayer)
+        local modes = settings.Priority.Modes
+        local score = 0
+        
+        if #modes == 0 then
+            return -cursorDistance
+        end
+        
+        if table.find(modes, "health") then
+            score = score + (100 - healthValue) * 10000
+        end
+        
+        if table.find(modes, "distance") then
+            score = score + (1000 - math.min(distanceToPlayer, 1000))
+        end
+        
+        return score
+    end
+
+    local function GetAllValidPlayers(settings, useFOV)
+        local validPlayers = {}
+        local mousePosition = UserInputService:GetMouseLocation()
+        local viewportSize = Camera.ViewportSize
+        local centerPosition = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            if player == LocalPlayer then continue end
+            
+            local character = player.Character
+            if not character then continue end
+            if settings.AliveCheck and not IsCharacterAlive(character) then continue end
+            if settings.TeamCheck and player.Team == LocalPlayer.Team then continue end
+            
+            -- Используем GetBestVisiblePart для получения лучшей видимой части
+            -- Эта функция сама ищет сначала выбранный парт, потом другие, если выбранный не виден
+            local part = GetTargetPart(character, settings, false)
+            if not part then continue end
+            
+            -- Проверяем видимость через Raycast (GetBestVisiblePart уже проверил видимость,
+            -- но для WallCheck нужна дополнительная проверка)
+            if settings.WallCheck and not IsPartVisible(part) then continue end
+            
+            local partPosition, onScreen = Camera:WorldToViewportPoint(part.Position)
+            if onScreen then
+                local cursorDistance = (Vector2.new(partPosition.X, partPosition.Y) - mousePosition).Magnitude
+                local centerDistance = (Vector2.new(partPosition.X, partPosition.Y) - centerPosition).Magnitude
+                
+                local distanceToCheck = useFOV and centerDistance or cursorDistance
+                
+                if distanceToCheck <= settings.FOV.Value then
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    local healthValue = humanoid and humanoid.Health or 100
+                    local distanceToPlayer = 9999
+                    
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        distanceToPlayer = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                    end
+                    
+                    table.insert(validPlayers, {
+                        player = player,
+                        cursorDistance = cursorDistance,
+                        centerDistance = centerDistance,
+                        health = healthValue,
+                        distance = distanceToPlayer,
+                        part = part
+                    })
+                end
+            end
+        end
+        
+        return validPlayers
+    end
+
+    local function GetBestPlayer(settings, useFOV)
+        local validPlayers = GetAllValidPlayers(settings, useFOV)
+        if #validPlayers == 0 then return nil end
+        
+        if not settings.Priority.Enabled or #settings.Priority.Modes == 0 then
+            table.sort(validPlayers, function(a, b)
+                return a.cursorDistance < b.cursorDistance
+            end)
+            return validPlayers[1].player
+        end
+        
+        for _, playerData in ipairs(validPlayers) do
+            playerData.score = GetPlayerScore(playerData.player, settings, playerData.cursorDistance, playerData.health, playerData.distance)
+        end
+        
         table.sort(validPlayers, function(a, b)
-            return a.cursorDistance < b.cursorDistance
+            if a.score == b.score then
+                return a.cursorDistance < b.cursorDistance
+            end
+            return a.score > b.score
         end)
+        
         return validPlayers[1].player
     end
-    
-    for _, playerData in ipairs(validPlayers) do
-        playerData.score = GetPlayerScore(playerData.player, settings, playerData.cursorDistance, playerData.health, playerData.distance)
+
+
+
+
+
+
+    local function GetClosestPlayerForAimlock()
+        local settings = Settings.Combat.Aimlock
+        if not settings.Enabled then return nil end
+        if settings.HoldCheck and not HasItemInHands() then return nil end
+        
+        return GetBestPlayer(settings)
     end
-    
-    table.sort(validPlayers, function(a, b)
-        if a.score == b.score then
-            return a.cursorDistance < b.cursorDistance
+
+    local function GetClosestPlayerForAimbot()
+        local settings = Settings.Combat.Aimbot
+        if not settings.Enabled then return nil end
+        if settings.HoldCheck and not HasItemInHands() then return nil end
+        
+        return GetBestPlayer(settings)
+    end
+
+    local lastUpdateTime = 0
+    local updateInterval = 0.05
+
+    local function UpdateAimlock()
+        local settings = Settings.Combat.Aimlock
+        if not settings.Enabled or not RunningAimlock then return end
+        
+        local currentTime = tick()
+        
+        if currentTime - lastUpdateTime >= updateInterval then
+            if not ValidateTarget(CurrentTarget, settings) then
+                CurrentTarget = GetClosestPlayerForAimlock()
+            end
+            lastUpdateTime = currentTime
         end
-        return a.score > b.score
-    end)
-    
-    return validPlayers[1].player
-end
-
-
-
-
-
-
-local function GetClosestPlayerForAimlock()
-    local settings = Settings.Combat.Aimlock
-    if not settings.Enabled then return nil end
-    if settings.HoldCheck and not HasItemInHands() then return nil end
-    
-    return GetBestPlayer(settings)
-end
-
-local function GetClosestPlayerForAimbot()
-    local settings = Settings.Combat.Aimbot
-    if not settings.Enabled then return nil end
-    if settings.HoldCheck and not HasItemInHands() then return nil end
-    
-    return GetBestPlayer(settings)
-end
-
-local lastUpdateTime = 0
-local updateInterval = 0.05
-
-local function UpdateAimlock()
-    local settings = Settings.Combat.Aimlock
-    if not settings.Enabled or not RunningAimlock then return end
-    
-    local currentTime = tick()
-    
-    if currentTime - lastUpdateTime >= updateInterval then
-        if not ValidateTarget(CurrentTarget, settings) then
-            CurrentTarget = GetClosestPlayerForAimlock()
-        end
-        lastUpdateTime = currentTime
-    end
-    
-    if not CurrentTarget then return end
-    
-    local character = CurrentTarget.Character
-    if not character then return end
-    
-    local part = GetTargetPart(character, settings, true)
-    if not part then return end
-    
-    if settings.WallCheck and not IsPartVisible(part) then return end
-    
-    local success, partPosition = pcall(function()
-        return Camera:WorldToViewportPoint(part.Position)
-    end)
-    
-    if not success then return end
-    
-    local mousePosition = UserInputService:GetMouseLocation()
-    local deltaX = (partPosition.X - mousePosition.X) / settings.Smoothness
-    local deltaY = (partPosition.Y - mousePosition.Y) / settings.Smoothness
-    local maxDelta = 200 / settings.Smoothness
-    
-    deltaX = math.clamp(deltaX, -maxDelta, maxDelta)
-    deltaY = math.clamp(deltaY, -maxDelta, maxDelta)
-    
-    if math.abs(deltaX) > 0.5 or math.abs(deltaY) > 0.5 then
-        pcall(mousemoverel, deltaX, deltaY)
-    end
-    
-    FOVAimlock.Color = settings.FOV.LockedColor
-end
-
-local function UpdateAimbot()
-    local settings = Settings.Combat.Aimbot
-    if not settings.Enabled or not RunningAimbot then return end
-    
-    local currentTime = tick()
-    
-    if currentTime - lastUpdateTime >= updateInterval then
-        if not ValidateTarget(CurrentTarget, settings) then
-            CurrentTarget = GetClosestPlayerForAimbot()
-        end
-        lastUpdateTime = currentTime
-    end
-    
-    if not CurrentTarget then return end
-    
-    local character = CurrentTarget.Character
-    if not character then return end
-    
-    local part = GetTargetPart(character, settings, true)
-    if not part then return end
-    
-    if settings.WallCheck and not IsPartVisible(part) then return end
-    
-    local targetPos = part.Position
-    if settings.AimingMethod == "velocity" then
-        targetPos = targetPos + (part.Velocity * settings.Prediction)
-    elseif settings.AimingMethod == "movedirection" then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            targetPos = targetPos + (humanoid.MoveDirection * settings.Prediction)
-        end
-    end
-    
-    if settings.Smoothness > 0 then
-        local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-        local newCFrame = Camera.CFrame:Lerp(targetCFrame, 1 / (settings.Smoothness * 10))
-        pcall(function()
-            Camera.CFrame = newCFrame
+        
+        if not CurrentTarget then return end
+        
+        local character = CurrentTarget.Character
+        if not character then return end
+        
+        local part = GetTargetPart(character, settings, true)
+        if not part then return end
+        
+        if settings.WallCheck and not IsPartVisible(part) then return end
+        
+        local success, partPosition = pcall(function()
+            return Camera:WorldToViewportPoint(part.Position)
         end)
-    else
-        pcall(function()
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-        end)
+        
+        if not success then return end
+        
+        local mousePosition = UserInputService:GetMouseLocation()
+        local deltaX = (partPosition.X - mousePosition.X) / settings.Smoothness
+        local deltaY = (partPosition.Y - mousePosition.Y) / settings.Smoothness
+        local maxDelta = 200 / settings.Smoothness
+        
+        deltaX = math.clamp(deltaX, -maxDelta, maxDelta)
+        deltaY = math.clamp(deltaY, -maxDelta, maxDelta)
+        
+        if math.abs(deltaX) > 0.5 or math.abs(deltaY) > 0.5 then
+            pcall(mousemoverel, deltaX, deltaY)
+        end
+        
+        FOVAimlock.Color = settings.FOV.LockedColor
     end
-    
-    FOVAimbot.Color = settings.FOV.LockedColor
-end
 
-local function UpdateFOVCircles()
-    local aimlockSettings = Settings.Combat.Aimlock
-    local aimbotSettings = Settings.Combat.Aimbot
-    
-    if aimlockSettings.Enabled and aimlockSettings.FOV.Enabled then
-        FOVAimlock.Visible = true
-        FOVAimlock.Position = UserInputService:GetMouseLocation()
-        FOVAimlock.Radius = aimlockSettings.FOV.Value
-        FOVAimlock.Color = aimlockSettings.FOV.Color
-        FOVAimlock.Filled = aimlockSettings.FOV.Filled
-        FOVAimlock.Transparency = aimlockSettings.FOV.Transparency
-    else
-        FOVAimlock.Visible = false
-    end
-    
-    if aimbotSettings.Enabled and aimbotSettings.FOV.Enabled then
-        FOVAimbot.Visible = true
-        local viewportSize = Camera.ViewportSize
-        FOVAimbot.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
-        FOVAimbot.Radius = aimbotSettings.FOV.Value
-        FOVAimbot.Color = aimbotSettings.FOV.Color
-        FOVAimbot.Filled = aimbotSettings.FOV.Filled
-        FOVAimbot.Transparency = aimbotSettings.FOV.Transparency
-    else
-        FOVAimbot.Visible = false
-    end
-end
-
-local function ResetTarget()
-    CurrentTarget = nil
-    FOVAimlock.Color = Settings.Combat.Aimlock.FOV.Color
-    FOVAimbot.Color = Settings.Combat.Aimbot.FOV.Color
-end
-
-UpdateRaycastIgnore()
-
-Players.PlayerAdded:Connect(function()
-    task.wait(0.5)
-    UpdateRaycastIgnore()
-end)
-
-Players.PlayerRemoving:Connect(function()
-    task.wait(0.1)
-    UpdateRaycastIgnore()
-end)
-
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    UpdateRaycastIgnore()
-end)
-
-UserInputService.InputBegan:Connect(function(Input)
-    if Typing then return end
-    
-    if Settings.Combat.Aimlock.Enabled then
-        if Input.KeyCode == Settings.Combat.Aimlock.TriggerKey or Input.UserInputType == Settings.Combat.Aimlock.TriggerKey then
-            if Settings.Combat.Aimlock.Toggle then
-                RunningAimlock = not RunningAimlock
-                if not RunningAimlock then ResetTarget() end
-            else
-                RunningAimlock = true
+    local function UpdateAimbot()
+        local settings = Settings.Combat.Aimbot
+        if not settings.Enabled or not RunningAimbot then return end
+        
+        local currentTime = tick()
+        
+        if currentTime - lastUpdateTime >= updateInterval then
+            if not ValidateTarget(CurrentTarget, settings) then
+                CurrentTarget = GetClosestPlayerForAimbot()
+            end
+            lastUpdateTime = currentTime
+        end
+        
+        if not CurrentTarget then return end
+        
+        local character = CurrentTarget.Character
+        if not character then return end
+        
+        local part = GetTargetPart(character, settings, true)
+        if not part then return end
+        
+        if settings.WallCheck and not IsPartVisible(part) then return end
+        
+        local targetPos = part.Position
+        if settings.AimingMethod == "velocity" then
+            targetPos = targetPos + (part.Velocity * settings.Prediction)
+        elseif settings.AimingMethod == "movedirection" then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                targetPos = targetPos + (humanoid.MoveDirection * settings.Prediction)
             end
         end
+        
+        if settings.Smoothness > 0 then
+            local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+            local newCFrame = Camera.CFrame:Lerp(targetCFrame, 1 / (settings.Smoothness * 10))
+            pcall(function()
+                if Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == true then
+                        local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+                        workspace.CurrentCamera.CFrame = newCFrame * stretchMatrix
+                elseif Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == false then
+                        Camera.CFrame = newCFrame
+                end
+            end)
+        else
+            pcall(function()
+                if Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == true then
+                        local finalCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+                        local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+                        workspace.CurrentCamera.CFrame = finalCFrame * stretchMatrix
+                elseif Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == false then
+                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+                end
+            end)
+        end
+        
+        FOVAimbot.Color = settings.FOV.LockedColor
     end
-    
-    if Settings.Combat.Aimbot.Enabled then
-        if Input.KeyCode == Settings.Combat.Aimbot.TriggerKey or Input.UserInputType == Settings.Combat.Aimbot.TriggerKey then
-            if Settings.Combat.Aimbot.Toggle then
-                RunningAimbot = not RunningAimbot
-                if not RunningAimbot then ResetTarget() end
-            else
-                RunningAimbot = true
+
+    local function UpdateFOVCircles()
+        local aimlockSettings = Settings.Combat.Aimlock
+        local aimbotSettings = Settings.Combat.Aimbot
+        
+        if aimlockSettings.Enabled and aimlockSettings.FOV.Enabled then
+            FOVAimlock.Visible = true
+            FOVAimlock.Position = UserInputService:GetMouseLocation()
+            FOVAimlock.Radius = aimlockSettings.FOV.Value
+            FOVAimlock.Color = aimlockSettings.FOV.Color
+            FOVAimlock.Filled = aimlockSettings.FOV.Filled
+            FOVAimlock.Transparency = aimlockSettings.FOV.Transparency
+        else
+            FOVAimlock.Visible = false
+        end
+        
+        if aimbotSettings.Enabled and aimbotSettings.FOV.Enabled then
+            FOVAimbot.Visible = true
+            local viewportSize = Camera.ViewportSize
+            FOVAimbot.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+            FOVAimbot.Radius = aimbotSettings.FOV.Value
+            FOVAimbot.Color = aimbotSettings.FOV.Color
+            FOVAimbot.Filled = aimbotSettings.FOV.Filled
+            FOVAimbot.Transparency = aimbotSettings.FOV.Transparency
+        else
+            FOVAimbot.Visible = false
+        end
+    end
+
+    local function ResetTarget()
+        CurrentTarget = nil
+        FOVAimlock.Color = Settings.Combat.Aimlock.FOV.Color
+        FOVAimbot.Color = Settings.Combat.Aimbot.FOV.Color
+    end
+
+    UpdateRaycastIgnore()
+
+    Players.PlayerAdded:Connect(function()
+        task.wait(0.5)
+        UpdateRaycastIgnore()
+    end)
+
+    Players.PlayerRemoving:Connect(function()
+        task.wait(0.1)
+        UpdateRaycastIgnore()
+    end)
+
+    LocalPlayer.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        UpdateRaycastIgnore()
+    end)
+
+    UserInputService.InputBegan:Connect(function(Input)
+        if Typing then return end
+        
+        if Settings.Combat.Aimlock.Enabled then
+            if Input.KeyCode == Settings.Combat.Aimlock.TriggerKey or Input.UserInputType == Settings.Combat.Aimlock.TriggerKey then
+                if Settings.Combat.Aimlock.Toggle then
+                    RunningAimlock = not RunningAimlock
+                    if not RunningAimlock then ResetTarget() end
+                else
+                    RunningAimlock = true
+                end
             end
         end
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(Input)
-    if Typing then return end
-    
-    if Settings.Combat.Aimlock.Enabled and not Settings.Combat.Aimlock.Toggle then
-        if Input.KeyCode == Settings.Combat.Aimlock.TriggerKey or Input.UserInputType == Settings.Combat.Aimlock.TriggerKey then
-            RunningAimlock = false
-            ResetTarget()
-        end
-    end
-    
-    if Settings.Combat.Aimbot.Enabled and not Settings.Combat.Aimbot.Toggle then
-        if Input.KeyCode == Settings.Combat.Aimbot.TriggerKey or Input.UserInputType == Settings.Combat.Aimbot.TriggerKey then
-            RunningAimbot = false
-            ResetTarget()
-        end
-    end
-end)
-
-UserInputService.TextBoxFocused:Connect(function() 
-    Typing = true
-    RunningAimlock = false
-    RunningAimbot = false
-    ResetTarget()
-end)
-
-UserInputService.TextBoxFocusReleased:Connect(function() 
-    Typing = false 
-end)
-
-local function OnCharacterAdded(character)
-    character:WaitForChild("Humanoid").Died:Connect(function()
-        if CurrentTarget and CurrentTarget.Character == character then
-            LastDeathTime = tick()
-            ResetTarget()
+        
+        if Settings.Combat.Aimbot.Enabled then
+            if Input.KeyCode == Settings.Combat.Aimbot.TriggerKey or Input.UserInputType == Settings.Combat.Aimbot.TriggerKey then
+                if Settings.Combat.Aimbot.Toggle then
+                    RunningAimbot = not RunningAimbot
+                    if not RunningAimbot then ResetTarget() end
+                else
+                    RunningAimbot = true
+                end
+            end
         end
     end)
-end
 
-for _, player in pairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer and player.Character then OnCharacterAdded(player.Character) end
-    player.CharacterAdded:Connect(OnCharacterAdded)
-end
+    UserInputService.InputEnded:Connect(function(Input)
+        if Typing then return end
+        
+        if Settings.Combat.Aimlock.Enabled and not Settings.Combat.Aimlock.Toggle then
+            if Input.KeyCode == Settings.Combat.Aimlock.TriggerKey or Input.UserInputType == Settings.Combat.Aimlock.TriggerKey then
+                RunningAimlock = false
+                ResetTarget()
+            end
+        end
+        
+        if Settings.Combat.Aimbot.Enabled and not Settings.Combat.Aimbot.Toggle then
+            if Input.KeyCode == Settings.Combat.Aimbot.TriggerKey or Input.UserInputType == Settings.Combat.Aimbot.TriggerKey then
+                RunningAimbot = false
+                ResetTarget()
+            end
+        end
+    end)
 
-RunService.RenderStepped:Connect(function()
-    UpdateFOVCircles()
-    UpdateAimlock()
-    UpdateAimbot()
-end)
+    UserInputService.TextBoxFocused:Connect(function() 
+        Typing = true
+        RunningAimlock = false
+        RunningAimbot = false
+        ResetTarget()
+    end)
 
-local function getTargetUnderMouse()
-    local target = game.Players.LocalPlayer:GetMouse().Target
-    if not target then return nil end
-    
-    while target do
-        if target:IsA("Model") then
-            local player = game.Players:GetPlayerFromCharacter(target)
-            if player and player ~= game.Players.LocalPlayer then
-                if Settings.Combat.Triggerbot.TeamCheck and player.Team == game.Players.LocalPlayer.Team then return nil end
-                local humanoid = target:FindFirstChild("Humanoid")
-                if humanoid and humanoid.Health > 0 then
-                    local rootPart = target:FindFirstChild("HumanoidRootPart")
-                    if rootPart and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                        if distance <= math.huge then 
-                            return target
+    UserInputService.TextBoxFocusReleased:Connect(function() 
+        Typing = false 
+    end)
+
+    local function OnCharacterAdded(character)
+        character:WaitForChild("Humanoid").Died:Connect(function()
+            if CurrentTarget and CurrentTarget.Character == character then
+                LastDeathTime = tick()
+                ResetTarget()
+            end
+        end)
+    end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then OnCharacterAdded(player.Character) end
+        player.CharacterAdded:Connect(OnCharacterAdded)
+    end
+
+    RunService.RenderStepped:Connect(function()
+        UpdateFOVCircles()
+        UpdateAimlock()
+        UpdateAimbot()
+    end)
+
+    local function getTargetUnderMouse()
+        local target = game.Players.LocalPlayer:GetMouse().Target
+        if not target then return nil end
+        
+        while target do
+            if target:IsA("Model") then
+                local player = game.Players:GetPlayerFromCharacter(target)
+                if player and player ~= game.Players.LocalPlayer then
+                    if Settings.Combat.Triggerbot.TeamCheck and player.Team == game.Players.LocalPlayer.Team then return nil end
+                    local humanoid = target:FindFirstChild("Humanoid")
+                    if humanoid and humanoid.Health > 0 then
+                        local rootPart = target:FindFirstChild("HumanoidRootPart")
+                        if rootPart and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+                            if distance <= math.huge then 
+                                return target
+                            end
                         end
                     end
                 end
             end
+            target = target.Parent
         end
-        target = target.Parent
+        return nil
     end
-    return nil
-end
 
-RunService.Heartbeat:Connect(function()
-    if Settings.Combat.Triggerbot.Enabled then
-        local target = getTargetUnderMouse()
-        local currentTime = tick()
-        if Settings.Combat.Triggerbot.Toggle then
-            if target and (currentTime - Settings.Combat.Triggerbot.LastShot) >= (Settings.Combat.Triggerbot.Cooldown / 1000) then
-                Settings.Combat.Triggerbot.LastShot = currentTime
-                pcall(function()
-                    mouse1press()
-                    task.wait(0.01)
-                    mouse1release()
-                end)
-            end
-        else
-            if target then
-                if not Settings.Combat.Triggerbot.Holding then
+    RunService.Heartbeat:Connect(function()
+        if Settings.Combat.Triggerbot.Enabled then
+            local target = getTargetUnderMouse()
+            local currentTime = tick()
+            if Settings.Combat.Triggerbot.Toggle then
+                if target and (currentTime - Settings.Combat.Triggerbot.LastShot) >= (Settings.Combat.Triggerbot.Cooldown / 1000) then
+                    Settings.Combat.Triggerbot.LastShot = currentTime
                     pcall(function()
                         mouse1press()
-                        Settings.Combat.Triggerbot.Holding = true
-                        Settings.Combat.Triggerbot.HoldstartAA = currentTime
+                        task.wait(0.01)
+                        mouse1release()
                     end)
                 end
-            elseif Settings.Combat.Triggerbot.Holding then
-                pcall(function()
-                    mouse1release()
-                    Settings.Combat.Triggerbot.Holding = false
-                    Settings.Combat.Triggerbot.HoldstartAA = nil
-                end)
+            else
+                if target then
+                    if not Settings.Combat.Triggerbot.Holding then
+                        pcall(function()
+                            mouse1press()
+                            Settings.Combat.Triggerbot.Holding = true
+                            Settings.Combat.Triggerbot.HoldstartAA = currentTime
+                        end)
+                    end
+                elseif Settings.Combat.Triggerbot.Holding then
+                    pcall(function()
+                        mouse1release()
+                        Settings.Combat.Triggerbot.Holding = false
+                        Settings.Combat.Triggerbot.HoldstartAA = nil
+                    end)
+                end
             end
         end
-    end
-end)
+    end)
 
-RunService.RenderStepped:Connect(function()
-    if Settings.Combat.Aimlock.RotateTo == true and RunningAimlock and CurrentTarget then
-        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.PrimaryPart and game.Players:FindFirstChild(CurrentTarget.Name) and game.Players[CurrentTarget.Name].Character and game.Players[CurrentTarget.Name].Character.HumanoidRootPart then
-            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(
-                CFrame.new(
-                    game.Players.LocalPlayer.Character.PrimaryPart.Position,
-                    Vector3.new(
-                        game.Players[CurrentTarget.Name].Character.HumanoidRootPart.Position.X,
-                        game.Players.LocalPlayer.Character.PrimaryPart.Position.Y,
-                        game.Players[CurrentTarget.Name].Character.HumanoidRootPart.Position.Z
+    RunService.RenderStepped:Connect(function()
+        if Settings.Combat.Aimlock.RotateTo == true and RunningAimlock and CurrentTarget then
+            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.PrimaryPart and game.Players:FindFirstChild(CurrentTarget.Name) and game.Players[CurrentTarget.Name].Character and game.Players[CurrentTarget.Name].Character.HumanoidRootPart then
+                game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(
+                    CFrame.new(
+                        game.Players.LocalPlayer.Character.PrimaryPart.Position,
+                        Vector3.new(
+                            game.Players[CurrentTarget.Name].Character.HumanoidRootPart.Position.X,
+                            game.Players.LocalPlayer.Character.PrimaryPart.Position.Y,
+                            game.Players[CurrentTarget.Name].Character.HumanoidRootPart.Position.Z
+                        )
                     )
                 )
-            )
-        end
-    end
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if Settings.Player.Speed.Toggle == false and Settings.Player.Speed.Enabled then
-        if input.KeyCode == Settings.Player.Speed.Keybind then
-            Settings.Player.Speed.Active = true
-        end
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if Settings.Player.Speed.Toggle == false and Settings.Player.Speed.Enabled then
-        if input.KeyCode == Settings.Player.Speed.Keybind then
-            Settings.Player.Speed.Active = false
-        end
-    end
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if Settings.Player.Speed.Enabled and Settings.Player.Speed.Toggle == true then
-        if input.KeyCode == Settings.Player.Speed.Keybind then
-            Settings.Player.Speed.Active = not Settings.Player.Speed.Active
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if Settings.Player.Speed.Enabled and Settings.Player.Speed.Active then
-        local character = game.Players.LocalPlayer.Character
-        if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildWhichIsA("Humanoid") then
-            local rootPart = character.HumanoidRootPart
-            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-            
-            if Settings.Player.Speed.Type == "velocity" then
-                local moveDirection = humanoid.MoveDirection
-                if moveDirection.Magnitude > 0 then
-                    rootPart.Velocity = moveDirection * (Settings.Player.Speed.Value * 50)
-                end
-            elseif Settings.Player.Speed.Type == "cframe" then
-                local moveDirection = humanoid.MoveDirection
-                if moveDirection.Magnitude > 0 then
-                    rootPart.CFrame = rootPart.CFrame + moveDirection * (Settings.Player.Speed.Value / 10)
-                end
             end
         end
-    end
-end)
+    end)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if Settings.Player.Flight.Enabled then
-        if input.KeyCode == Settings.Player.Flight.Keybind then
-            if not Settings.Player.Flight.Active then
-                Fly(Settings.Player.Flight.Type)
-                Settings.Player.Flight.Active = true
-            else
-                Unfly(Settings.Player.Flight.Type)
-                Settings.Player.Flight.Active = false
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if Settings.Player.Speed.Toggle == false and Settings.Player.Speed.Enabled then
+            if input.KeyCode == Settings.Player.Speed.Keybind then
+                Settings.Player.Speed.Active = true
             end
         end
-    end
-end)
+    end)
 
-function Fly(type)
-    if type == "vehicle" then
-        local character = game.Players.LocalPlayer.Character
-        if not character or not character.HumanoidRootPart then return end
-        local rootPart = character.HumanoidRootPart
-        if rootPart:FindFirstChild("bodyvelocity") then rootPart.bodyvelocity:Destroy() end
-        if rootPart:FindFirstChild("bodygyro") then rootPart.bodygyro:Destroy() end
-        local bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.Name = "bodyvelocity"
-        bodyVelocity.Parent = rootPart
-        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        local bodyGyro = Instance.new("BodyGyro")
-        bodyGyro.Name = "bodygyro"
-        bodyGyro.Parent = rootPart
-        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-        bodyGyro.P = 1000
-        bodyGyro.D = 50
-        bodyGyro.CFrame = workspace.Camera.CFrame
+    UserInputService.InputEnded:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if Settings.Player.Speed.Toggle == false and Settings.Player.Speed.Enabled then
+            if input.KeyCode == Settings.Player.Speed.Keybind then
+                Settings.Player.Speed.Active = false
+            end
+        end
+    end)
 
-        if Settings.Player.Flight.Connections.Vehicle then Settings.Player.Flight.Connections.Vehicle:Disconnect() end
-        Settings.Player.Flight.Connections.Vehicle = RunService.RenderStepped:Connect(function()
-            if not Settings.Player.Flight.Enabled or not Settings.Player.Flight.Active or Settings.Player.Flight.Type ~= "vehicle" then return end
-            local char = game.Players.LocalPlayer.Character
-            if not char or not char.HumanoidRootPart then Unfly("vehicle") return end
-            local hrp = char.HumanoidRootPart
-            local bv = hrp:FindFirstChild("bodyvelocity")
-            local bg = hrp:FindFirstChild("bodygyro")
-            if not bv or not bg then return end
-            local moveDirection = Vector3.new()
-            local speed = Settings.Player.Flight.Value * 50
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + workspace.Camera.CFrame.LookVector * speed end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - workspace.Camera.CFrame.RightVector * speed end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - workspace.Camera.CFrame.LookVector * speed end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + workspace.Camera.CFrame.RightVector * speed end
-            bv.Velocity = moveDirection
-            bg.CFrame = workspace.Camera.CFrame
-        end)      
-    elseif type == "cframe" then
-        local character = game.Players.LocalPlayer.Character
-        if not character then return end
-        local humanoid = character:FindFirstChildOfClass('Humanoid')
-        if humanoid then humanoid.PlatformStand = true end
-        local head = character:FindFirstChild("Head")
-        if head then head.Anchored = true end
-        if Settings.Player.Flight.Connections.CFrame then Settings.Player.Flight.Connections.CFrame:Disconnect() end
-        Settings.Player.Flight.Connections.CFrame = RunService.Heartbeat:Connect(function(deltaTime)
-            if Settings.Player.Flight.Type == "cframe" and Settings.Player.Flight.Enabled == true and Settings.Player.Flight.Active == true then
-                local character = game.Players.LocalPlayer.Character
-                if character and character:FindFirstChild("Head") then
-                    local head = character.Head
-                    local humanoid = character:FindFirstChildOfClass('Humanoid')
-                    if humanoid then
-                        local moveDirection = humanoid.MoveDirection * (Settings.Player.Flight.Value * deltaTime) * 50
-                        local headCFrame = head.CFrame
-                        local cameraCFrame = workspace.CurrentCamera.CFrame
-                        local cameraOffset = headCFrame:ToObjectSpace(cameraCFrame).Position
-                        cameraCFrame = cameraCFrame * CFrame.new(-cameraOffset.X, -cameraOffset.Y, -cameraOffset.Z + 1)
-                        local headPosition = headCFrame.Position
-                        local objectSpaceVelocity = CFrame.new(cameraCFrame.Position, Vector3.new(headPosition.X, cameraCFrame.Position.Y, headPosition.Z)):VectorToObjectSpace(moveDirection)
-                        head.CFrame = CFrame.new(headPosition) * (cameraCFrame - cameraCFrame.Position) * CFrame.new(objectSpaceVelocity)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if Settings.Player.Speed.Enabled and Settings.Player.Speed.Toggle == true then
+            if input.KeyCode == Settings.Player.Speed.Keybind then
+                Settings.Player.Speed.Active = not Settings.Player.Speed.Active
+            end
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        if Settings.Player.Speed.Enabled and Settings.Player.Speed.Active then
+            local character = game.Players.LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildWhichIsA("Humanoid") then
+                local rootPart = character.HumanoidRootPart
+                local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+                
+                if Settings.Player.Speed.Type == "velocity" then
+                    local moveDirection = humanoid.MoveDirection
+                    if moveDirection.Magnitude > 0 then
+                        rootPart.Velocity = moveDirection * (Settings.Player.Speed.Value * 50)
+                    end
+                elseif Settings.Player.Speed.Type == "cframe" then
+                    local moveDirection = humanoid.MoveDirection
+                    if moveDirection.Magnitude > 0 then
+                        rootPart.CFrame = rootPart.CFrame + moveDirection * (Settings.Player.Speed.Value / 10)
                     end
                 end
             end
-        end)
-    elseif type == "velocity" then
-        if not Settings.Player.Flight.Enabled then return end
-        local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if not root or not humanoid then return end
-        Unfly(type)
-        Settings.Player.Flight.Part = Instance.new("Part")
-        Settings.Player.Flight.Part.Name = "FlightPart"
-        Settings.Player.Flight.Part.Anchored = true
-        Settings.Player.Flight.Part.CanCollide = false
-        Settings.Player.Flight.Part.Transparency = 1
-        Settings.Player.Flight.Part.Size = Vector3.new(1,1,1)
-        Settings.Player.Flight.Part.Position = root.Position
-        Settings.Player.Flight.Part.Parent = workspace
-        Settings.Player.Flight.TargetPos = root.Position
-        Settings.Player.Flight.SmoothPos = root.Position
-        Settings.Player.Flight.Active = true
-        workspace.CurrentCamera.CameraSubject = Settings.Player.Flight.Part
-        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+        end
+    end)
 
-        table.insert(Settings.Player.Flight.Connections.Velocity, RunService.Heartbeat:Connect(function()
-            if not Settings.Player.Flight.Active then return end
-            local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                local move = humanoid.MoveDirection * (Settings.Player.Flight.Value / 10)
-                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Flight.Value / 10, 0) end
-                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -Settings.Player.Flight.Value / 10, 0) end
-                if move.Magnitude > 0 then Settings.Player.Flight.TargetPos = Settings.Player.Flight.TargetPos + move end
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if Settings.Player.Flight.Enabled then
+            if input.KeyCode == Settings.Player.Flight.Keybind then
+                if not Settings.Player.Flight.Active then
+                    Fly(Settings.Player.Flight.Type)
+                    Settings.Player.Flight.Active = true
+                else
+                    Unfly(Settings.Player.Flight.Type)
+                    Settings.Player.Flight.Active = false
+                end
             end
-        end))
+        end
+    end)
 
-        table.insert(Settings.Player.Flight.Connections.Velocity, RunService.Heartbeat:Connect(function()
-            if not Settings.Player.Flight.Active or not Settings.Player.Flight.Part then return end
-            Settings.Player.Flight.SmoothPos = Settings.Player.Flight.SmoothPos:Lerp(Settings.Player.Flight.TargetPos, 0.1)
-            Settings.Player.Flight.Part.Position = Settings.Player.Flight.SmoothPos
-        end))
+    function Fly(type)
+        if type == "vehicle" then
+            local character = game.Players.LocalPlayer.Character
+            if not character or not character.HumanoidRootPart then return end
+            local rootPart = character.HumanoidRootPart
+            if rootPart:FindFirstChild("bodyvelocity") then rootPart.bodyvelocity:Destroy() end
+            if rootPart:FindFirstChild("bodygyro") then rootPart.bodygyro:Destroy() end
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.Name = "bodyvelocity"
+            bodyVelocity.Parent = rootPart
+            bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+            local bodyGyro = Instance.new("BodyGyro")
+            bodyGyro.Name = "bodygyro"
+            bodyGyro.Parent = rootPart
+            bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            bodyGyro.P = 1000
+            bodyGyro.D = 50
+            bodyGyro.CFrame = workspace.Camera.CFrame
 
-        table.insert(Settings.Player.Flight.Connections.Velocity, RunService.Heartbeat:Connect(function()
-            if not Settings.Player.Flight.Active then return end
+            if Settings.Player.Flight.Connections.Vehicle then Settings.Player.Flight.Connections.Vehicle:Disconnect() end
+            Settings.Player.Flight.Connections.Vehicle = RunService.RenderStepped:Connect(function()
+                if not Settings.Player.Flight.Enabled or not Settings.Player.Flight.Active or Settings.Player.Flight.Type ~= "vehicle" then return end
+                local char = game.Players.LocalPlayer.Character
+                if not char or not char.HumanoidRootPart then Unfly("vehicle") return end
+                local hrp = char.HumanoidRootPart
+                local bv = hrp:FindFirstChild("bodyvelocity")
+                local bg = hrp:FindFirstChild("bodygyro")
+                if not bv or not bg then return end
+                local moveDirection = Vector3.new()
+                local speed = Settings.Player.Flight.Value * 50
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + workspace.Camera.CFrame.LookVector * speed end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - workspace.Camera.CFrame.RightVector * speed end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - workspace.Camera.CFrame.LookVector * speed end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + workspace.Camera.CFrame.RightVector * speed end
+                bv.Velocity = moveDirection
+                bg.CFrame = workspace.Camera.CFrame
+            end)      
+        elseif type == "cframe" then
+            local character = game.Players.LocalPlayer.Character
+            if not character then return end
+            local humanoid = character:FindFirstChildOfClass('Humanoid')
+            if humanoid then humanoid.PlatformStand = true end
+            local head = character:FindFirstChild("Head")
+            if head then head.Anchored = true end
+            if Settings.Player.Flight.Connections.CFrame then Settings.Player.Flight.Connections.CFrame:Disconnect() end
+            Settings.Player.Flight.Connections.CFrame = RunService.Heartbeat:Connect(function(deltaTime)
+                if Settings.Player.Flight.Type == "cframe" and Settings.Player.Flight.Enabled == true and Settings.Player.Flight.Active == true then
+                    local character = game.Players.LocalPlayer.Character
+                    if character and character:FindFirstChild("Head") then
+                        local head = character.Head
+                        local humanoid = character:FindFirstChildOfClass('Humanoid')
+                        if humanoid then
+                            local moveDirection = humanoid.MoveDirection * (Settings.Player.Flight.Value * deltaTime) * 50
+                            local headCFrame = head.CFrame
+                            local cameraCFrame = workspace.CurrentCamera.CFrame
+                            local cameraOffset = headCFrame:ToObjectSpace(cameraCFrame).Position
+                            cameraCFrame = cameraCFrame * CFrame.new(-cameraOffset.X, -cameraOffset.Y, -cameraOffset.Z + 1)
+                            local headPosition = headCFrame.Position
+                            local objectSpaceVelocity = CFrame.new(cameraCFrame.Position, Vector3.new(headPosition.X, cameraCFrame.Position.Y, headPosition.Z)):VectorToObjectSpace(moveDirection)
+                            head.CFrame = CFrame.new(headPosition) * (cameraCFrame - cameraCFrame.Position) * CFrame.new(objectSpaceVelocity)
+                        end
+                    end
+                end
+            end)
+        elseif type == "velocity" then
+            if not Settings.Player.Flight.Enabled then return end
             local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if root and humanoid and humanoid.Health > 0 and Settings.Player.Flight.Part then
-                root.CFrame = CFrame.new(Settings.Player.Flight.Part.Position)
-                root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), math.random(300,600))
-            end
-        end))
+            if not root or not humanoid then return end
+            Unfly(type)
+            Settings.Player.Flight.Part = Instance.new("Part")
+            Settings.Player.Flight.Part.Name = "FlightPart"
+            Settings.Player.Flight.Part.Anchored = true
+            Settings.Player.Flight.Part.CanCollide = false
+            Settings.Player.Flight.Part.Transparency = 1
+            Settings.Player.Flight.Part.Size = Vector3.new(1,1,1)
+            Settings.Player.Flight.Part.Position = root.Position
+            Settings.Player.Flight.Part.Parent = workspace
+            Settings.Player.Flight.TargetPos = root.Position
+            Settings.Player.Flight.SmoothPos = root.Position
+            Settings.Player.Flight.Active = true
+            workspace.CurrentCamera.CameraSubject = Settings.Player.Flight.Part
+            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 
-        table.insert(Settings.Player.Flight.Connections.Velocity, humanoid.Died:Connect(function()
-            if Settings.Player.Flight.Active then Unfly(type) end
-        end))
+            table.insert(Settings.Player.Flight.Connections.Velocity, RunService.Heartbeat:Connect(function()
+                if not Settings.Player.Flight.Active then return end
+                local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    local move = humanoid.MoveDirection * (Settings.Player.Flight.Value / 10)
+                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Flight.Value / 10, 0) end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -Settings.Player.Flight.Value / 10, 0) end
+                    if move.Magnitude > 0 then Settings.Player.Flight.TargetPos = Settings.Player.Flight.TargetPos + move end
+                end
+            end))
+
+            table.insert(Settings.Player.Flight.Connections.Velocity, RunService.Heartbeat:Connect(function()
+                if not Settings.Player.Flight.Active or not Settings.Player.Flight.Part then return end
+                Settings.Player.Flight.SmoothPos = Settings.Player.Flight.SmoothPos:Lerp(Settings.Player.Flight.TargetPos, 0.1)
+                Settings.Player.Flight.Part.Position = Settings.Player.Flight.SmoothPos
+            end))
+
+            table.insert(Settings.Player.Flight.Connections.Velocity, RunService.Heartbeat:Connect(function()
+                if not Settings.Player.Flight.Active then return end
+                local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if root and humanoid and humanoid.Health > 0 and Settings.Player.Flight.Part then
+                    root.CFrame = CFrame.new(Settings.Player.Flight.Part.Position)
+                    root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), math.random(300,600))
+                end
+            end))
+
+            table.insert(Settings.Player.Flight.Connections.Velocity, humanoid.Died:Connect(function()
+                if Settings.Player.Flight.Active then Unfly(type) end
+            end))
+        end
     end
-end
 
-function Unfly(type)
-    if type == "vehicle" then
-        if Settings.Player.Flight.Connections.Vehicle then Settings.Player.Flight.Connections.Vehicle:Disconnect() Settings.Player.Flight.Connections.Vehicle = nil end
-        local character = game.Players.LocalPlayer.Character
-        if character and character.HumanoidRootPart then
-            local hrp = character.HumanoidRootPart
-            if hrp:FindFirstChild("bodyvelocity") then hrp.bodyvelocity:Destroy() end
-            if hrp:FindFirstChild("bodygyro") then hrp.bodygyro:Destroy() end
+    function Unfly(type)
+        if type == "vehicle" then
+            if Settings.Player.Flight.Connections.Vehicle then Settings.Player.Flight.Connections.Vehicle:Disconnect() Settings.Player.Flight.Connections.Vehicle = nil end
+            local character = game.Players.LocalPlayer.Character
+            if character and character.HumanoidRootPart then
+                local hrp = character.HumanoidRootPart
+                if hrp:FindFirstChild("bodyvelocity") then hrp.bodyvelocity:Destroy() end
+                if hrp:FindFirstChild("bodygyro") then hrp.bodygyro:Destroy() end
+            end
+        elseif type == "cframe" then
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass('Humanoid')
+                if humanoid then humanoid.PlatformStand = false end
+                local head = character:FindFirstChild("Head")
+                if head then head.Anchored = false end
+            end
+            if Settings.Player.Flight.Connections.CFrame then Settings.Player.Flight.Connections.CFrame:Disconnect() end
+        elseif type == "velocity" then
+            if Settings.Player.Flight.Active then
+                Settings.Player.Flight.Active = false
+                if root then root.Velocity = Vector3.new(0, 0, 0) end
+                for _, c in pairs(Settings.Player.Flight.Connections.Velocity) do 
+                    pcall(function() c:Disconnect() end)
+                end
+                if root then root.Velocity = Vector3.new(0, 0, 0) end
+                Settings.Player.Flight.Connections.Velocity = {}
+                if game.Players.LocalPlayer.Character then
+                    workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
+                end
+                if root then root.Velocity = Vector3.new(0, 0, 0) end
+                workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+                if Settings.Player.Flight.Part then Settings.Player.Flight.Part:Destroy() Settings.Player.Flight.Part = nil end
+                local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if root then root.Velocity = Vector3.new(0, 0, 0) end
+            end
         end
-    elseif type == "cframe" then
-        local character = game.Players.LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass('Humanoid')
-            if humanoid then humanoid.PlatformStand = false end
-            local head = character:FindFirstChild("Head")
-            if head then head.Anchored = false end
-        end
-        if Settings.Player.Flight.Connections.CFrame then Settings.Player.Flight.Connections.CFrame:Disconnect() end
-    elseif type == "velocity" then
-        if Settings.Player.Flight.Active then
-            Settings.Player.Flight.Active = false
+    end
+
+    function StopAntiAim()
+        if Settings.Player.Antiaim.Active then
+            Settings.Player.Antiaim.Active = false
             if root then root.Velocity = Vector3.new(0, 0, 0) end
-            for _, c in pairs(Settings.Player.Flight.Connections.Velocity) do 
+            for _, c in pairs(Settings.Player.Antiaim.Connections) do 
                 pcall(function() c:Disconnect() end)
             end
             if root then root.Velocity = Vector3.new(0, 0, 0) end
-            Settings.Player.Flight.Connections.Velocity = {}
+            Settings.Player.Antiaim.Connections = {}
             if game.Players.LocalPlayer.Character then
                 workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
             end
             if root then root.Velocity = Vector3.new(0, 0, 0) end
             workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-            if Settings.Player.Flight.Part then Settings.Player.Flight.Part:Destroy() Settings.Player.Flight.Part = nil end
+            if Settings.Player.Antiaim.Part then Settings.Player.Antiaim.Part:Destroy() Settings.Player.Antiaim.Part = nil end
             local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if root then root.Velocity = Vector3.new(0, 0, 0) end
         end
     end
-end
 
-function StopAntiAim()
-    if Settings.Player.Antiaim.Active then
-        Settings.Player.Antiaim.Active = false
-        if root then root.Velocity = Vector3.new(0, 0, 0) end
-        for _, c in pairs(Settings.Player.Antiaim.Connections) do 
-            pcall(function() c:Disconnect() end)
-        end
-        if root then root.Velocity = Vector3.new(0, 0, 0) end
-        Settings.Player.Antiaim.Connections = {}
-        if game.Players.LocalPlayer.Character then
-            workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
-        end
-        if root then root.Velocity = Vector3.new(0, 0, 0) end
-        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-        if Settings.Player.Antiaim.Part then Settings.Player.Antiaim.Part:Destroy() Settings.Player.Antiaim.Part = nil end
-        local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if root then root.Velocity = Vector3.new(0, 0, 0) end
-    end
-end
-
-function StartAntiAim()
-    if not Settings.Player.Antiaim.Enabled then return end
-    local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if not root or not humanoid then return end
-    StopAntiAim()
-    Settings.Player.Antiaim.Part = Instance.new("Part")
-    Settings.Player.Antiaim.Part.Name = "AntiaimPart"
-    Settings.Player.Antiaim.Part.Anchored = true
-    Settings.Player.Antiaim.Part.CanCollide = false
-    Settings.Player.Antiaim.Part.Transparency = 1
-    Settings.Player.Antiaim.Part.Size = Vector3.new(1,1,1)
-    Settings.Player.Antiaim.Part.Position = root.Position
-    Settings.Player.Antiaim.Part.Parent = workspace
-    Settings.Player.Antiaim.TargetPos = root.Position
-    Settings.Player.Antiaim.SmoothPos = root.Position
-    Settings.Player.Antiaim.Active = true
-    workspace.CurrentCamera.CameraSubject = Settings.Player.Antiaim.Part
-    workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-
-    table.insert(Settings.Player.Antiaim.Connections, RunService.Heartbeat:Connect(function()
-        if not Settings.Player.Antiaim.Active then return end
-        local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            local move = humanoid.MoveDirection * (Settings.Player.Antiaim.Speed / 10)
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Antiaim.Speed / 10, 0) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -Settings.Player.Antiaim.Speed / 10, 0) end
-            if move.Magnitude > 0 then Settings.Player.Antiaim.TargetPos = Settings.Player.Antiaim.TargetPos + move end
-        end
-    end))
-
-    table.insert(Settings.Player.Antiaim.Connections, RunService.Heartbeat:Connect(function()
-        if not Settings.Player.Antiaim.Active or not Settings.Player.Antiaim.Part then return end
-        Settings.Player.Antiaim.SmoothPos = Settings.Player.Antiaim.SmoothPos:Lerp(Settings.Player.Antiaim.TargetPos, 0.1)
-        Settings.Player.Antiaim.Part.Position = Settings.Player.Antiaim.SmoothPos
-    end))
-
-    table.insert(Settings.Player.Antiaim.Connections, RunService.Heartbeat:Connect(function()
-        if not Settings.Player.Antiaim.Active then return end
+    function StartAntiAim()
+        if not Settings.Player.Antiaim.Enabled then return end
         local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if root and humanoid and humanoid.Health > 0 and Settings.Player.Antiaim.Part then
-            local offset = Vector3.new(
-                (math.random() - 0.5) * Settings.Player.Antiaim.Power * 2,
-                (math.random() - 0.5) * Settings.Player.Antiaim.Power * 2,
-                (math.random() - 0.5) * Settings.Player.Antiaim.Power * 2
-            )
-            root.CFrame = CFrame.new(Settings.Player.Antiaim.Part.Position) + offset
-            local moveDirection = humanoid.MoveDirection
-            if moveDirection.Magnitude > 0 then
-                root.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(moveDirection.X, 0, moveDirection.Z))
-            end
-            root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), math.random(300,600))
-        end
-    end))
-
-    table.insert(Settings.Player.Antiaim.Connections, humanoid.Died:Connect(function()
-        if Settings.Player.Antiaim.Active then StopAntiAim() end
-    end))
-end
-
-RunService.Heartbeat:Connect(function()
-    if Settings.Player.Antiaim.Enabled and not Settings.Player.Antiaim.Active then
-        StartAntiAim()
-    elseif not Settings.Player.Antiaim.Enabled and Settings.Player.Antiaim.Active then
+        if not root or not humanoid then return end
         StopAntiAim()
-    end
-end)
+        Settings.Player.Antiaim.Part = Instance.new("Part")
+        Settings.Player.Antiaim.Part.Name = "AntiaimPart"
+        Settings.Player.Antiaim.Part.Anchored = true
+        Settings.Player.Antiaim.Part.CanCollide = false
+        Settings.Player.Antiaim.Part.Transparency = 1
+        Settings.Player.Antiaim.Part.Size = Vector3.new(1,1,1)
+        Settings.Player.Antiaim.Part.Position = root.Position
+        Settings.Player.Antiaim.Part.Parent = workspace
+        Settings.Player.Antiaim.TargetPos = root.Position
+        Settings.Player.Antiaim.SmoothPos = root.Position
+        Settings.Player.Antiaim.Active = true
+        workspace.CurrentCamera.CameraSubject = Settings.Player.Antiaim.Part
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 
-RunService.Heartbeat:Connect(function()
-    if not Settings.Other.InstantTurn then return end
-    local character = game.Players.LocalPlayer.Character
-    if not character then return end
-    local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not rootPart then return end
-    local moveDirection = humanoid.MoveDirection
-    if moveDirection.Magnitude > 0 then
-        rootPart.CFrame = CFrame.lookAt(rootPart.Position, rootPart.Position + Vector3.new(moveDirection.X, 0, moveDirection.Z))
-    end
-end)
+        table.insert(Settings.Player.Antiaim.Connections, RunService.Heartbeat:Connect(function()
+            if not Settings.Player.Antiaim.Active then return end
+            local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                local move = humanoid.MoveDirection * (Settings.Player.Antiaim.Speed / 10)
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, Settings.Player.Antiaim.Speed / 10, 0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -Settings.Player.Antiaim.Speed / 10, 0) end
+                if move.Magnitude > 0 then Settings.Player.Antiaim.TargetPos = Settings.Player.Antiaim.TargetPos + move end
+            end
+        end))
 
-RunService.Heartbeat:Connect(function()
-    if Settings.Target.Aimlock and Settings.Target.Selected then
-        local targetPlayer = game.Players[Settings.Target.Selected]
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            pcall(function()
-                workspace.Camera.CFrame = CFrame.new(workspace.Camera.CFrame.Position, targetPlayer.Character.HumanoidRootPart.Position)
-            end)
+        table.insert(Settings.Player.Antiaim.Connections, RunService.Heartbeat:Connect(function()
+            if not Settings.Player.Antiaim.Active or not Settings.Player.Antiaim.Part then return end
+            Settings.Player.Antiaim.SmoothPos = Settings.Player.Antiaim.SmoothPos:Lerp(Settings.Player.Antiaim.TargetPos, 0.1)
+            Settings.Player.Antiaim.Part.Position = Settings.Player.Antiaim.SmoothPos
+        end))
+
+        table.insert(Settings.Player.Antiaim.Connections, RunService.Heartbeat:Connect(function()
+            if not Settings.Player.Antiaim.Active then return end
+            local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if root and humanoid and humanoid.Health > 0 and Settings.Player.Antiaim.Part then
+                local offset = Vector3.new(
+                    (math.random() - 0.5) * Settings.Player.Antiaim.Power * 2,
+                    (math.random() - 0.5) * Settings.Player.Antiaim.Power * 2,
+                    (math.random() - 0.5) * Settings.Player.Antiaim.Power * 2
+                )
+                root.CFrame = CFrame.new(Settings.Player.Antiaim.Part.Position) + offset
+                local moveDirection = humanoid.MoveDirection
+                if moveDirection.Magnitude > 0 then
+                    root.CFrame = CFrame.lookAt(root.Position, root.Position + Vector3.new(moveDirection.X, 0, moveDirection.Z))
+                end
+                root.Velocity = Vector3.new(-math.random(300,600), math.random(300,600), math.random(300,600))
+            end
+        end))
+
+        table.insert(Settings.Player.Antiaim.Connections, humanoid.Died:Connect(function()
+            if Settings.Player.Antiaim.Active then StopAntiAim() end
+        end))
+    end
+
+    RunService.Heartbeat:Connect(function()
+        if Settings.Player.Antiaim.Enabled and not Settings.Player.Antiaim.Active then
+            StartAntiAim()
+        elseif not Settings.Player.Antiaim.Enabled and Settings.Player.Antiaim.Active then
+            StopAntiAim()
         end
-    end
-end)
+    end)
 
-RunService.Heartbeat:Connect(function()
-    if Settings.Target.Spectate and Settings.Target.Selected then
-        local targetPlayer = game.Players[Settings.Target.Selected]
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
-            workspace.CurrentCamera.CameraSubject = targetPlayer.Character.Humanoid
+    RunService.Heartbeat:Connect(function()
+        if not Settings.Other.InstantTurn then return end
+        local character = game.Players.LocalPlayer.Character
+        if not character then return end
+        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if not humanoid or not rootPart then return end
+        local moveDirection = humanoid.MoveDirection
+        if moveDirection.Magnitude > 0 then
+            rootPart.CFrame = CFrame.lookAt(rootPart.Position, rootPart.Position + Vector3.new(moveDirection.X, 0, moveDirection.Z))
         end
-    end
-end)
+    end)
 
-task.spawn(function()
-    while task.wait() do
-        if Settings.Target.Fling.Enabled and Settings.Target.Selected then
-            local lp = game.Players.LocalPlayer
-            local lc = lp.Character
-            local lh = lc and lc:FindFirstChildOfClass("Humanoid")
-            local lr = lc and lc:FindFirstChild("HumanoidRootPart")
-            
-            if lc and lh and lr then
-                local tp = game.Players[Settings.Target.Selected]
+    RunService.Heartbeat:Connect(function()
+        if Settings.Target.Aimlock and Settings.Target.Selected then
+            local targetPlayer = game.Players[Settings.Target.Selected]
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    workspace.Camera.CFrame = CFrame.new(workspace.Camera.CFrame.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                end)
+            end
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        if Settings.Target.Spectate and Settings.Target.Selected then
+            local targetPlayer = game.Players[Settings.Target.Selected]
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                workspace.CurrentCamera.CameraSubject = targetPlayer.Character.Humanoid
+            end
+        end
+    end)
+
+    task.spawn(function()
+        while task.wait() do
+            if Settings.Target.Fling.Enabled and Settings.Target.Selected then
+                local lp = game.Players.LocalPlayer
+                local lc = lp.Character
+                local lh = lc and lc:FindFirstChildOfClass("Humanoid")
+                local lr = lc and lc:FindFirstChild("HumanoidRootPart")
                 
-                if tp then
-                    local tc = tp.Character
-                    local th = tc and tc:FindFirstChildOfClass("Humanoid")
+                if lc and lh and lr then
+                    local tp = game.Players[Settings.Target.Selected]
                     
-                    if tc and th and th.Health > 0 then
-                        local targetPart = tc:FindFirstChild("HumanoidRootPart") or tc:FindFirstChild("Head") or tc:FindFirstChildWhichIsA("BasePart")
+                    if tp then
+                        local tc = tp.Character
+                        local th = tc and tc:FindFirstChildOfClass("Humanoid")
                         
-                        if targetPart then
-                            if not Settings.Target.Fling.OldPos then
-                                Settings.Target.Fling.OldPos = lr.CFrame
-                                Settings.Target.Fling.FallenParts = workspace.FallenPartsDestroyHeight
-                                workspace.FallenPartsDestroyHeight = 0/0
-                                
-                                lh:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                                
-                                if not Settings.Target.Fling.BodyVelocity then
-                                    Settings.Target.Fling.BodyVelocity = Instance.new("BodyVelocity")
-                                    Settings.Target.Fling.BodyVelocity.Parent = lr
-                                    Settings.Target.Fling.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                                    Settings.Target.Fling.BodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                        if tc and th and th.Health > 0 then
+                            local targetPart = tc:FindFirstChild("HumanoidRootPart") or tc:FindFirstChild("Head") or tc:FindFirstChildWhichIsA("BasePart")
+                            
+                            if targetPart then
+                                if not Settings.Target.Fling.OldPos then
+                                    Settings.Target.Fling.OldPos = lr.CFrame
+                                    Settings.Target.Fling.FallenParts = workspace.FallenPartsDestroyHeight
+                                    workspace.FallenPartsDestroyHeight = 0/0
+                                    
+                                    lh:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                                    
+                                    if not Settings.Target.Fling.BodyVelocity then
+                                        Settings.Target.Fling.BodyVelocity = Instance.new("BodyVelocity")
+                                        Settings.Target.Fling.BodyVelocity.Parent = lr
+                                        Settings.Target.Fling.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                                        Settings.Target.Fling.BodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                                    end
                                 end
-                            end
-                            
-                            if tc:FindFirstChild("Head") then
-                                workspace.CurrentCamera.CameraSubject = tc.Head
-                            end
-                            
-                            local angle = (angle or 0) + 100
-                            
-                            local moveDir = th.MoveDirection
-                            local velMag = targetPart.Velocity.Magnitude
-                            
-                            if velMag < 50 then
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
                                 
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
+                                if tc:FindFirstChild("Head") then
+                                    workspace.CurrentCamera.CameraSubject = tc.Head
+                                end
                                 
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
+                                local angle = (angle or 0) + 100
                                 
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
+                                local moveDir = th.MoveDirection
+                                local velMag = targetPart.Velocity.Magnitude
                                 
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, 0) * CFrame.new(moveDir) * CFrame.Angles(math.rad(angle), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.new(moveDir) * CFrame.Angles(math.rad(angle), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
+                                if velMag < 50 then
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.new(moveDir * (velMag / 1.25)) * CFrame.Angles(math.rad(angle), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, 0) * CFrame.new(moveDir) * CFrame.Angles(math.rad(angle), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.new(moveDir) * CFrame.Angles(math.rad(angle), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                else
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, th.WalkSpeed) * CFrame.Angles(math.rad(90), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, -th.WalkSpeed) * CFrame.Angles(0, 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, th.WalkSpeed) * CFrame.Angles(math.rad(90), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(0, 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                    
+                                    lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(0, 0, 0)
+                                    lc:SetPrimaryPartCFrame(lr.CFrame)
+                                    lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
+                                    task.wait()
+                                end
                             else
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, th.WalkSpeed) * CFrame.Angles(math.rad(90), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, -th.WalkSpeed) * CFrame.Angles(0, 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, 1.5, th.WalkSpeed) * CFrame.Angles(math.rad(90), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(0, 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
-                                
-                                lr.CFrame = CFrame.new(targetPart.Position) * CFrame.new(0, -1.5, 0) * CFrame.Angles(0, 0, 0)
-                                lc:SetPrimaryPartCFrame(lr.CFrame)
-                                lr.Velocity = Vector3.new(9e7, 9e7*10, 9e7)
-                                task.wait()
+                                if Settings.Target.Fling.OldPos then
+                                    lr.CFrame = Settings.Target.Fling.OldPos
+                                    lc:SetPrimaryPartCFrame(Settings.Target.Fling.OldPos)
+                                    lh:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                                    workspace.CurrentCamera.CameraSubject = lh
+                                    workspace.FallenPartsDestroyHeight = Settings.Target.Fling.FallenParts
+                                    
+                                    if Settings.Target.Fling.BodyVelocity then
+                                        Settings.Target.Fling.BodyVelocity:Destroy()
+                                        Settings.Target.Fling.BodyVelocity = nil
+                                    end
+                                    
+                                    for _, v in pairs(lc:GetChildren()) do
+                                        if v:IsA("BasePart") then
+                                            v.Velocity = Vector3.new()
+                                            v.RotVelocity = Vector3.new()
+                                        end
+                                    end
+                                    
+                                    Settings.Target.Fling.OldPos = nil
+                                end
                             end
                         else
                             if Settings.Target.Fling.OldPos then
@@ -2239,166 +2323,139 @@ task.spawn(function()
                                 Settings.Target.Fling.OldPos = nil
                             end
                         end
-                    else
-                        if Settings.Target.Fling.OldPos then
-                            lr.CFrame = Settings.Target.Fling.OldPos
-                            lc:SetPrimaryPartCFrame(Settings.Target.Fling.OldPos)
-                            lh:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                            workspace.CurrentCamera.CameraSubject = lh
-                            workspace.FallenPartsDestroyHeight = Settings.Target.Fling.FallenParts
-                            
-                            if Settings.Target.Fling.BodyVelocity then
-                                Settings.Target.Fling.BodyVelocity:Destroy()
-                                Settings.Target.Fling.BodyVelocity = nil
-                            end
-                            
-                            for _, v in pairs(lc:GetChildren()) do
-                                if v:IsA("BasePart") then
-                                    v.Velocity = Vector3.new()
-                                    v.RotVelocity = Vector3.new()
-                                end
-                            end
-                            
-                            Settings.Target.Fling.OldPos = nil
+                    end
+                end
+            elseif Settings.Target.Fling.OldPos then
+                local lp = game.Players.LocalPlayer
+                local lc = lp.Character
+                local lh = lc and lc:FindFirstChildOfClass("Humanoid")
+                local lr = lc and lc:FindFirstChild("HumanoidRootPart")
+                
+                if lc and lh and lr then
+                    lr.CFrame = Settings.Target.Fling.OldPos
+                    lc:SetPrimaryPartCFrame(Settings.Target.Fling.OldPos)
+                    lh:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                    workspace.CurrentCamera.CameraSubject = lh
+                    workspace.FallenPartsDestroyHeight = Settings.Target.Fling.FallenParts
+                    
+                    if Settings.Target.Fling.BodyVelocity then
+                        Settings.Target.Fling.BodyVelocity:Destroy()
+                        Settings.Target.Fling.BodyVelocity = nil
+                    end
+                    
+                    for _, v in pairs(lc:GetChildren()) do
+                        if v:IsA("BasePart") then
+                            v.Velocity = Vector3.new()
+                            v.RotVelocity = Vector3.new()
+                        end
+                    end
+                end
+                Settings.Target.Fling.OldPos = nil
+            end
+        end
+    end)
+
+    local lastPositions = {}
+    local lastAliveStatus = {}
+    local lastUpdate = {}
+
+    local function checkTeleportToMe()
+        local myChar = LocalPlayer.Character
+        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+        
+        local myPos = myChar.HumanoidRootPart.Position
+        
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            if otherPlayer == LocalPlayer then continue end
+            
+            local otherChar = otherPlayer.Character
+            if not otherChar or not otherChar:FindFirstChild("HumanoidRootPart") then continue end
+            
+            local humanoid = otherChar:FindFirstChild("Humanoid")
+            local isAlive = humanoid and humanoid.Health > 0
+            local currentPos = otherChar.HumanoidRootPart.Position
+            local currentTime = tick()
+            
+            if lastPositions[otherPlayer] and lastAliveStatus[otherPlayer] ~= nil then
+                if isAlive and lastAliveStatus[otherPlayer] == true then
+                    local moveDist = (currentPos - lastPositions[otherPlayer]).Magnitude
+                    local timeDiff = currentTime - (lastUpdate[otherPlayer] or currentTime)
+                    local speed = moveDist / (timeDiff + 0.001)
+                    
+                    if moveDist > 1 and speed > 500 then
+                        local distToMe = (currentPos - myPos).Magnitude
+                        
+                        if distToMe < 15 then  
+                            Settings.Other.OldPosition = LocalPlayer.Character.HumanoidRootPart.CFrame
+                            workspace.FallenPartsDestroyHeight = 0/1/0
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, Settings.Other.FallenParts - 250, 0))
+                            task.wait(1)
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Other.OldPosition
+                            workspace.FallenPartsDestroyHeight = Settings.Other.FallenParts
                         end
                     end
                 end
             end
-        elseif Settings.Target.Fling.OldPos then
-            local lp = game.Players.LocalPlayer
-            local lc = lp.Character
-            local lh = lc and lc:FindFirstChildOfClass("Humanoid")
-            local lr = lc and lc:FindFirstChild("HumanoidRootPart")
             
-            if lc and lh and lr then
-                lr.CFrame = Settings.Target.Fling.OldPos
-                lc:SetPrimaryPartCFrame(Settings.Target.Fling.OldPos)
-                lh:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                workspace.CurrentCamera.CameraSubject = lh
-                workspace.FallenPartsDestroyHeight = Settings.Target.Fling.FallenParts
-                
-                if Settings.Target.Fling.BodyVelocity then
-                    Settings.Target.Fling.BodyVelocity:Destroy()
-                    Settings.Target.Fling.BodyVelocity = nil
-                end
-                
-                for _, v in pairs(lc:GetChildren()) do
-                    if v:IsA("BasePart") then
-                        v.Velocity = Vector3.new()
-                        v.RotVelocity = Vector3.new()
-                    end
-                end
-            end
-            Settings.Target.Fling.OldPos = nil
+            lastPositions[otherPlayer] = currentPos
+            lastAliveStatus[otherPlayer] = isAlive
+            lastUpdate[otherPlayer] = currentTime
         end
     end
-end)
 
-game:GetService("RunService").RenderStepped:Connect(function()
-    if Settings.Target.Attach == true and Settings.Target.Selected ~= nil then
-        local targetChar = game.Players[Settings.Target.Selected].Character
-        local localChar = game.Players.LocalPlayer.Character
-        if targetChar and targetChar:FindFirstChild("HumanoidRootPart") and localChar and localChar:FindFirstChild("HumanoidRootPart") then
-            localChar.HumanoidRootPart.CFrame = targetChar.HumanoidRootPart.CFrame + Vector3.new(0, 10, 0)
-        end
-    end
-end)
-
-local lastPositions = {}
-local lastAliveStatus = {}
-local lastUpdate = {}
-
-local function checkTeleportToMe()
-    local myChar = LocalPlayer.Character
-    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-    
-    local myPos = myChar.HumanoidRootPart.Position
-    
-    for _, otherPlayer in ipairs(Players:GetPlayers()) do
-        if otherPlayer == LocalPlayer then continue end
-        
-        local otherChar = otherPlayer.Character
-        if not otherChar or not otherChar:FindFirstChild("HumanoidRootPart") then continue end
-        
-        local humanoid = otherChar:FindFirstChild("Humanoid")
-        local isAlive = humanoid and humanoid.Health > 0
-        local currentPos = otherChar.HumanoidRootPart.Position
-        local currentTime = tick()
-        
-        if lastPositions[otherPlayer] and lastAliveStatus[otherPlayer] ~= nil then
-            if isAlive and lastAliveStatus[otherPlayer] == true then
-                local moveDist = (currentPos - lastPositions[otherPlayer]).Magnitude
-                local timeDiff = currentTime - (lastUpdate[otherPlayer] or currentTime)
-                local speed = moveDist / (timeDiff + 0.001)
-                
-                if moveDist > 1 and speed > 500 then
-                    local distToMe = (currentPos - myPos).Magnitude
-                    
-                    if distToMe < 15 then  
-                        Settings.Other.OldPosition = LocalPlayer.Character.HumanoidRootPart.CFrame
-                        workspace.FallenPartsDestroyHeight = 0/1/0
-                        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0, Settings.Other.FallenParts - 250, 0))
-                        task.wait(1)
-                        LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.Other.OldPosition
-                        workspace.FallenPartsDestroyHeight = Settings.Other.FallenParts
-                    end
-                end
+    spawn(function()
+        while wait(0.5) do
+            if Settings.Other.AKA == true then
+                pcall(checkTeleportToMe)
             end
         end
-        
-        lastPositions[otherPlayer] = currentPos
-        lastAliveStatus[otherPlayer] = isAlive
-        lastUpdate[otherPlayer] = currentTime
-    end
-end
+    end)
 
-spawn(function()
-    while wait(0.5) do
-        if Settings.Other.AKA == true then
-            pcall(checkTeleportToMe)
+    RunService.RenderStepped:Connect(function()
+    if Settings.Other.BunnyHop == false then return end
+    local character = LocalPlayer.Character
+    if not character then return end
+    local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not rootPart then return end
+    
+    if humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+        if humanoid.FloorMaterial ~= Enum.Material.Air then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end
-end)
+    rootPart.CFrame = rootPart.CFrame + humanoid.MoveDirection * (Settings.Player.Speed.Value / 10)
+    end)
 
-RunService.RenderStepped:Connect(function()
-    if Settings.Other.FieldOfView.Enabled == true and Camera.FieldOfView ~= Settings.Other.FieldOfView.Value and LocalPlayer.Character ~= nil then
-        pcall(function()
-            Camera.FieldOfView = Settings.Other.FieldOfView.Value
-        end)
+    getPing = function()
+        local network = game.Stats.Network
+        if network and network.ServerStatsItem and network.ServerStatsItem["Data Ping"] then
+            return math.floor(network.ServerStatsItem["Data Ping"]:GetValue())
+        end
+        return 0
     end
-end)
 
-RunService.RenderStepped:Connect(function()
-   if Settings.Other.BunnyHop == false then return end
-   local character = LocalPlayer.Character
-   if not character then return end
-   local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-   local rootPart = character:FindFirstChild("HumanoidRootPart")
-   if not humanoid or not rootPart then return end
-   
-   if humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-       if humanoid.FloorMaterial ~= Enum.Material.Air then
-           humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-       end
-   end
-   rootPart.CFrame = rootPart.CFrame + humanoid.MoveDirection * (Settings.Player.Speed.Value / 10)
-end)
-
-getPing = function()
-    local network = game.Stats.Network
-    if network and network.ServerStatsItem and network.ServerStatsItem["Data Ping"] then
-        return math.floor(network.ServerStatsItem["Data Ping"]:GetValue())
+    local fpsValues = {}
+    getFPS = function()
+        local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+        table.insert(fpsValues, fps)
+        if #fpsValues > 10 then table.remove(fpsValues, 1) end
+        local sum = 0
+        for _, v in ipairs(fpsValues) do sum = sum + v end
+        return math.floor(sum / #fpsValues)
     end
-    return 0
-end
 
-local fpsValues = {}
-getFPS = function()
-    local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
-    table.insert(fpsValues, fps)
-    if #fpsValues > 10 then table.remove(fpsValues, 1) end
-    local sum = 0
-    for _, v in ipairs(fpsValues) do sum = sum + v end
-    return math.floor(sum / #fpsValues)
-end
 
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if Settings.Visual.Camera.FieldOfView.Enabled == true and Camera.FieldOfView ~= Settings.Visual.Camera.FieldOfView.Value and game.Players.LocalPlayer.Character ~= nil then
+            pcall(function()
+                Camera.FieldOfView = Settings.Visual.Camera.FieldOfView.Value
+            end)
+        end
+    end)
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if Settings.Visual.Camera.Stretch.Enabled == true and RunningAimbot == false then
+            workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+        end
+    end)

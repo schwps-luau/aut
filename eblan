@@ -1598,26 +1598,23 @@
         end
         
         if settings.Smoothness > 0 then
-            local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-            local newCFrame = Camera.CFrame:Lerp(targetCFrame, 1 / (settings.Smoothness * 10))
-            pcall(function()
-                if Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == true then
-                        local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
-                        workspace.CurrentCamera.CFrame = newCFrame * stretchMatrix
-                elseif Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == false then
-                        Camera.CFrame = newCFrame
-                end
-            end)
+            local targetCFrame = CFrame.new(workspace.Camera.CFrame.Position, targetPos)
+            local newCFrame = workspace.Camera.CFrame:Lerp(targetCFrame, 1 / (settings.Smoothness * 10))
+            
+            if Settings.Visual.Camera.Stretch.Enabled then
+                local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+                workspace.CurrentCamera.CFrame = newCFrame * stretchMatrix
+            else
+                workspace.Camera.CFrame = newCFrame
+            end
         else
-            pcall(function()
-                if Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == true then
-                        local finalCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-                        local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
-                        workspace.CurrentCamera.CFrame = finalCFrame * stretchMatrix
-                elseif Settings.Combat.Aimbot.Enabled == true and Settings.Visual.Camera.Stretch.Enabled == false then
-                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-                end
-            end)
+            if Settings.Visual.Camera.Stretch.Enabled then
+                local finalCFrame = CFrame.new(workspace.Camera.CFrame.Position, targetPos)
+                local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+                workspace.CurrentCamera.CFrame = finalCFrame * stretchMatrix
+            else
+                workspace.Camera.CFrame = CFrame.new(workspace.Camera.CFrame.Position, targetPos)
+            end
         end
         
         FOVAimbot.Color = settings.FOV.LockedColor
@@ -2455,7 +2452,10 @@
     end)
 
     game:GetService("RunService").RenderStepped:Connect(function()
-        if Settings.Visual.Camera.Stretch.Enabled == true and RunningAimbot == false then
-            workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+        if Settings.Visual.Camera.Stretch.Enabled == true then
+            if RunningAimbot == false or (RunningAimbot == true and CurrentTarget == nil) then
+                local stretchMatrix = CFrame.new(0, 0, 0, 1, 0, 0, 0, Settings.Visual.Camera.Stretch.Value, 0, 0, 0, 1)
+                workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * stretchMatrix
+            end
         end
     end)
